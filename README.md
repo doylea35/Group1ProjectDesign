@@ -23,7 +23,8 @@ Ensure you have the following installed before proceeding:
 
 #### 🔹  Step 0: Clone this GitHub repository to your local machine
 Open a terminal (Command Prompt or PowerShell) and run:
-```sh git clone https://github.com/doylea35/Group1ProjectDesign.git
+```sh 
+git clone https://github.com/doylea35/Group1ProjectDesign.git
 ```
 
 ##### 🔹 Step 1: Navigate to the Backend Directory
