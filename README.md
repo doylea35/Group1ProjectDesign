@@ -7,9 +7,34 @@ This guide provides instructions to set up and run the **GroupGrade** applicatio
 ---
 
 ### 📌 Frontend Setup
-*(Provide installation steps for the frontend here.)*
-
+#### ✅ Prerequisites
+Ensure you have the following installed before proceeding:
+- **Node.js** ([Download here]([https://www.python.org/downloads/](https://nodejs.org/en )))
 ---
+
+#### 🏁 Installation Steps (Windows)
+
+#### 🔹  Step 0: Clone this GitHub repository to your local machine
+Open a terminal (Command Prompt or PowerShell) and run:
+```sh 
+git clone https://github.com/doylea35/Group1ProjectDesign.git
+```
+
+##### 🔹 Step 1: Navigate to the Backend Directory
+Run:
+```sh
+cd "<your-repository-directory>\Group1ProjectDesign\frontend\frontend"
+```
+##### 🔹 Step 2: Install the dependencies
+Run:
+ ```sh
+npm install
+```
+##### 🔹 Step 3: Start the frontend server
+Run:
+ ```sh
+npm run dev
+```
 
 ### 🖥️ Backend Setup
 
