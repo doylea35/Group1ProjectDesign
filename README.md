@@ -9,7 +9,7 @@ This guide provides instructions to set up and run the **GroupGrade** applicatio
 ### 📌 Frontend Setup
 #### ✅ Prerequisites
 Ensure you have the following installed before proceeding:
-- **Node.js** ([Download here]([https://www.python.org/downloads/](https://nodejs.org/en )))
+- **Node.js** ([Download here]([https://www.python.org/downloads/](https://nodejs.org/en ))
 ---
 
 #### 🏁 Installation Steps (Windows)
