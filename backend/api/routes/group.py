@@ -5,7 +5,7 @@ from db.schemas import groups_serial
 from api.request_model.group_request_schema import CreateGroupRequest, DeleteGroupRequest
 group_router = APIRouter()
 
-def sendEmails():
+def sendEmails(email):
     pass
 
 @group_router.get("/", response_model=list[Group])
@@ -20,13 +20,24 @@ async def create_group_handler(request : CreateGroupRequest):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"User with email {request.creator_email} does not exist."
             )
+    
     # send invitation email to the user
     for email in request.members:
         sendEmails(email)
-    newGroup : Group = Group(members=[request.creator_email], name=request.group_name, tasks=[])
+    
+    # Create a new group object
+    newGroup = {
+        "members" : [request.creator_email] + request.members,  
+        "name": request.group_name,
+        "tasks" : []
 
+    }
+
+    # insert into database
     inserted_group = groups_collection.insert_one(newGroup)
-    return {"id": str(inserted_group.inserted_id), "message": "Group created"}
+    created_group = groups_collection.find_one({"_id": inserted_group.inserted_id})
+
+    return created_group  # return full group object
 
 @group_router.delete("/deleteGroup",  status_code=status.HTTP_201_CREATED)
 async def delete_group_handler(request : DeleteGroupRequest):
