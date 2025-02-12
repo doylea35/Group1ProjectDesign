@@ -1,6 +1,6 @@
-import os
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
+from bson import ObjectId
 
 
 class User(BaseModel):
@@ -9,6 +9,7 @@ class User(BaseModel):
     groups: Optional[List[str]] = None # List of Foreign Keys referencing Group.id
 
 class Group(BaseModel): #_id as Primary key, automatically created, can be found using ObjectID
+    id: Optional[str] = Field(alias="_id", default=None)  # Include MongoDB _id
     members: List[str] # List of Foreign Keys referencing User.email
     name: str
     tasks: Optional[List[str]] = None # List of Foreign Keys referencing Task.id
