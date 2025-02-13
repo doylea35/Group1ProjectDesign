@@ -1,0 +1,83 @@
+.create-profile-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh; 
+    width: 50%;
+    background-color: #9197b371;
+    padding: 2.5rem; 
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.create-profile-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.create-profile-header {
+    color: #5932EA;
+    font-size: 1.6rem;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 25px;
+    width: 100%;
+}
+
+.create-profile-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90%; 
+    gap: 18px;
+}
+
+.create-profile-form label {
+    font-weight: 500;
+    color: #4a4a4a;
+    font-size: 14px;
+    text-align: left;
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.create-profile-form input {
+    width: 100%;
+    padding: 12px;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border 0.3s, box-shadow 0.3s;
+    background-color: white;
+}
+
+.create-profile-form input:focus {
+    border: 1.5px solid #5932EA;
+    outline: none;
+    box-shadow: 0 0 8px rgba(89, 50, 234, 0.2);
+}
+
+.create-profile-form button {
+    width: 100%;
+    padding: 14px;
+    background-color: #5932EA;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    text-align: center;
+}
+
+.create-profile-form button:hover {
+    background-color: #4a1fbe;
+    transform: scale(1.03);
+}
+
+.create-profile-form button:active {
+    transform: scale(0.98);
+}
