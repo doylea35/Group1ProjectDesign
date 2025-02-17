@@ -43,6 +43,10 @@ function App() {
               <Link to="/profile" className="create-profile-btn">
                 <button>Create Profile</button>
               </Link>
+              {/* Add the Create New Project button */}
+              <div className="card">
+                <CreateNewProjectPop />
+              </div>
             </>
           } />
         </Routes>
@@ -51,5 +55,4 @@ function App() {
   );
 }
 
-export default App;
 export default App;
