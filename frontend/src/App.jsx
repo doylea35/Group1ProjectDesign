@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState } from "react";;
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
-import './App.css';
+import reactLogo from "./assets/react.svg";;
+import viteLogo from "/vite.svg";;
+import "./App.css";
+import CreateNewProjectPop from "./pages/CreateProjectPop"; // Import dialog component;
 import CreateProfile from './pages/CreateProfile';
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(0);;
 
   return (
     <Router>
@@ -50,4 +51,5 @@ function App() {
   );
 }
 
+export default App;
 export default App;
