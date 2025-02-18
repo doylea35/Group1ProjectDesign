@@ -2,12 +2,18 @@ from db.models import User, Group, Task
 from bson import ObjectId
 
 def _user_serial(user: dict) -> User:
-    return {
-        # "id": str(user["_id"]),
-        "email": user["email"],
-        "name": user["name"],
-        "groups":[str(group_id) for group_id in user.get("groups", [])] 
-    }
+    return User(
+        _id=str(user["_id"]),
+        email=user["email"],
+        name=user["name"],
+        groups=[str(group_id) for group_id in user.get("groups", [])],
+        free_time={
+            day: [{"start": slot["start"], "end": slot["end"]} for slot in slots]
+            for day, slots in user.get("free_time", {}).items()
+        }
+    )
+
+    
 
 def group_serial(group: dict) -> Group:
     print(f"inside group_serial: {str(group['_id'])}\n")
