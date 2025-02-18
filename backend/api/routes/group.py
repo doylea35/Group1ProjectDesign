@@ -6,16 +6,9 @@ from db.schemas import groups_serial, group_serial
 from api.request_model.group_request_schema import CreateGroupRequest, DeleteGroupRequest
 from bson import ObjectId
 from email_service.email_utils import email_sender
-from email_validator import validate_email, EmailNotValidError
+from api.utils import is_valid_email
 
 group_router = APIRouter()
-
-def is_valid_email(email: str) -> bool:
-    try:
-        validate_email(email)
-        return True
-    except EmailNotValidError:
-        return False
 
 @group_router.get("/", response_model=list[Group])
 async def get_groups_handler():

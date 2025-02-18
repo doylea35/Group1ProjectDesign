@@ -14,27 +14,12 @@ async def get_users():
     users = users_serial(users_collection.find())
     return users
 
-# @profiles_router.get("/groups/")
-# async def get_groups():
-#     a = groups_collection.find()
-#     print("type(group):")
-#     for b in a:
-#         print(type(b))
-#     groups = groups_serial(groups_collection.find())
-    
-#     return groups
 
 @profiles_router.get("/tasks/")
 async def get_tasks():
     tasks = tasks_serial(tasks_collection.find())
     return tasks
 
-
-#### POST Requests ####
-# @profiles_router.post("/groups/")
-# def create_group(group: Group):
-#     new_group = groups_collection.insert_one(group.dict())
-#     return {"id": str(new_group.inserted_id), "message": "Group created"}
 
 @profiles_router.post("/users/")
 def create_user(user: User):
@@ -51,6 +36,7 @@ def create_user(user: User):
     # Insert user
     user_dict = user.dict()
     user_dict["groups"] = valid_group_ids
+    user_dict["free_time"] = user.free_time
     users_collection.insert_one(user_dict)
 
     return {"message": "User created", "email": user.email}
