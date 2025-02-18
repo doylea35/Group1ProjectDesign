@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Query
 from fastapi.responses import JSONResponse
+from typing import Optional
 from db.database import groups_collection, users_collection
 from db.models import Group
 from db.schemas import groups_serial, group_serial
@@ -18,8 +19,19 @@ def is_valid_email(email: str) -> bool:
         return False
 
 @group_router.get("/", response_model=list[Group])
-async def get_groups_handler():
-    groups = groups_serial(groups_collection.find())
+async def get_groups_handler(user_email: Optional[str] = Query(None, description=" User email to filter groups or Blank for all groups")):
+    if user_email:
+        user = users_collection.find_one({"email": user_email})
+        if not user:
+
+            raise HTTPException(status_code=404, detail=" User not found")
+        query = {"_id": {"$in": [ObjectId(group_id) for group_id in user.get("groups", [])]}}
+        
+        groups =groups_serial(groups_collection.find(query))
+
+    else:
+        groups = groups_serial(groups_collection.find())
+
     return groups
 
 @group_router.post("/create", status_code=status.HTTP_201_CREATED)
