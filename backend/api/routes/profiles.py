@@ -24,11 +24,7 @@ async def get_users():
     
 #     return groups
 
-#@profiles_router.get("/tasks/")
-#async def get_tasks():
-#    tasks = tasks_serial(tasks_collection.find())
-#    return tasks
-
+# returns all tasks or tasks assigned to a specific user
 @profiles_router.get("/tasks/")
 async def get_tasks(assigned_to: Optional[str] = Query(None, description="User email to filter tasks, or blank for all tasks")):
     query = {} if not assigned_to else {"assigned_to": assigned_to}
