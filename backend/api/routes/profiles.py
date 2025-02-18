@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException
-from typing import Dict
+from fastapi import APIRouter, HTTPException, Query, Query
+from typing import Dict, Optional
 from db.database import groups_collection, users_collection, tasks_collection
 from db.models import User, Group, Task
 from db.schemas import users_serial, groups_serial, tasks_serial
@@ -24,9 +24,15 @@ async def get_users():
     
 #     return groups
 
+#@profiles_router.get("/tasks/")
+#async def get_tasks():
+#    tasks = tasks_serial(tasks_collection.find())
+#    return tasks
+
 @profiles_router.get("/tasks/")
-async def get_tasks():
-    tasks = tasks_serial(tasks_collection.find())
+async def get_tasks(assigned_to: Optional[str] = Query(None, description="User email to filter tasks, or blank for all tasks")):
+    query = {} if not assigned_to else {"assigned_to": assigned_to}
+    tasks = tasks_serial(tasks_collection.find(query))
     return tasks
 
 
