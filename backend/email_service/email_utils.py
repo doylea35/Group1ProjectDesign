@@ -60,6 +60,7 @@ def create_service(api_name, api_version, *scopes):
     cred = load_credentials_from_env()
 
     if not cred or not cred.valid:
+        print("No valid Google OAuth Credentials...")
         if cred and cred.expired and cred.refresh_token:
             print("Requesting a refresh token...")
             cred.refresh(Request())
@@ -70,7 +71,7 @@ def create_service(api_name, api_version, *scopes):
             
             flow = InstalledAppFlow.from_client_config(client_secrets, SCOPES)
 
-            cred = flow.run_local_server()
+            cred = flow.run_local_server(access_type="offline", prompt="consent")
 
             save_credentials_to_env(cred)
 
@@ -103,3 +104,10 @@ class EmailSender():
         return True
     
 email_sender : EmailSender = EmailSender()
+
+
+# cred = load_credentials_from_env()
+# if cred:
+#     print("Refresh Token:", cred.refresh_token)
+# else:
+#     print("no refresh token")
