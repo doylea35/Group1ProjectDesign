@@ -7,7 +7,7 @@ import openai
 import os
 from dotenv import load_dotenv
 from api.utils import is_valid_email
-
+import json
 # Load API Key from environment variables
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -75,22 +75,91 @@ async def update_free_time(user_email: str, updated_free_time: Dict[str, List[Fr
     updated_user["_id"] = str(updated_user["_id"])
     return {"message": "Free time updated successfully", "data": updated_user}
 
+PROMPT_TEMPLATE = """
+You are given a list of free time slots for multiple people. Your task is to find the overlapping time slots across all users.
+Now, given the following free time slots: {time_slots}, find the overlapping free time slots (if any).
+
+### **Example Input:**
+[
+  {{
+    "Monday": [],
+    "Wednesday": [
+      {{ "start": "09:00", "end": "10:30" }},
+      {{ "start": "15:00", "end": "16:00" }}
+    ],
+    "Saturday": [
+      {{ "start": "09:00", "end": "10:30" }},
+      {{ "start": "15:00", "end": "16:00" }}
+    ]
+  }},
+  {{
+    "Monday": [],
+    "Wednesday": [
+      {{ "start": "09:00", "end": "10:00" }},
+      {{ "start": "15:00", "end": "16:00" }}
+    ],
+    "Saturday": [
+      {{ "start": "09:00", "end": "10:00" }},
+      {{ "start": "15:50", "end": "16:00" }}
+    ]
+  }}
+]
+Expected output: 
+{{
+  "Monday": [],
+  "Wednesday": [
+    {{ "start": "09:00", "end": "10:00" }},
+    {{ "start": "15:00", "end": "16:00" }}
+  ],
+  "Saturday": [
+    {{ "start": "09:00", "end": "10:00" }},
+    {{ "start": "15:50", "end": "16:00" }}
+  ]
+}}
+Return the response strictly in JSON format like the example above, with no additional text or explanations. If no overlapping slots exist, return an empty JSON object {{}} with out ```joson ```. so pure text only.. 
+"""
 
 
+MAX_TOKEN = 10000
 
-
-@calendar_router.post("/getFreeTime")
-async def ask_chatgpt_for_free_time(request: ChatRequest):
+@calendar_router.post("/getOverlappingTime")
+async def ask_chatgpt_for_free_time(free_time_slots : list[Dict[str, List[FreeTimeSlot]]]):
     try:
+        print("ask_chatgpt_for_free_time\n")
+
+        processed_slots = [
+        {
+            day: [slot if isinstance(slot, dict) else slot.dict() for slot in slots]
+            for day, slots in user_slots.items()
+        }
+        for user_slots in free_time_slots
+        ]
+
+        processed_slots_json = json.dumps(processed_slots, indent=2)
+        # print(f"processed_slots: {str(processed_slots_json)}")
+
+        # Prepare the final prompt
+        formatted_prompt = PROMPT_TEMPLATE.format(time_slots=str(processed_slots_json))
+        # print("formyed prompts")
+
+        # Call OpenAI API
         response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": request.prompt}],
-            max_tokens=request.max_tokens
+            model="gpt-4o",  # Use "gpt-4o" for best performance
+            messages=[{"role": "user", "content": formatted_prompt}],
+            max_tokens=1000,  # Limit response length
         )
-        return {"response": response["choices"][0]["message"]["content"]}
+
+        # Extract the response content
+        gpt_response = response["choices"][0]["message"]["content"]
+        # print(f"model respons: {gpt_response}\n")
+        # Parse JSON output from GPT
+        try:
+            overlapping_free_time = json.loads(gpt_response)
+            return overlapping_free_time  # Return the structured JSON response
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Invalid JSON response from OpenAI"
+            )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR , detail=str(e))
-    
-# message = ChatRequest(prompt="""Here is the free time for three people: Claire: 11:00-13:00, 14:00-16:00, Jack: 14:00-14:30, Ennis: 14:00-15:00, 09:00-10:00", find the time slot where everyone is free""")
-
-
