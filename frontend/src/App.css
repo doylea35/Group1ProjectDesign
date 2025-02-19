@@ -1,3 +1,8 @@
+@import "@radix-ui/colors/black-alpha.css";
+@import "@radix-ui/colors/green.css";
+@import "@radix-ui/colors/mauve.css";
+@import "@radix-ui/colors/violet.css";
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -39,4 +44,354 @@
 
 .read-the-docs {
   color: #888;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Title font*/
+h1 {
+  position: absolute; 
+  top: 20px; 
+  left: 50px; 
+  margin: 0; 
+  font-size: 50px; 
+}
+
+/* Dialog pop up styling /*
+/* reset */
+button,
+fieldset,
+input {
+	all: unset;
+}
+
+.DialogOverlay {
+  background-color: rgba(0, 0, 0, 0.5); 
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(5px);
+}
+
+.DialogContent {
+  background-color: #ffffffff; /* Light grey background */
+  border-radius: 6px;
+  box-shadow: var(--shadow-6);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 500px;
+  max-height: 85vh;
+  padding: 25px;
+  animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.DialogContent:focus {
+outline: none;
+}
+
+.DialogTitle {
+margin: 0;
+font-weight: 500;
+color: var(--mauve-12);
+font-size: 17px;
+}
+
+.DialogDescription {
+margin: 10px 0 20px;
+color: var(--mauve-11);
+font-size: 15px;
+line-height: 1.5;
+}
+
+.Button {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+border-radius: 4px;
+padding: 0 15px;
+font-size: 15px;
+line-height: 1;
+font-weight: 500;
+height: 35px;
+user-select: none;
+}
+.Button:focus:not(:focus-visible) {
+outline: 0;
+}
+.Button:focus-visible {
+outline: 2px solid var(--violet-6);
+outline-offset: 1px;
+}
+.Button.violet {
+background-color: var(--violet-4);
+color: var(--violet-12);
+outline-color: var(--violet-6);
+}
+.Button.violet:hover {
+background-color: var(--mauve-3);
+}
+.Button.green {
+background-color: var(--green-4);
+color: var(--green-11);
+outline-color: var(--green-7);
+}
+.Button.green:hover {
+background-color: var(--green-5);
+}
+
+.IconButton {
+  all: unset;
+  font-family: inherit;
+  border-radius: 100%;
+  height: 25px;
+  width: 25px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--violet-11);
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: var(--violet-4, #ddd); 
+}
+
+.IconButton:hover {
+background-color: var(--violet-7);
+}
+.IconButton:focus {
+box-shadow: 0 0 0 2px var(--violet-7);
+}
+
+.Fieldset {
+display: flex;
+gap: 20px;
+align-items: center;
+margin-bottom: 15px;
+}
+
+.Label {
+font-size: 15px;
+color: var(--violet-11);
+width: 110px;
+text-align: right;
+}
+
+.Input {
+width: 100%;
+flex: 1;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+border-radius: 4px;
+padding: 0 10px;
+font-size: 15px;
+line-height: 1;
+color: var(--violet-11);
+box-shadow: 0 0 0 1px var(--violet-7);
+height: 35px;
+}
+.Input:focus {
+box-shadow: 0 0 0 2px var(--violet-8);
+}
+
+@keyframes overlayShow {
+from {
+  opacity: 0;
+}
+to {
+  opacity: 1;
+}
+}
+
+@keyframes contentShow {
+from {
+  opacity: 0;
+  transform: translate(-50%, -48%) scale(0.96);
+}
+to {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+}
+
+/* Ensure the dropdown has a visible background */
+.CustomDropdownContent {
+  background: white;
+  border-radius: 8px;
+  padding: 5px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  min-width: 200px;
+  z-index: 1000; /* Ensure it appears above everything */
+}
+
+/* Make sure the dropdown items are visible */
+.CustomDropdownViewport {
+  padding: 5px;
+  background-color: var(--violet-2); /* Light background */
+  border-radius: 6px;
+}
+
+/* Styling for Individual Dropdown Items */
+.CustomDropdownItem {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  background: white;
+  color: var(--violet-11);
+}
+
+/* Hover effect */
+.CustomDropdownItem:hover {
+  background: var(--violet-9);
+  color: white;
+}
+
+/* Ensure CheckIcon appears on selection */
+.CheckIcon {
+  display: none;
+  width: 16px;
+  height: 16px;
+}
+
+.CustomDropdownItem[data-highlighted] .CheckIcon {
+  display: inline-block;
+}
+
+/* Styling for Select Trigger with Outline */
+.CustomSelectTrigger {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 2px solid var(--violet-7); /* ✅ Outline added */
+  font-size: 16px;
+  cursor: pointer;
+  width: 120px;
+  height: 15px;
+  transition: border 0.2s ease, background 0.2s ease;
+}
+
+/* Add Hover Effect */
+.CustomSelectTrigger:hover {
+  border-color: var(--violet-9);
+  background: var(--violet-3);
+}
+
+/* Add Focus Effect */
+.CustomSelectTrigger:focus {
+  border-color: var(--violet-10);
+  box-shadow: 0 0 0 3px var(--violet-6); /* ✅ Focus effect */
+}
+
+/* Ensure Dropdown Icon is aligned properly */
+.DropdownIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--violet-9);
+}
+
+/* Container for Start & End Time */
+.TimeSelectionContainer {
+  display: flex;
+  gap: 20px; /* Space between fields */
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* Center time slots */
+.TimeSelectionWrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+/* Time slot container */
+.TimeSelectionContainer {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+}
+
+/* Each time input */
+.TimeFieldset {
+  display: flex;
+  flex-direction: column;
+  width: 130px;
+  text-align: center;
+}
+
+/* Small input boxes */
+.TimeFieldset .Input {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 14px;
+  border: 2px solid var(--violet-7);
+  border-radius: 6px;
+  text-align: center;
+  transition: border 0.2s ease;
+}
+
+/* Add focus effect */
+.TimeFieldset .Input:focus {
+  border-color: var(--violet-10);
+  box-shadow: 0 0 0 3px var(--violet-6);
+}
+
+/* Add More Time button */
+.ButtonContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.plusButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--violet-4);
+  color: var(--violet-12);
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.plusButton:hover {
+  background-color: var(--violet-6);
+}
+
+/* Delete button for removing time slots */
+.DeleteButton {
+  all: unset;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--violet-9);
+  margin-left: 10px;
+  padding: 5px;
+}
+
+.DeleteButton:hover {
+  color: var(--violet-11);
+}
+
+.ErrorMessage {
+  color: red;
+  margin-bottom: 10px;
 }

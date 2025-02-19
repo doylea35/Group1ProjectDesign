@@ -3,8 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import reactLogo from "./assets/react.svg";;
 import viteLogo from "/vite.svg";;
 import "./App.css";
-import CreateNewProjectPop from "./pages/CreateProjectPop"; // Import dialog component;
+import CreateNewProjectPop from "./pages/CreateProjectPop"; 
 import CreateProfile from './pages/CreateProfile';
+import SchedulingPage from "./pages/SchedulingPage";
 
 function App() {
   const [count, setCount] = useState(0);;
@@ -17,6 +18,7 @@ function App() {
         </nav>
         <Routes>
           <Route path="/profile" element={<CreateProfile />} />
+          <Route path="/schedule" element={<SchedulingPage />} />
           <Route path="/" element={
             <>
               <div>
@@ -47,6 +49,9 @@ function App() {
               <div className="card">
                 <CreateNewProjectPop />
               </div>
+              <Link to="/schedule" className="schedule-page-btn">
+                <button>Find a time to meet your team!</button>
+              </Link>
             </>
           } />
         </Routes>
