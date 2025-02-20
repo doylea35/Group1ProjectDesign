@@ -26,6 +26,8 @@ dist-ssr
 
 # Python
 __pycache__/
+.idea/
+
 *.pyc
 *.pyo
 *.pyd
