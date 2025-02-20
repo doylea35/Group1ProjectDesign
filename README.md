@@ -29,6 +29,8 @@ cd "<your-repository-directory>\Group1ProjectDesign\frontend\frontend"
 Run:
  ```sh
 npm install
+npm install @radix-ui/react-dialog @radix-ui/react-icons
+npm install @radix-ui/colors
 ```
 ##### 🔹 Step 3: Start the frontend server
 Run:
