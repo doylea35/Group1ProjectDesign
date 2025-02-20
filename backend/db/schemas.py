@@ -8,8 +8,9 @@ def _user_serial(user: dict) -> User:
         name=user["name"],
         groups=[str(group_id) for group_id in user.get("groups", [])],
         free_time={
-            day: [{"start": slot["start"], "end": slot["end"]} for slot in slots]
+            day: [{"start": slot["start"], "end": slot["end"]} for slot in slots if isinstance(slot, dict)]
             for day, slots in user.get("free_time", {}).items()
+            if isinstance(slots, list)  # Ensure slots is a list before iterating
         }
     )
 
