@@ -12,6 +12,10 @@ class User(BaseModel):
     name: str
     groups: Optional[List[str]] = None # List of Foreign Keys referencing Group.id
     free_time: Optional[Dict[str, List[FreeTimeSlot]]] = {} # optional free_time, by default is {}
+    password: Optional[str]
+    token: Optional[str]
+    status: Optional[str]
+    confirmation_code: Optional[str]
 
 class Group(BaseModel): #_id as Primary key, automatically created, can be found using ObjectID
     id: Optional[str] = Field(alias="_id", default=None)  # Include MongoDB _id
@@ -28,5 +32,8 @@ class Task(BaseModel): #_id as Primary key, automatically created, can be found 
     group: str # Foreign Key referencing Group.id
     priority: str # ["Low", "Medium", "High"]
 
-class UserFreeTime(BaseModel):
-    free_time: Dict[str, List[FreeTimeSlot]]
+class SubTeam(BaseModel): #_id as Primary key, automatically created, can be found using ObjectID
+    team_name: str 
+    members: List[str]  # List of Foreign Keys referencing User.email
+    tasks: List[str] # List of Foreign Keys referencing Task.id
+    group: str # Foreign Key referencing Group.id
