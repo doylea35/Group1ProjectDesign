@@ -4,6 +4,8 @@ import { Cross2Icon } from "@radix-ui/react-icons";
 import "../App.css";
 
 const CreateProfile = () => {
+  
+  const [open, setOpen] = React.useState(false);
   const [profile, setProfile] = React.useState({
     name: "",
     email: "",
@@ -51,7 +53,7 @@ const CreateProfile = () => {
   };
 
   return (
-    <Dialog.Root open={!submitted} onOpenChange={(open) => setSubmitted(!open)}>
+    <Dialog.Root open={open} onOpenChange={setOpen}> 
       <Dialog.Trigger asChild>
         <button className="Button violet">Create Profile</button>
       </Dialog.Trigger>

@@ -496,3 +496,35 @@ to {
 .sidebar.closed + .content {
   margin-left: 0;
 }
+
+.projects-container {
+  padding: 20px;
+  text-align: center;
+}
+
+.projects-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+.project-item {
+  background: var(--mauve-3);
+  padding: 15px;
+  margin: 10px auto;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 80%;
+}
+
+.Button {
+  margin-left: 10px;
+}
+
+.error-message {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+}

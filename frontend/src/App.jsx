@@ -7,9 +7,9 @@ import Sidebar from "./components/Sidebar";
 import CreateProfile from "./pages/CreateProfile";
 import CreateNewProjectPop from "./pages/CreateProjectPop"; 
 import SchedulingPage from "./pages/SchedulingPage";
+import ProjectPage from "./pages/ProjectsPage";
 
 //placeholders
-const ProjectsPage = () => <div>Projects Page</div>;
 const LogoutPage = () => <div>Logging Out...</div>;
 
 function App() {
@@ -55,11 +55,10 @@ function App() {
               </Link>
             </>
           } />
-          {/* Ensure all sidebar links are properly routed */}
           <Route path="/create-profile" element={<CreateProfile />} />
           <Route path="/create-project" element={<CreateNewProjectPop />} />
           <Route path="/find-meeting-time" element={<SchedulingPage />} />
-          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects" element={<ProjectPage />} />
           <Route path="/logout" element={<LogoutPage />} />
           <Route path="/schedule" element={<SchedulingPage />} />
         </Routes>
