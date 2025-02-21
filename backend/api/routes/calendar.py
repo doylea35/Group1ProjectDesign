@@ -163,3 +163,19 @@ async def ask_chatgpt_for_free_time(free_time_slots : list[Dict[str, List[FreeTi
             )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR , detail=str(e))
+    
+
+# {
+#     "free_time":{
+#     "Monday": [],
+#     "Wednesday": [
+#       { "start": "09:00", "end": "1
+#  },
+#       { "start": "15:00", "end": "16:00" }
+#     ],
+#     "Saturday": [
+#       { "start": "09:00", "end": "10:30" },
+#       { "start": "15:00", "end": "16:00" }
+#     ]
+#}
+#   },

@@ -8,6 +8,7 @@ client : MongoClient = connect_to_mongodb()
 db : Database = client.GroupGrade
 
 # MongoDB Collections
-users_collection : Collection = db["users"] #db["users"] # tb podem fer db["users"] ?
+users_collection : Collection = db["users"] 
 groups_collection : Collection = db["groups"]
 tasks_collection : Collection = db["tasks"]
+subteams_collection : Collection = db["subteams"]
