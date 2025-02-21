@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
-from db.database import groups_collection, users_collection
+from db.database import groups_collection, users_collection, tasks_collection, subteams_collection
 from db.models import User
 from db.schemas import users_serial
 from api.request_model.user_request_schema import CreateUserRequest, DeleteUserRequest, UpdateUserRequest
@@ -55,6 +55,22 @@ async def delete_user(request : DeleteUserRequest):
     
     # Delete user
     users_collection.delete_one({"email": request.email})
+
+    # delete user from groups
+    groups_collection.update_many(
+        {},
+        {"$pull": {"members": request.email}}
+    )
+
+    # if there are no members in the group, delete it
+    groups_collection.delete_many({"members": []})
+
+    # if there are no members in the subteam, delete it
+    subteams_collection.delete_many({"members": []})
+
+    # delete user from tasks
+    tasks_collection.delete_many({"assigned_to": request.email})
+
 
 
 #### PUT Requests ####

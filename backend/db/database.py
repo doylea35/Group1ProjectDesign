@@ -11,3 +11,4 @@ db : Database = client.GroupGrade
 users_collection : Collection = db["users"] 
 groups_collection : Collection = db["groups"]
 tasks_collection : Collection = db["tasks"]
+subteams_collection : Collection = db["subteams"]

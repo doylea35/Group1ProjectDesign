@@ -22,3 +22,9 @@ class Task(BaseModel): #_id as Primary key, automatically created, can be found 
     status: str # ["To Do", "In Progress", "Completed"]
     group: str # Foreign Key referencing Group.id
     priority: str # ["Low", "Medium", "High"]
+
+class SubTeam(BaseModel): #_id as Primary key, automatically created, can be found using ObjectID
+    team_name: str 
+    members: List[str]  # List of Foreign Keys referencing User.email
+    tasks: List[str] # List of Foreign Keys referencing Task.id
+    group: str # Foreign Key referencing Group.id
