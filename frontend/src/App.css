@@ -297,6 +297,13 @@ to {
   box-shadow: 0 0 0 3px var(--violet-6); /* ✅ Focus effect */
 }
 
+/* Profile and Project button on main page*/
+.ProfileProjectContainer {
+  display: flex;
+  justify-content: space-evenly; 
+  padding: 20px; 
+}
+
 /* Ensure Dropdown Icon is aligned properly */
 .DropdownIcon {
   width: 20px;
@@ -394,4 +401,98 @@ to {
 .ErrorMessage {
   color: red;
   margin-bottom: 10px;
+}
+
+/* Sidebar styling */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 220px;
+  height: 100vh;
+  background: var(--mauve-3);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding-top: 20px;
+  outline: none;
+  box-shadow: none;
+}
+
+/* Collapsed sidebar */
+.sidebar.closed {
+  transform: translateX(-100%);
+}
+
+/* Sidebar links */
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;  
+  width: 100%;
+  padding-top: 20px;
+  outline: none;
+  box-shadow: none;
+}
+
+.nav-link {
+  display: block;
+  padding: 12px 16px;  
+  color: var(--mauve-12);
+  text-decoration: none;
+  font-size: 16px;
+  width: 100%; 
+  text-align: left;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  box-sizing: border-box; 
+  outline: none;
+  box-shadow: none;
+}
+
+.nav-link:hover {
+  background: var(--violet-6);
+  color: white;
+  outline: none;
+  box-shadow: none;
+}
+
+.toggle-button {
+  position: absolute;
+  top: 20px;
+  left: 100%; /* Position right outside the sidebar */
+  cursor: pointer;
+  background: var(--violet-5);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 0 5px 5px 0; 
+  font-size: 16px; 
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.toggle-button:focus,
+.toggle-button:active,
+.toggle-button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.toggle-button:hover {
+  background: var(--violet-6);
+  outline: none;
+  box-shadow: none;
+}
+
+.content {
+  margin-left: 220px;
+  padding: 20px;
+  transition: margin-left 0.3s ease;
+  outline: none;
+  box-shadow: none;
+}
+
+.sidebar.closed + .content {
+  margin-left: 0;
 }

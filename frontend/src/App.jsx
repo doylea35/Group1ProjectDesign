@@ -3,21 +3,26 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import reactLogo from "./assets/react.svg";;
 import viteLogo from "/vite.svg";;
 import "./App.css";
+import Sidebar from "./components/Sidebar";
+import CreateProfile from "./pages/CreateProfile";
 import CreateNewProjectPop from "./pages/CreateProjectPop"; 
-import CreateProfile from './pages/CreateProfile';
 import SchedulingPage from "./pages/SchedulingPage";
+
+//placeholders
+const ProjectsPage = () => <div>Projects Page</div>;
+const LogoutPage = () => <div>Logging Out...</div>;
 
 function App() {
   const [count, setCount] = useState(0);;
 
   return (
     <Router>
+      <Sidebar /> 
       <div>
         <nav>
           <Link to="/">Home</Link>
         </nav>
         <Routes>
-          <Route path="/profile" element={<CreateProfile />} />
           <Route path="/schedule" element={<SchedulingPage />} />
           <Route path="/" element={
             <>
@@ -41,12 +46,8 @@ function App() {
               <p className="read-the-docs">
                 Click on the Vite and React logos to learn more
               </p>
-              {/* Link styled as a button */}
-              <Link to="/profile" className="create-profile-btn">
-                <button>Create Profile</button>
-              </Link>
-              {/* Add the Create New Project button */}
-              <div className="card">
+              <div className=".ProfileProjectContainer" style={{ display: "flex", justifyContent: "space-evenly" }}>
+                <CreateProfile />
                 <CreateNewProjectPop />
               </div>
               <Link to="/schedule" className="schedule-page-btn">
@@ -54,6 +55,13 @@ function App() {
               </Link>
             </>
           } />
+          {/* Ensure all sidebar links are properly routed */}
+          <Route path="/create-profile" element={<CreateProfile />} />
+          <Route path="/create-project" element={<CreateNewProjectPop />} />
+          <Route path="/find-meeting-time" element={<SchedulingPage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/logout" element={<LogoutPage />} />
+          <Route path="/schedule" element={<SchedulingPage />} />
         </Routes>
       </div>
     </Router>
