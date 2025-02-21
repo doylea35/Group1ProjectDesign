@@ -8,12 +8,6 @@ from bson import ObjectId # mongodb uses ObjectId to store _id
 profiles_router = APIRouter()
 
 
-#### GET Requests ####
-@profiles_router.get("/users/")
-async def get_users():
-    users = users_serial(users_collection.find())
-    return users
-
 
 # returns all tasks or tasks assigned to a specific user
 @profiles_router.get("/tasks/")
@@ -22,26 +16,6 @@ async def get_tasks(assigned_to: Optional[str] = Query(None, description="User e
     tasks = tasks_serial(tasks_collection.find(query))
     return tasks
 
-
-@profiles_router.post("/users/")
-def create_user(user: User):
-    if users_collection.find_one({"email": user.email}):
-        raise HTTPException(status_code=400, detail="Email already exists")
-
-    # Validate group IDs
-    valid_group_ids = []
-    for group_id in user.groups:
-        if not groups_collection.find_one({"_id": ObjectId(group_id)}):
-            raise HTTPException(status_code=400, detail=f"Group {group_id} does not exist")
-        valid_group_ids.append(ObjectId(group_id))
-
-    # Insert user
-    user_dict = user.dict()
-    user_dict["groups"] = valid_group_ids
-    user_dict["free_time"] = user.free_time
-    users_collection.insert_one(user_dict)
-
-    return {"message": "User created", "email": user.email}
 
 #creates task and assigns it to user
 @profiles_router.post("/tasks/")
