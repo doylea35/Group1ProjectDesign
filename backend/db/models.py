@@ -28,9 +28,8 @@ class Task(BaseModel): #_id as Primary key, automatically created, can be found 
     group: str # Foreign Key referencing Group.id
     priority: str # ["Low", "Medium", "High"]
 
-class FreeTimeSlot(BaseModel):
-    start: str
-    end: str
-
-class UserFreeTime(BaseModel):
-    free_time: Dict[str, List[FreeTimeSlot]]
+class SubTeam(BaseModel): #_id as Primary key, automatically created, can be found using ObjectID
+    team_name: str 
+    members: List[str]  # List of Foreign Keys referencing User.email
+    tasks: List[str] # List of Foreign Keys referencing Task.id
+    group: str # Foreign Key referencing Group.id

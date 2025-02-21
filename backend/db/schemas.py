@@ -1,4 +1,4 @@
-from db.models import User, Group, Task
+from db.models import User, Group, Task, SubTeam
 from bson import ObjectId
 
 def _user_serial(user: dict) -> User:
@@ -38,6 +38,14 @@ def _task_serial(task: dict) -> Task:
         "priority": task["priority"]
     }
 
+def _subteam_serial(subteam: dict) -> SubTeam:
+    return {
+        "team_name": subteam["team_name"],
+        "members": subteam["members"],
+        "tasks": subteam["tasks"],
+        "group": str(subteam["group"])
+    }
+
 def users_serial(users: list[dict]) -> list[User]:
     return [_user_serial(user) for user in users]
 
@@ -47,3 +55,5 @@ def groups_serial(groups: list[dict]) -> list[Group]:
 def tasks_serial(tasks: list[dict]) -> list[Task]:
     return [_task_serial(task) for task in tasks]
 
+def subteams_serial(subteams: list[dict]) -> list[SubTeam]:
+    return [_subteam_serial(subteam) for subteam in subteams]
