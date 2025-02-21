@@ -12,6 +12,10 @@ class User(BaseModel):
     name: str
     groups: Optional[List[str]] = None # List of Foreign Keys referencing Group.id
     free_time: Optional[Dict[str, List[FreeTimeSlot]]] = {} # optional free_time, by default is {}
+    password: Optional[str]
+    token: Optional[str]
+    status: Optional[str]
+    confirmation_code: Optional[str]
 
 class Group(BaseModel): #_id as Primary key, automatically created, can be found using ObjectID
     id: Optional[str] = Field(alias="_id", default=None)  # Include MongoDB _id
