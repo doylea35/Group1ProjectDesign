@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import * as Collapsible from "@radix-ui/react-collapsible";
-import * as Dialog from "@radix-ui/react-dialog"; // Import Radix Dialog
+import * as Dialog from "@radix-ui/react-dialog"; 
 import { useState } from "react";
 import CreateNewProjectPop from "../pages/CreateProjectPop";
 
@@ -42,8 +42,6 @@ export default function Layout() {
             <Link to="/projects/project3" className={`nav-link ${isActive("/projects/project3") ? "active" : ""}`}>
               Project 3
             </Link>
-
-            {/* Open the Popup Directly */}
             <Dialog.Root>
               <Dialog.Trigger asChild>
                 <button className="create-btn">Create New Project</button>
@@ -64,7 +62,6 @@ export default function Layout() {
         </Link>
       </nav>
 
-      {/* Main Content */}
       <div className="main-content">
         <Outlet />
       </div>

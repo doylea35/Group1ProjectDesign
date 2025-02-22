@@ -4,9 +4,8 @@ import HomePage from "./pages/HomePage";
 import Layout from "./components/Layout";
 import SettingsPage from "./pages/SettingsPage";
 import HelpPage from "./pages/HelpPage";
-import Project1 from "./pages/projects/project1";
-import Project2 from "./pages/projects/project2";
-import Project3 from "./pages/projects/project3";
+import ProjectPage from "./pages/ProjectPage"; 
+import SchedulingPage from "./pages/SchedulingPage";
 
 export default function App() {
     return (
@@ -17,9 +16,8 @@ export default function App() {
                 <Route path="/home" element={<HomePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/help" element={<HelpPage />} />
-                <Route path="/projects/project1" element={<Project1 />} />
-                <Route path="/projects/project2" element={<Project2 />} />
-                <Route path="/projects/project3" element={<Project3 />} />
+                <Route path="projects/:projectId" element={<ProjectPage />} />
+                <Route path="/schedule" element={<SchedulingPage />} />
             </Route>
         </Routes>
     );
