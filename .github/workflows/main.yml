@@ -1,0 +1,27 @@
+name: Main Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Run Linter
+        run: echo "Running linting checks..." # modify this later if we really need a linter
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Run Tests
+        run: echo "Running tests..." # modify this later
+
+  deploy:
+    needs: [lint, test]  # Only deploy if linting and tests pass
+    uses: ./.github/workflows/deploy.yml
