@@ -1,13 +1,42 @@
-# Group Project Design Group 1
+# **Group Project Design Group 1**
 
-## Installation Guide
+# **Overview**  
+
+## **About the Application**  
+📌 **To-Do:** Add a brief overview of the application's purpose and functionality.  
+
+## **Key Features**  
+📌 **To-Do:** List the application's main features concisely.  
+
+---
+
+# **Step by Step**  
+
+## **Live Deployment**  
+- **Frontend:** Available at `<insert frontend URL>`  
+- **Backend:** Hosted on **Heroku** at:  
+  🔗 [GroupGrade Backend](https://group-grade-backend-5f919d63857a.herokuapp.com/)  
+
+## **Testing the Application**  
+You can test the application's functionalities in two ways:  
+
+1️⃣ **Using the Live Deployment**  
+- Visit the deployed frontend.  
+- Use the credentials provided in the **Login Section** to access the platform.  
+
+2️⃣ **Running Locally**  
+If you prefer to run and test the application on your local machine, follow the **Installation Guide** below.  
+
+---
+
+## **Installation Guide**
 
 This guide provides instructions to set up and run the **GroupGrade** application.
 
 ---
 
-### 📌 Frontend Setup
-#### ✅ Prerequisites
+### 📌 **Frontend Setup**
+#### ✅ **Prerequisites**
 Ensure you have the following installed before proceeding:
 - **Node.js** ([Download here](https://nodejs.org/en ))
 ---
@@ -38,7 +67,7 @@ Run:
 npm run dev
 ```
 
-### 🖥️ Backend Setup
+### 🖥️ **Backend Setup**
 
 #### ✅ Prerequisites
 Ensure you have the following installed before proceeding:
@@ -75,3 +104,9 @@ Once the server is running, access the API documentation at:
 
 Swagger UI: http://127.0.0.1:8000/docs
 ReDoc: http://127.0.0.1:8000/redoc
+
+## **Login**
+user: nzhang
+
+# **Backends**
+We are using MongoDB as our database.
