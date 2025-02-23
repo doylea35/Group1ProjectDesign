@@ -309,40 +309,50 @@ to {
 /* Container for Start & End Time */
 .TimeSelectionContainer {
   display: flex;
-  gap: 20px; /* Space between fields */
+  flex-direction: row;  /* Keep inputs in one row */
+  gap: 20px;  /* Space between fields */
   align-items: center;
   justify-content: space-between;
   width: 100%;
 }
-
-/* Center time slots */
+/* Wrapper for all time slots */
 .TimeSelectionWrapper {
   display: flex;
-  justify-content: center;
+  flex-direction: column; /* Ensures each slot appears on a new row */
+  gap: 10px; /* Adds space between rows */
+  align-items: center;
   width: 100%;
-  margin-bottom: 10px;
 }
 
-/* Time slot container */
+/* Wrapper for all time slots */
+.TimeSelectionWrapper {
+  display: flex;
+  flex-direction: column; /* Ensures each slot appears on a new row */
+  gap: 10px; /* Adds space between rows */
+  align-items: center;
+  width: 100%;
+}
+
+/* Each row containing Start & End time */
 .TimeSelectionContainer {
   display: flex;
-  gap: 15px;
+  flex-direction: row; /* Keep start & end times on same line */
+  gap: 20px; /* Space between fields */
   align-items: center;
   justify-content: center;
-  width: auto;
+  width: 100%;
 }
 
 /* Each time input */
 .TimeFieldset {
   display: flex;
   flex-direction: column;
-  width: 130px;
   text-align: center;
 }
 
-/* Small input boxes */
+/* Input Styling */
 .TimeFieldset .Input {
-  width: 100%;
+  width: 130px; /* Adjust width */
   padding: 6px 8px;
   font-size: 14px;
   border: 2px solid var(--violet-7);
@@ -351,11 +361,13 @@ to {
   transition: border 0.2s ease;
 }
 
-/* Add focus effect */
+/* Input Focus Effect */
 .TimeFieldset .Input:focus {
   border-color: var(--violet-10);
   box-shadow: 0 0 0 3px var(--violet-6);
 }
+
+
 
 /* Add More Time button */
 .ButtonContainer {
@@ -379,7 +391,7 @@ to {
   background-color: var(--violet-6);
 }
 
-/* Delete button for removing time slots */
+/* Delete button for removing time slots (trashcan icon) */
 .DeleteButton {
   all: unset;
   cursor: pointer;

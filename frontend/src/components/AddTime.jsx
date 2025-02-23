@@ -79,33 +79,39 @@ const AddTime = ({ freeTimes, setFreeTimes }) => {
             </Select.Root>
           </fieldset>
 
-          <div className="time-slot-container">
+          <div className="TimeSelectionWrapper">
             {timeSlots.map((slot) => (
-              <div className="time-slot" key={slot.id}>
-                <label>Start Time</label>
-                <input
-                  type="time"
-                  value={slot.startTime}
-                  onChange={(e) => updateTimeSlot(slot.id, "startTime", e.target.value)}
-                  required
-                />
-                <label>End Time</label>
-                <input
-                  type="time"
-                  value={slot.endTime}
-                  onChange={(e) => updateTimeSlot(slot.id, "endTime", e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  className="DeleteButton"
-                  onClick={() => removeTimeSlot(slot.id)}
-                >
-                  <TrashIcon />
-                </button>
+              <div className="TimeSelectionContainer" key={slot.id}>
+                <fieldset className="TimeFieldset">
+                  <label>Start Time</label>
+                  <input
+                    type="time"
+                    className="Input"
+                    value={slot.startTime}
+                    onChange={(e) => updateTimeSlot(slot.id, "startTime", e.target.value)}
+                  />
+                </fieldset>
+
+                <fieldset className="TimeFieldset">
+                  <label>End Time</label>
+                  <input
+                    type="time"
+                    className="Input"
+                    value={slot.endTime}
+                    onChange={(e) => updateTimeSlot(slot.id, "endTime", e.target.value)}
+                  />
+                </fieldset>
+
+                {/* Show delete button only if there's more than one slot */}
+                {timeSlots.length > 1 && (
+                  <button className="DeleteButton" onClick={() => removeTimeSlot(slot.id)}>
+                    🗑️
+                  </button>
+                )}
               </div>
             ))}
           </div>
+
 
           <div className="ButtonContainer">
             <button className="plusButton" onClick={addTimeSlot}>
