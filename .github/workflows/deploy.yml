@@ -21,7 +21,10 @@ jobs:
       - name: Deploy backend to Heroku
         run: |
           echo "Authenticating with Heroku..."
-          heroku auth:token
+          echo "${{ secrets.HEROKU_API_KEY }}" | heroku auth:token
           heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
-          HEROKU_API_KEY=${{ secrets.HEROKU_API_KEY }} heroku auth:whoami
+          heroku auth:whoami
           git subtree push --prefix backend heroku main
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
