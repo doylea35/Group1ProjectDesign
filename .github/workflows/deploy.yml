@@ -1,9 +1,7 @@
 name: Deploy backend to Heroku
 
 on:
-  push:
-    branches:
-      - main  # Trigger only when pushing/merging to the main branch
+  workflow_call
 
 jobs:
   deploy:
