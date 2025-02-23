@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from api.routes.greeting import greeting_router
 from api.routes.profiles import profiles_router
 from api.routes.group import group_router
-from api.routes.users import user_router
 from api.routes.calendar import calendar_router
 from api.routes.user import user_router
+from fastapi.middleware.cors import CORSMiddleware
 import logging
 
 
@@ -26,6 +26,14 @@ logger.addHandler(console_handler)
 
 app = FastAPI()
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change this to our frontend URL (in a later stage) for security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # routers
 app.include_router(greeting_router, prefix="", tags=["greeting"])
