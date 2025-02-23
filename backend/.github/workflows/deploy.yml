@@ -1,0 +1,29 @@
+name: Deploy backend to Heroku
+
+on:
+  push:
+    branches:
+      - main  # Trigger only when pushing/merging to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
+
+      - name: Install Heroku CLI
+        run: curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Deploy backend to Heroku
+        run: |
+          echo ${{ secrets.HEROKU_API_KEY }} | heroku auth:token
+          heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
+          git subtree push --prefix backend heroku main
+
