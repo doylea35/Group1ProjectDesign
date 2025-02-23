@@ -23,7 +23,7 @@ jobs:
 
       - name: Deploy backend to Heroku
         run: |
-          echo ${{ secrets.HEROKU_API_KEY }} | heroku auth:token
+          echo ${{ secrets.HEROKU_API_KEY }}
           heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
           git subtree push --prefix backend heroku main
 
