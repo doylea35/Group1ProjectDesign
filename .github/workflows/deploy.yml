@@ -22,8 +22,8 @@ jobs:
         run: curl https://cli-assets.heroku.com/install.sh | sh
 
       - name: Deploy backend to Heroku
-        run: |
-          echo ${{ secrets.HEROKU_API_KEY }}
+        run: 
+          HEROKU_API_KEY=${{ secrets.HEROKU_API_KEY }} heroku auth:whoami
           heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
           git subtree push --prefix backend heroku main
 
