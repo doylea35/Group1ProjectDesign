@@ -1,7 +1,6 @@
 name: Deploy backend to Heroku
 
-on:
-  workflow_call
+on: workflow_call
 
 jobs:
   deploy:
@@ -14,14 +13,15 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v3
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install Heroku CLI
         run: curl https://cli-assets.heroku.com/install.sh | sh
 
       - name: Deploy backend to Heroku
-        run: 
-          HEROKU_API_KEY=${{ secrets.HEROKU_API_KEY }} heroku auth:whoami
+        run: |
+          echo "Authenticating with Heroku..."
+          heroku auth:token
           heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
+          HEROKU_API_KEY=${{ secrets.HEROKU_API_KEY }} heroku auth:whoami
           git subtree push --prefix backend heroku main
-
