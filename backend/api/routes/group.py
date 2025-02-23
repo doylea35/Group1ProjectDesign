@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Depends
 from fastapi.responses import JSONResponse
 from typing import Optional
 from db.database import groups_collection, users_collection
@@ -8,11 +8,15 @@ from api.request_model.group_request_schema import CreateGroupRequest, DeleteGro
 from bson import ObjectId
 from email_service.email_utils import email_sender
 from api.utils import is_valid_email
+from api.utils import get_current_user
 
 group_router = APIRouter()
 
 @group_router.get("/", response_model=list[Group])
-async def get_groups_handler(user_email: Optional[str] = Query(None, description="User email to filter groups or Blank for all groups")):
+async def get_groups_handler(                          
+    current_user: dict = Depends(get_current_user)
+):
+    user_email = current_user["email"]
     if user_email:
         user = users_collection.find_one({"email": user_email})
         if not user:

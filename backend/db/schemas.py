@@ -6,10 +6,10 @@ def _user_serial(user: dict) -> User:
         _id=str(user["_id"]),
         email=user["email"],
         name=user["name"],
-        groups=[str(group_id) for group_id in user.get("groups", [])],
+        groups=[str(group_id) for group_id in user.get("groups", []) or []],  # Ensure it's a list
         free_time={
-            day: [{"start": slot["start"], "end": slot["end"]} for slot in slots]
-            for day, slots in user.get("free_time", {}).items()
+            day: [{"start": slot["start"], "end": slot["end"]} for slot in (slots or [])]
+            for day, slots in (user.get("free_time", {}) or {}).items()  # Ensure it's a dict
         }
     )
 

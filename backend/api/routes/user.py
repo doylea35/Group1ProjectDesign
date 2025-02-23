@@ -85,7 +85,9 @@ async def register_user(request : UserRegister):
         "email": request.email,
         "password": hashed_password,
         "status": "Pending",
-        "confirmation_code": confirmation_code
+        "confirmation_code": confirmation_code,
+        "groups":valid_group_ids,
+        "free_time": {}
     }
 
     result = users_collection.insert_one(new_user)
