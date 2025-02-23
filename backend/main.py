@@ -6,7 +6,11 @@ from api.routes.calendar import calendar_router
 from api.routes.user import user_router
 from fastapi.middleware.cors import CORSMiddleware
 import logging
+import os
+from dotenv import load_dotenv
+import uvicorn
 
+load_dotenv()
 
 
 # Create logger
@@ -42,3 +46,6 @@ app.include_router(group_router, prefix="/api/group", tags=["Group"])
 app.include_router(calendar_router, prefix="/api/calendar", tags=["Calendar"])
 app.include_router(user_router, prefix="/api/user", tags=["User"])
 
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
