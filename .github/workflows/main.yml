@@ -25,3 +25,6 @@ jobs:
   deploy:
     needs: [lint, test]  # Only deploy if linting and tests pass
     uses: ./.github/workflows/deploy.yml
+    secrets:
+      HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
