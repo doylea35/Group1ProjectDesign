@@ -1,26 +1,28 @@
-import { Routes, Route, } from "react-router-dom";
-import LandingPage from "./pages/LandingPage";
-import HomePage from "./pages/HomePage";
-import Layout from "./components/Layout";
-import SettingsPage from "./pages/SettingsPage";
-import HelpPage from "./pages/HelpPage";
-import Project1 from "./pages/projects/project1";
-import Project2 from "./pages/projects/project2";
-import Project3 from "./pages/projects/project3";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
+import Sidebar from './components/Layout';
+import CreateProfile from './pages/CreateProfile';
+import CreateNewProjectPop from './pages/CreateProjectPop';
+import SchedulingPage from './pages/SchedulingPage';
+import LoginPage from './pages/LoginPage';
+import ProjectsPage from './pages/ProjectsPage';
+import LogoutPage from './pages/LogoutPage';
 
-export default function App() {
-    return (
-        <Routes>
-            <Route path="/" element={<LandingPage />} />
-
-            <Route element={<Layout />}>
-                <Route path="/home" element={<HomePage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/help" element={<HelpPage />} />
-                <Route path="/projects/project1" element={<Project1 />} />
-                <Route path="/projects/project2" element={<Project2 />} />
-                <Route path="/projects/project3" element={<Project3 />} />
-            </Route>
-        </Routes>
-    );
+function App() {
+  return (
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route element={<Sidebar />}>
+          <Route path="create-profile" element={<CreateProfile />} />
+          <Route path="create-project" element={<CreateNewProjectPop />} />
+          <Route path="find-meeting-time" element={<SchedulingPage />} />
+          <Route path="login" element={<LoginPage />} />
+          <Route path="logout" element={<LogoutPage />} />
+          <Route path="projects" element={<ProjectsPage />} />
+        </Route>
+      </Routes>
+  );
 }
+
+export default App;

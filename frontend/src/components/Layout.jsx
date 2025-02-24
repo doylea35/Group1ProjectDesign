@@ -1,73 +1,36 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
-import * as Collapsible from "@radix-ui/react-collapsible";
-import * as Dialog from "@radix-ui/react-dialog"; // Import Radix Dialog
-import { useState } from "react";
-import CreateNewProjectPop from "../pages/CreateProjectPop";
+import React, { useState } from "react";
+import { Link, Outlet } from "react-router-dom";
+import "../App.css";
 
-export default function Layout() {
-  const location = useLocation();
-  const isActive = (path) => location.pathname === path;
-  const [open, setOpen] = useState(false);
+const Sidebar = () => {
+  const [isOpen, setIsOpen] = useState(true);
+
+  const toggleSidebar = () => {
+    setIsOpen((prev) => !prev);
+  };
 
   return (
-    <div className="layout-container">
+    <div className="app-layout">
       {/* Sidebar */}
-      <nav className="sidebar">
-        {/* Logo + title */}
-        <div className="logo-container">
-          <img src="/hexlogo.png" alt="GroupGrade Logo" className="logo" />
-          <h1 className="title">GroupGrade</h1>
-        </div>
+      <div className={`sidebar ${isOpen ? "open" : "closed"}`}>
+        <button onClick={toggleSidebar} className="toggle-button">
+          {isOpen ? "⟨" : "⟩"}
+        </button>
+        <nav className={`sidebar-links ${isOpen ? "active" : ""}`}>
+          <Link to="/" className="nav-link">Home</Link>
+          <Link to="/create-profile" className="nav-link">Create Profile</Link>
+          <Link to="/create-project" className="nav-link">Create Project</Link>
+          <Link to="/find-meeting-time" className="nav-link">Find Meeting Time</Link>
+          <Link to="/projects" className="nav-link">Projects</Link>
+          <Link to="/logout" className="nav-link">Log Out</Link>
+        </nav>
+      </div>
 
-        {/* Navigation */}
-        <Link to="/home" className={`nav-link ${isActive("/home") ? "active" : ""}`}>
-          <span>Home</span>
-        </Link>
-
-        <Collapsible.Root open={open} onOpenChange={setOpen}>
-          <Collapsible.Trigger asChild>
-            <button className={`collapsible-btn ${open ? "active" : ""}`}>
-              <span>Projects</span>
-              <span className={`arrow ${open ? "rotate-90" : ""}`}>›</span>
-            </button>
-          </Collapsible.Trigger>
-
-          <Collapsible.Content className="collapsible-content">
-            <Link to="/projects/project1" className={`nav-link ${isActive("/projects/project1") ? "active" : ""}`}>
-              Project 1
-            </Link>
-            <Link to="/projects/project2" className={`nav-link ${isActive("/projects/project2") ? "active" : ""}`}>
-              Project 2
-            </Link>
-            <Link to="/projects/project3" className={`nav-link ${isActive("/projects/project3") ? "active" : ""}`}>
-              Project 3
-            </Link>
-
-            {/* Open the Popup Directly */}
-            <Dialog.Root>
-              <Dialog.Trigger asChild>
-                <button className="create-btn">Create New Project</button>
-              </Dialog.Trigger>
-              <CreateNewProjectPop />
-            </Dialog.Root>
-          </Collapsible.Content>
-        </Collapsible.Root>
-
-        <Link to="/settings" className={`nav-link ${isActive("/settings") ? "active" : ""}`}>
-          <span>Settings</span>
-          <span>›</span>
-        </Link>
-
-        <Link to="/help" className={`nav-link ${isActive("/help") ? "active" : ""}`}>
-          <span>Help</span>
-          <span>›</span>
-        </Link>
-      </nav>
-
-      {/* Main Content */}
-      <div className="main-content">
+      <div className={`main-content ${isOpen ? "expanded" : "collapsed"}`}>
         <Outlet />
       </div>
     </div>
   );
-}
+};
+
+export default Sidebar;

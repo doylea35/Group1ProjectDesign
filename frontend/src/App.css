@@ -405,19 +405,6 @@ to {
   width: 100vw;
 }
 
-/* Sidebar */
-.sidebar {
-  width: 64px;
-  background-color: white;
-  color: gray;
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--shadow-6);
-  z-index: 10;
-  position: relative;
-}
-
 /* Logo */
 .logo-container {
   display: flex;
@@ -529,3 +516,280 @@ to {
   padding: 1.5rem;
   background-color: var(--gray-2);
 }
+/* Sidebar styling */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 220px;
+  height: 100vh;
+  background: var(--mauve-3);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding-top: 20px;
+  outline: none;
+  box-shadow: none;
+}
+
+/* Collapsed sidebar */
+.sidebar.closed {
+  transform: translateX(-100%);
+}
+
+/* Sidebar links */
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;  
+  width: 100%;
+  padding-top: 20px;
+  outline: none;
+  box-shadow: none;
+}
+
+.nav-link {
+  display: block;
+  padding: 12px 16px;  
+  color: var(--mauve-12);
+  text-decoration: none;
+  font-size: 16px;
+  width: 100%; 
+  text-align: left;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  box-sizing: border-box; 
+  outline: none;
+  box-shadow: none;
+}
+
+.nav-link:hover {
+  background: var(--violet-6);
+  color: white;
+  outline: none;
+  box-shadow: none;
+}
+
+.toggle-button {
+  position: absolute;
+  top: 20px;
+  left: 100%; /* Position right outside the sidebar */
+  cursor: pointer;
+  background: var(--violet-5);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 0 5px 5px 0; 
+  font-size: 16px; 
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.toggle-button:focus,
+.toggle-button:active,
+.toggle-button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.toggle-button:hover {
+  background: var(--violet-6);
+  outline: none;
+  box-shadow: none;
+}
+
+.content {
+  margin-left: 220px;
+  padding: 20px;
+  transition: margin-left 0.3s ease;
+  outline: none;
+  box-shadow: none;
+}
+
+.sidebar.closed + .content {
+  margin-left: 0;
+}
+
+.projects-container {
+  padding: 20px;
+  text-align: center;
+}
+
+.projects-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+.project-item {
+  background: var(--mauve-3);
+  padding: 15px;
+  margin: 10px auto;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 80%;
+}
+
+.Button {
+  margin-left: 10px;
+}
+
+.error-message {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.projects-container {
+  padding: 20px;
+  text-align: center;
+}
+
+.projects-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
+
+.project-item {
+  background: var(--mauve-3);
+  padding: 15px;
+  margin: 10px auto;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 80%;
+}
+
+.Button {
+  margin-left: 10px;
+}
+
+.error-message {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+/* Landing page main container */
+.landing-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('/large-triangles.svg');
+  background-repeat: repeat;
+  background-size: auto;
+}
+
+/* Card container */
+.landing-card {
+  background-color: #f8fafc;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+}
+
+/* Logo styling */
+.logo {
+  width: 8rem; /* 128px equivalent */
+  height: 8rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Main heading */
+.heading-main {
+  font-size: 2.25rem; /* 36px equivalent */
+  font-weight: bold;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+/* Sub heading */
+.heading-sub {
+  font-size: 1.25rem; /* 20px equivalent */
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* Buttons common style */
+.button {
+  width: 20rem; /* 320px equivalent */
+  padding: 1rem; /* 16px equivalent */
+  border-radius: 9999px;
+  font-weight: bold;
+  font-size: 1.25rem; /* 20px equivalent */
+  transition: all 0.1s;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Specific login button style */
+.login-button, .create-account-button {
+  background-color: #5932EA;
+  color: white;
+  margin-top: 1.75rem;
+}
+
+.login-button:hover, .create-account-button:hover {
+  background-color: #3111B6;
+}
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.login-card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  width: 350px;
+}
+
+.login-title {
+  text-align: center;
+  color: #5932EA;
+  margin-bottom: 20px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-label {
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.form-input {
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.form-button {
+  background-color: #5932EA;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.form-button:hover {
+  background-color: #3111B6; 
+}
+
