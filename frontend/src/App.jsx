@@ -10,6 +10,7 @@ import LogoutPage from './pages/LogoutPage';
 import ProjectPage from './pages/ProjectPage';
 import SchedulingPage from './pages/SchedulingPage';
 
+
 function App() {
   return (
       <Routes>
