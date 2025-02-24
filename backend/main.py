@@ -38,7 +38,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+# https://group-grade-backend-5f919d63857a.herokuapp.com/api/calendar/getUserFreeTime
 # routers
 app.include_router(greeting_router, prefix="", tags=["greeting"])
 app.include_router(profiles_router, prefix="", tags=["profiles"])
