@@ -3,9 +3,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import "../App.css";
 
-const CreateProfile = () => {
-  
-  const [open, setOpen] = React.useState(false);
+const CreateProfilePopup = ({ open, setOpen }) => {
   const [profile, setProfile] = React.useState({
     name: "",
     email: "",
@@ -28,7 +26,7 @@ const CreateProfile = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    
+
     let newErrors = {};
 
     if (!profile.name.trim()) {
@@ -46,17 +44,14 @@ const CreateProfile = () => {
 
     console.log("Profile Created:", profile);
     alert("Profile created successfully!");
-    
+
     setProfile({ name: "", email: "" });
     setErrors({ name: "", email: "" });
     setSubmitted(true);
   };
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}> 
-      <Dialog.Trigger asChild>
-        <button className="Button violet">Create Profile</button>
-      </Dialog.Trigger>
+    <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="DialogOverlay" />
         <Dialog.Content className="DialogContent">
@@ -107,4 +102,4 @@ const CreateProfile = () => {
   );
 };
 
-export default CreateProfile;
+export default CreateProfilePopup;

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import CreateNewProjectPop from "../pages/CreateProjectPop";
+import CreateProfilePopup from "./CreateProfile";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import * as Dialog from "@radix-ui/react-dialog";
 import "../App.css";
@@ -8,6 +9,7 @@ import "../App.css";
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [isProjectsOpen, setIsProjectsOpen] = useState(false); // Define collapsible state
+  const [createProfileOpen, setCreateProfileOpen] = useState(false);
 
   const toggleSidebar = () => {
     setIsOpen((prev) => !prev);
@@ -22,7 +24,19 @@ const Sidebar = () => {
         </button>
         <nav className={`sidebar-links ${isOpen ? "active" : ""}`}>
           <Link to="/" className="nav-link">Home</Link>
-          <Link to="/create-profile" className="nav-link">Create Profile</Link>
+          <button className="nav-link" onClick={() => setCreateProfileOpen(true)}>Create Profile</button>
+          
+          <Dialog.Root open={createProfileOpen} onOpenChange={setCreateProfileOpen}>
+            <Dialog.Portal>
+              <Dialog.Overlay className="DialogOverlay" />
+              <Dialog.Content className="DialogContent">
+                <CreateProfilePopup open={createProfileOpen} setOpen={setCreateProfileOpen} />
+                <Dialog.Close asChild>
+                  <button className="close-btn">Close</button>
+                </Dialog.Close>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
 
           <Collapsible.Root open={isProjectsOpen} onOpenChange={setIsProjectsOpen}>
             <Collapsible.Trigger asChild>
