@@ -1,0 +1,25 @@
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict
+from db.models import FreeTimeSlot
+
+class GetAllFreeTimeRequest(BaseModel):
+    group_id : str
+
+
+class UpdateUserFreeTimeRequest(BaseModel):
+    free_time: Dict[str, List[FreeTimeSlot]] = Field(default={}, description="""Sample: {
+    "Monday": [],
+    "Wednesday": [
+      { "start": "09:00", "end": "10:30" },
+      { "start": "15:00", "end": "16:00" }
+    ],
+    "Saturday": [
+      { "start": "09:00", "end": "10:30" },
+      { "start": "15:00", "end": "16:00" }
+    ]
+  }""")
+    
+
+class GetOverlappingTimeSlotRequest(BaseModel):
+    free_time_slots : Optional[list[Dict[str, List[FreeTimeSlot]]]] = Field(default=[], description="A list of free time slot dictionary, i.e. the free slots of each person in the group")
+    group_id: str
