@@ -17,11 +17,17 @@ jobs:
 
       - name: Install Heroku CLI
         run: curl https://cli-assets.heroku.com/install.sh | sh
-
+      - name: Debug Secrets
+        run: |
+          if [ -z "${{ secrets.HEROKU_APP_NAME }}" ]; then
+            echo "HEROKU_APP_NAME is empty!"
+          else
+            echo "HEROKU_APP_NAME is set!"
+          fi
       - name: Deploy backend to Heroku
         run: |
           echo "Authenticating with Heroku..."
-          echo "App Name: ${ secrets.HEROKU_APP_NAME }"
+          echo "App Name: ${{ secrets.HEROKU_APP_NAME }}"
           echo "${{ secrets.HEROKU_API_KEY }}" | heroku auth:token
           heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
           heroku auth:whoami
