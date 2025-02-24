@@ -49,10 +49,10 @@ Open a terminal (Command Prompt or PowerShell) and run:
 git clone https://github.com/doylea35/Group1ProjectDesign.git
 ```
 
-##### 🔹 Step 1: Navigate to the Backend Directory
+##### 🔹 Step 1: Navigate to the Frontend Directory
 Run:
 ```sh
-cd "<your-repository-directory>\Group1ProjectDesign\frontend\frontend"
+cd "<your-repository-directory>\Group1ProjectDesign\frontend"
 ```
 ##### 🔹 Step 2: Install the dependencies
 Run:
