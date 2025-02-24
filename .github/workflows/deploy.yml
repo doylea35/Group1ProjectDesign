@@ -33,7 +33,10 @@ jobs:
       - name: Set up Heroku Git Remote
         run: |
           echo "Setting up Heroku remote..."
-          heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }} || git remote add heroku "https://git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git"
+          if ! git remote | grep -q "heroku"; then
+            git remote add heroku "https://git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git"
+          fi
+          git remote -v  # Debugging: List remotes
 
       - name: Push Backend to Heroku
         env:
@@ -42,11 +45,13 @@ jobs:
           echo "Setting up Git credentials..."
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
-          
+
           echo "Setting up authentication..."
           HEROKU_GIT_URL="https://heroku:$HEROKU_API_KEY@git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git"
           git remote set-url heroku "$HEROKU_GIT_URL"
 
-          echo "Pushing to Heroku..."
+          echo "Checking remotes..."
           git remote -v  # Debugging: Ensure the remote exists
+
+          echo "Pushing to Heroku..."
           git subtree push --prefix backend heroku main
