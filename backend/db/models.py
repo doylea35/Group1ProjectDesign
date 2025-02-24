@@ -10,7 +10,7 @@ class User(BaseModel):
     id: Optional[str] = Field(alias="_id", default=None)
     email: str # Primary Key ; en un futur plantejar fer-ho amb EmailStr, requerreix email validator
     name: str
-    groups: Optional[List[str]] = None # List of Foreign Keys referencing Group.id
+    groups: Optional[List[str]] = [] # List of Foreign Keys referencing Group.id
     free_time: Optional[Dict[str, List[FreeTimeSlot]]] = {} # optional free_time, by default is {}
     password: Optional[str]
     token: Optional[str]
@@ -22,6 +22,7 @@ class Group(BaseModel): #_id as Primary key, automatically created, can be found
     members: List[str] # List of Foreign Keys referencing User.email
     name: str
     tasks: Optional[List[str]] = None # List of Foreign Keys referencing Task.id
+    pending_members:Optional[List[str]] =[]
 
 class Task(BaseModel): #_id as Primary key, automatically created, can be found using ObjectID
     assigned_to: str # Foreign Key referencing User.email

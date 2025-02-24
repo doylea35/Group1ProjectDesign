@@ -23,17 +23,26 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/login")
 
 user_router = APIRouter()
 
-BASE_URL = "http://127.0.0.1:8000/confirmRegistration/{confirmationCode}"
+frontend_url_dev = os.getenv("FRONTEND_URL_DEV")
+
+BASE_URL = "{frontend_url}/confirmRegistration/{confirmationCode}"
 
 # Function to hash passwords
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt(11)
     hashed_password =  bcrypt.hashpw(password.encode("utf-8"), salt)
-    return hashed_password
+    # Ensure it is bytes before decoding
+    if isinstance(hashed_password, bytes):
+        return hashed_password.decode("utf-8")  # Convert bytes to string
+    return hashed_password  # If already string, return as is
 
 
 # Function to verify passwords
-def verify_password(plain_password: str, hashed_password: str) -> bool:
+def verify_password(plain_password: str, hashed_password : str) -> bool:
+    # real_password = None
+    # if type(hash_password) is bytes:
+    #     real_password.decode("utf-8")
+    # else:
     return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
@@ -56,21 +65,23 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 # Pydantic models
-class UserRegister(BaseModel):
+class UserRegisterRequest(BaseModel):
     name: str
     email: str
     password: str
     groups: list[str]
 
-
+class UserLoginRequest(BaseModel):
+    email: str
+    password: str
 
 @user_router.post("/register")
-async def register_user(request : UserRegister):
+async def register_user(request : UserRegisterRequest):
     existing_user = users_collection.find_one({"email": request.email})
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    hashed_password =  hash_password(request.password)
+    hashed_password = hash_password(request.password)
     confirmation_code = "123"
 
     # Validate group IDs
@@ -80,6 +91,10 @@ async def register_user(request : UserRegister):
             raise HTTPException(status_code=400, detail=f"Group {group_id} does not exist")
         valid_group_ids.append(ObjectId(group_id))
     
+    # hashed_password_str = hashed_password.decode("utf-8")
+    # print(f"type of hashed_password_str = {type(hashed_password_str)}")
+
+    # new_user = User(name=request.name, email=request.email, password=request.password, status="Pending", confirmation_code=confirmation_code, groups=valid_group_ids, free_time={})
     new_user = {
         "name": request.name,
         "email": request.email,
@@ -98,7 +113,7 @@ async def register_user(request : UserRegister):
         {"$set": {"confirmation_code": unique_token}}
     )
 
-    confirmation_link = BASE_URL.format(confirmationCode=confirmation_code)
+    confirmation_link = BASE_URL.format(frontend_url=frontend_url_dev,confirmationCode=confirmation_code)
 
     message = REGISTRATION_CONFIRMATION_EMAIL_TEMPLATE.format(
         user_name=request.name,
@@ -133,15 +148,15 @@ async def verify_user(confirmationCode: str):
 
 
 @user_router.post("/login")
-async def login_user(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = users_collection.find_one({"email": form_data.username})
+async def login_user(request: UserLoginRequest):
+    user = users_collection.find_one({"email": request.email})
     if not user:
         raise HTTPException(status_code=400, detail="Invalid credentials")
 
     if user["status"] != "Active":
         raise HTTPException(status_code=401, detail="Pending Account. Please Verify Your Email")
 
-    if not verify_password(form_data.password, user["password"]):
+    if not verify_password(request.password, user["password"]):
         raise HTTPException(status_code=400, detail="Invalid password")
 
     return {

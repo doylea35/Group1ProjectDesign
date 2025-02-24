@@ -1,17 +1,25 @@
 from fastapi import APIRouter, HTTPException, status, Query, Depends
-from fastapi.responses import JSONResponse
 from db.database import groups_collection, users_collection
 from db.models import Group
 from db.schemas import groups_serial
-from api.request_model.group_request_schema import CreateGroupRequest, DeleteGroupRequest
+from api.request_model.group_request_schema import CreateGroupRequest, DeleteGroupRequest,ConfirmGroupMembershipRequest
 from bson import ObjectId
 from email_service.email_utils import email_sender
 from api.utils import is_valid_email
 from api.utils import get_current_user
+from dotenv import load_dotenv
+import os
+# Load environment variables
+load_dotenv()
 
 group_router = APIRouter()
 
-@group_router.get("/", response_model=list[Group])
+frontend_url_dev = os.getenv("FRONTEND_URL_DEV")
+
+BASE_URL = "{frontend_url}/confirmMembership"
+
+
+@group_router.get("/")
 async def get_groups_handler(                          
     current_user: dict = Depends(get_current_user)
 ):
@@ -24,7 +32,7 @@ async def get_groups_handler(
         groups =groups_serial(groups_collection.find(query))
     else:
         groups = groups_serial(groups_collection.find())
-    return groups
+    return {"data": groups}
 
 @group_router.post("/create", status_code=status.HTTP_201_CREATED)
 async def create_group_handler(request : CreateGroupRequest):
@@ -38,8 +46,8 @@ async def create_group_handler(request : CreateGroupRequest):
     newGroup = {
         "members" : [request.creator_email],  
         "name": request.group_name,
-        "tasks" : []
-
+        "tasks" : [],
+        "pending_members": request.members
     }
 
     # insert into database
@@ -80,39 +88,57 @@ async def delete_group_handler(request : DeleteGroupRequest):
     # remove_task(group_id)
 
 
-@group_router.put("/confirmMembership/{user_email}/{group_id}")
-async def confirm_member(user_email: str, group_id: str):
+@group_router.put("/confirmMembership")
+async def confirm_member(request:ConfirmGroupMembershipRequest):
     # assume the user exist in our database
     # TODO ask the frontend to first check if the user exists or not, if not, ask user to register first then call this api
     # if not is_valid_email(user_email):
-    #     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"message": f"User with emai{user_email}' is not a registered user."})
+    #     return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, content={"message": f"User with emai{user_email}' is not a registered user."})
+
+    group_id = request.group_id
+    user_email = request.user_email
     
     group = groups_collection.find_one({"_id": ObjectId(group_id)})
     user = users_collection.find_one({"email":user_email})
     if not user:
-        return JSONResponse(
+        return HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={"message": f"User with email: '{user_email}' is not a registered user."}
             )
     if not group:
-        return JSONResponse(
+        return HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={"message": f"Group with id: {group_id}' does not exist."}
             )
     
     updated_group = None
-    
-    if user_email not in group["members"]:
-        updated_group = groups_collection.find_one_and_update(
-        {"_id": ObjectId(group_id)}, # find by user email
-        {"$addToSet": {"members": user_email}}
-        , return_document=True)
 
-        if not updated_group:
-            return JSONResponse(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail={"message": f"Something went wrong when adding the user to the group"}
+    if user_email in group["members"]:
+        return {"message": f"Successful operation: {user_email} is already in the group."}
+
+    if user_email not in group["pending_members"]:
+        return HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={"message": f"{user_email} is not a pending memeber in the group: {group["name"]}"}
                 )
+
+    
+    
+    updated_group = groups_collection.find_one_and_update(
+        {"_id": ObjectId(group_id)}, # find by user email
+        {
+            "$addToSet": {"members": user_email},
+            "$pull": {"pending_members": user_email}
+        }
+        , return_document=True)
+    
+
+
+    if not updated_group:
+        return HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"message": f"Something went wrong when adding the user to the group"}
+            )
 
     updated_user = None
     if group_id not in user["groups"]:
@@ -123,7 +149,7 @@ async def confirm_member(user_email: str, group_id: str):
         , return_document=True)
 
         if not updated_user:
-            return JSONResponse(
+            return HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail={"message": f"Something went wrong when adding the group to the user"}
                 )
@@ -133,7 +159,7 @@ async def confirm_member(user_email: str, group_id: str):
     if updated_group:
         updated_group["_id"] = str(updated_group["_id"])
 
-    return {"message": "User is now added to the group.", "updated_group": str(updated_group), "updated_user": str(updated_user)}
+    return {"message": "User is now added to the group.", "data": {"updated_group": str(updated_group), "updated_user": str(updated_user)}}
 
 
 INVITATION_EMAIL_TEMPLATE = """<!DOCTYPE html>
@@ -204,7 +230,6 @@ INVITATION_EMAIL_TEMPLATE = """<!DOCTYPE html>
 </html>"""
 
 def send_project_invitation_email(user_emails:list[str], creator_email:str, new_group_id:str, new_group_name:str ):
-    BASE_URL = "http://127.0.0.1:8000/confirmMembership"
 
     valid_user_emails = []
     # filter out invalid emails
@@ -221,6 +246,6 @@ def send_project_invitation_email(user_emails:list[str], creator_email:str, new_
         email_content = INVITATION_EMAIL_TEMPLATE.format(
             creator_email=creator_email,
             project_name=new_group_name,
-            invitation_link=f"{BASE_URL}/{user_email_for_link}/{new_group_id}"
+            invitation_link=f"{BASE_URL.format(frontend_url=frontend_url_dev)}/{user_email_for_link}/{new_group_id}"
         )
         email_sender.send_email(receipient=user_email, email_message=email_content, subject_line="Please Verify Your Email!")

@@ -10,3 +10,9 @@ class CreateGroupRequest(BaseModel):
 class DeleteGroupRequest(BaseModel):
     email: str
     group_id : str
+
+
+class ConfirmGroupMembershipRequest(BaseModel):
+    user_email: str
+    group_id: str
+    
