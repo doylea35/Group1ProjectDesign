@@ -10,7 +10,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -22,25 +21,31 @@ jobs:
 
       - name: Install Heroku CLI
         run: curl https://cli-assets.heroku.com/install.sh | sh
-      - name: Debug Secrets
-        run: |
-          if [ -z "${{ secrets.HEROKU_APP_NAME }}" ]; then
-            echo "HEROKU_APP_NAME is empty!"
-          else
-            echo "HEROKU_APP_NAME is set!"
-          fi
-          if [ -z "${{ secrets.HEROKU_API_KEY }}" ]; then
-            echo "HEROKU_API_KEY is empty!"
-          else
-            echo "HEROKU_API_KEY is set!"
-          fi
-      - name: Deploy backend to Heroku
+
+      - name: Authenticate with Heroku
         run: |
           echo "Authenticating with Heroku..."
-          echo "App Name: ${{ secrets.HEROKU_APP_NAME }}"
-          heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
+          echo "${{ secrets.HEROKU_API_KEY }}" | heroku auth:token
           heroku auth:whoami
-          git subtree push --prefix backend heroku main
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
+      - name: Set up Heroku Git Remote
+        run: |
+          echo "Setting up Heroku remote..."
+          heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
+
+      - name: Push Backend to Heroku
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: |
+          echo "Setting up Git credentials..."
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          
+          echo "Setting up authentication..."
+          HEROKU_GIT_URL="https://heroku:$HEROKU_API_KEY@git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git"
+          git remote set-url heroku "$HEROKU_GIT_URL"
+
+          echo "Pushing to Heroku..."
+          git subtree push --prefix backend heroku main
