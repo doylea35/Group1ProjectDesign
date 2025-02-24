@@ -1,13 +1,14 @@
-from fastapi import APIRouter, HTTPException, status
-from typing import List, Dict
-from db.models import FreeTimeSlot
-from db.database import users_collection
+from fastapi import APIRouter, HTTPException, status, Depends
+from db.database import users_collection, groups_collection
 from pydantic import BaseModel
 import openai
 import os
 from dotenv import load_dotenv
 from api.utils import is_valid_email
 import json
+from api.request_model.calendar_request_schema import GetAllFreeTimeRequest, UpdateUserFreeTimeRequest, GetOverlappingTimeSlotRequest
+from api.utils import get_current_user
+from bson import ObjectId
 # Load API Key from environment variables
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -20,8 +21,9 @@ class ChatRequest(BaseModel):
     max_tokens: int = 10000
 
 
-@calendar_router.get("/getAllFreeTime/{user_email}")
-async def get_all_freetime_for_user(user_email : str):
+@calendar_router.get("/getUserFreeTime")
+async def get_user_freetime_for_user(current_user: dict = Depends(get_current_user)):
+    user_email = current_user["email"]
     if not is_valid_email(user_email):
         return HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -36,9 +38,36 @@ async def get_all_freetime_for_user(user_email : str):
             )
     
     return {"message": "Here are the free time slot", "data":user["free_time"]}
+
+
+@calendar_router.get("/getGroupFreeTime")
+async def get_all_freetime_for_user(request : GetAllFreeTimeRequest, current_user: dict = Depends(get_current_user)):
+    free_time_slots = []
+    cur_group = groups_collection.find_one({"_id": ObjectId(request.group_id)})
+    if not cur_group:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Group does not exist."
+        )
+        
+    for member_email in cur_group["members"]:
+      user = users_collection.find_one({"email": member_email})
+      free_time_slots = []
+      if user is not None:
+        if len(user["free_time"]) > 0:
+          obj = {
+              "name": user["name"],
+              "email": user["email"],
+              "free_time": user["free_time"]
+          }
+          free_time_slots.append(obj)
     
-@calendar_router.put("/updateFreeTime/{user_email}")
-async def update_free_time(user_email: str, updated_free_time: Dict[str, List[FreeTimeSlot]]):
+    return {"message": "Here are the free time slot", "data":free_time_slots}
+    
+@calendar_router.put("/updateFreeTime")
+async def update_free_time(request : UpdateUserFreeTimeRequest, current_user: dict = Depends(get_current_user)):
+    user_email = current_user["email"]
+    updated_free_time = request.free_time
 
     if not is_valid_email(user_email):
         return HTTPException(
@@ -73,7 +102,7 @@ async def update_free_time(user_email: str, updated_free_time: Dict[str, List[Fr
                 detail="Free time slots update failed. Please try again."
             )
     updated_user["_id"] = str(updated_user["_id"])
-    return {"message": "Free time updated successfully", "data": updated_user}
+    return {"message": "Free time updated successfully", "data": updated_user["free_time"]}
 
 PROMPT_TEMPLATE = """
 You are given a list of free time slots for multiple people. Your task is to find the overlapping time slots across all users.
@@ -123,7 +152,24 @@ Return the response strictly in JSON format like the example above, with no addi
 MAX_TOKEN = 10000
 
 @calendar_router.post("/getOverlappingTime")
-async def ask_chatgpt_for_free_time(free_time_slots : list[Dict[str, List[FreeTimeSlot]]]):
+async def ask_chatgpt_for_free_time(request: GetOverlappingTimeSlotRequest, current_user: dict = Depends(get_current_user)):
+    free_time_slots = []
+
+    if len(request.free_time_slots) > 0:
+        free_time_slots = request.free_time_slots
+    else:
+        cur_group = groups_collection.find_one({"_id": request.group_id})
+        if not cur_group:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Group does not exist."
+            )
+
+        for member_email in cur_group["members"]:
+          user = users_collection.find_one({"email": member_email})
+          if user is not None:
+            if len(user["free_time"]) > 0:
+              free_time_slots.append(user["free_time"])
     try:
         print("ask_chatgpt_for_free_time\n")
 
@@ -169,7 +215,7 @@ async def ask_chatgpt_for_free_time(free_time_slots : list[Dict[str, List[FreeTi
 #     "free_time":{
 #     "Monday": [],
 #     "Wednesday": [
-#       { "start": "09:00", "end": "1
+#       { "start": "09:00", "end": "1"
 #  },
 #       { "start": "15:00", "end": "16:00" }
 #     ],
@@ -177,5 +223,5 @@ async def ask_chatgpt_for_free_time(free_time_slots : list[Dict[str, List[FreeTi
 #       { "start": "09:00", "end": "10:30" },
 #       { "start": "15:00", "end": "16:00" }
 #     ]
-#}
+# }
 #   },

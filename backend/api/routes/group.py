@@ -1,9 +1,8 @@
 from fastapi import APIRouter, HTTPException, status, Query, Depends
 from fastapi.responses import JSONResponse
-from typing import Optional
 from db.database import groups_collection, users_collection
 from db.models import Group
-from db.schemas import groups_serial, group_serial
+from db.schemas import groups_serial
 from api.request_model.group_request_schema import CreateGroupRequest, DeleteGroupRequest
 from bson import ObjectId
 from email_service.email_utils import email_sender
@@ -224,4 +223,4 @@ def send_project_invitation_email(user_emails:list[str], creator_email:str, new_
             project_name=new_group_name,
             invitation_link=f"{BASE_URL}/{user_email_for_link}/{new_group_id}"
         )
-        email_sender.send_email(receipient=user_email, email_message=email_content)
+        email_sender.send_email(receipient=user_email, email_message=email_content, subject_line="Please Verify Your Email!")
