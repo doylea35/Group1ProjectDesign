@@ -20,7 +20,7 @@ function App() {
           <Route path="login" element={<LoginPage />} />
           <Route path="logout" element={<LogoutPage />} />
           <Route path="projects" element={<ProjectsPage />} />
-          <Route path="project" element={<ProjectPage />} />
+          <Route path="projects/:projectId" element={<ProjectPage />} />
           <Route path="schedule" element={<SchedulingPage />} />
         </Route>
       </Routes>
