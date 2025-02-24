@@ -53,5 +53,5 @@ jobs:
           echo "Checking remotes..."
           git remote -v  # Debugging: Ensure the remote exists
 
-          echo "Pushing to Heroku..."
-          git subtree push --prefix backend heroku main
+          echo "Forcing push to Heroku..."
+          git push --force heroku `git subtree split --prefix backend main`:main
