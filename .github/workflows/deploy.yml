@@ -17,7 +17,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v3
         with:
-          python-version: "3.10"
+          python-version: "3.12"
 
       - name: Install Heroku CLI
         run: curl https://cli-assets.heroku.com/install.sh | sh
@@ -33,7 +33,7 @@ jobs:
       - name: Set up Heroku Git Remote
         run: |
           echo "Setting up Heroku remote..."
-          heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
+          heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }} || git remote add heroku "https://git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git"
 
       - name: Push Backend to Heroku
         env:
@@ -48,4 +48,5 @@ jobs:
           git remote set-url heroku "$HEROKU_GIT_URL"
 
           echo "Pushing to Heroku..."
+          git remote -v  # Debugging: Ensure the remote exists
           git subtree push --prefix backend heroku main
