@@ -55,7 +55,6 @@ const Sidebar = () => {
             </Collapsible.Content>
           </Collapsible.Root>
 
-          <Link to="/project" className="nav-link">Projects</Link>
           <Link to="/logout" className="nav-link">Log Out</Link>
         </nav>
       </div>

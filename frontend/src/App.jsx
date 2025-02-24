@@ -5,7 +5,6 @@ import Sidebar from './components/Layout';
 import CreateProfile from './pages/CreateProfile';
 import CreateNewProjectPop from './pages/CreateProjectPop';
 import LoginPage from './pages/LoginPage';
-import ProjectsPage from './pages/ProjectsPage';
 import LogoutPage from './pages/LogoutPage';
 import ProjectPage from './pages/ProjectPage';
 import SchedulingPage from './pages/SchedulingPage';
@@ -20,7 +19,6 @@ function App() {
           <Route path="create-project" element={<CreateNewProjectPop />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="logout" element={<LogoutPage />} />
-          <Route path="projects" element={<ProjectsPage />} />
           <Route path="projects/:projectId" element={<ProjectPage />} />
           <Route path="schedule" element={<SchedulingPage />} />
         </Route>
