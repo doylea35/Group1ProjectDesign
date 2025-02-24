@@ -1,7 +1,12 @@
 name: Deploy backend to Heroku
 
-on: workflow_call
-
+on:
+  workflow_call:
+    secrets:
+      HEROKU_APP_NAME:
+        required: true
+      HEROKU_API_KEY:
+        required: true
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -24,11 +29,15 @@ jobs:
           else
             echo "HEROKU_APP_NAME is set!"
           fi
+          if [ -z "${{ secrets.HEROKU_API_KEY }}" ]; then
+            echo "HEROKU_API_KEY is empty!"
+          else
+            echo "HEROKU_API_KEY is set!"
+          fi
       - name: Deploy backend to Heroku
         run: |
           echo "Authenticating with Heroku..."
           echo "App Name: ${{ secrets.HEROKU_APP_NAME }}"
-          echo "${{ secrets.HEROKU_API_KEY }}" | heroku auth:token
           heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
           heroku auth:whoami
           git subtree push --prefix backend heroku main
