@@ -1,9 +1,13 @@
 import React, { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
+import CreateNewProjectPop from "../pages/CreateProjectPop";
+import * as Collapsible from "@radix-ui/react-collapsible";
+import * as Dialog from "@radix-ui/react-dialog";
 import "../App.css";
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
+  const [isProjectsOpen, setIsProjectsOpen] = useState(false); // Define collapsible state
 
   const toggleSidebar = () => {
     setIsOpen((prev) => !prev);
@@ -19,9 +23,39 @@ const Sidebar = () => {
         <nav className={`sidebar-links ${isOpen ? "active" : ""}`}>
           <Link to="/" className="nav-link">Home</Link>
           <Link to="/create-profile" className="nav-link">Create Profile</Link>
-          <Link to="/create-project" className="nav-link">Create Project</Link>
-          <Link to="/find-meeting-time" className="nav-link">Find Meeting Time</Link>
-          <Link to="/projects" className="nav-link">Projects</Link>
+
+          <Collapsible.Root open={isProjectsOpen} onOpenChange={setIsProjectsOpen}>
+            <Collapsible.Trigger asChild>
+              <button className={`collapsible-btn ${isProjectsOpen ? "active" : ""}`}>
+                <span>Projects</span>
+                <span className={`arrow ${isProjectsOpen ? "rotate-90" : ""}`}>›</span>
+              </button>
+            </Collapsible.Trigger>
+
+            <Collapsible.Content className="collapsible-content">
+              <Link to="/projects/project1" className="nav-link">Project 1</Link>
+              <Link to="/projects/project2" className="nav-link">Project 2</Link>
+              <Link to="/projects/project3" className="nav-link">Project 3</Link>
+
+              {/* Dialog for Creating a New Project */}
+              <Dialog.Root>
+                <Dialog.Trigger asChild>
+                  <button className="create-btn">Create New Project</button>
+                </Dialog.Trigger>
+                <Dialog.Portal>
+                  <Dialog.Overlay className="DialogOverlay" />
+                  <Dialog.Content className="DialogContent">
+                    <CreateNewProjectPop />
+                    <Dialog.Close asChild>
+                      <button className="close-btn">Close</button>
+                    </Dialog.Close>
+                  </Dialog.Content>
+                </Dialog.Portal>
+              </Dialog.Root>
+            </Collapsible.Content>
+          </Collapsible.Root>
+
+          <Link to="/project" className="nav-link">Projects</Link>
           <Link to="/logout" className="nav-link">Log Out</Link>
         </nav>
       </div>
