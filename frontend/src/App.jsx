@@ -8,7 +8,7 @@ import LoginPage from './components/LoginPage';
 import LogoutPage from './pages/LogoutPage';
 import ProjectPage from './pages/ProjectPage';
 import SchedulingPage from './pages/SchedulingPage';
-
+import HomePage from './pages/HomePage';
 
 function App() {
   return (
@@ -21,6 +21,8 @@ function App() {
           <Route path="logout" element={<LogoutPage />} />
           <Route path="projects/:projectId" element={<ProjectPage />} />
           <Route path="schedule" element={<SchedulingPage />} />
+          <Route path="home" element={<HomePage/>} />
+
         </Route>
       </Routes>
   );

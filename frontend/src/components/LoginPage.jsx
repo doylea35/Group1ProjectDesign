@@ -1,48 +1,57 @@
 import React, { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Cross2Icon } from '@radix-ui/react-icons';
+import { useNavigate } from 'react-router-dom';
 import '../App.css';
 
 const LoginPage = ({ setOpen }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = (event) => {
     event.preventDefault();
     console.log("Login Submitted:", username, password);
+    navigate('/home'); // Redirect to home or dashboard
+    setOpen(false);
   };
 
   return (
     <Dialog.Portal>
       <Dialog.Overlay className="DialogOverlay" />
       <Dialog.Content className="DialogContent">
-        <Dialog.Title className="DialogTitle">Login to GroupGrade</Dialog.Title>
-        <Dialog.Description className="DialogDescription">
-          Enter your username and password below.
-        </Dialog.Description>
-        <form onSubmit={handleLogin} className="login-form">
-          <label htmlFor="username" className="form-label">Username:</label>
-          <input
-            type="text"
-            id="username"
-            className="form-input"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-          <label htmlFor="password" className="form-label">Password:</label>
-          <input
-            type="password"
-            id="password"
-            className="form-input"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button type="submit" className="Button green">Log In</button>
+        <Dialog.Title className="DialogTitle">Log In to Your Account</Dialog.Title>
+        <form onSubmit={handleLogin}>
+        <fieldset className="Fieldset" style={{ marginTop: '20px' }}>
+            <label className="Label" htmlFor="username">Username:</label>
+            <input
+              className="Input"
+              id="username"
+              type="text"
+              name="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </fieldset>
+          <fieldset className="Fieldset">
+            <label className="Label" htmlFor="password">Password:</label>
+            <input
+              className="Input"
+              id="password"
+              type="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </fieldset>
+          <div style={{ display: "flex", marginTop: 25, justifyContent: "flex-end" }}>
+              <button type="submit" className="Button green">Log In</button>
+            </div>
         </form>
         <Dialog.Close asChild>
-          <button className="IconButton" aria-label="Close">
+          <button className="IconButton">
             <Cross2Icon />
           </button>
         </Dialog.Close>

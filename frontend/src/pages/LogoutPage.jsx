@@ -1,14 +1,14 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../App.css';
+import LoginPage from '../components/LoginPage';
 
 const LogoutPage = () => {
   const navigate = useNavigate();
 
-  // Simulate logout logic (e.g., clearing tokens) and then redirect
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate('/login');
+      navigate('/');
     }, 3000); 
 
     return () => clearTimeout(timer);
@@ -18,7 +18,7 @@ const LogoutPage = () => {
     <div className="logout-container">
       <h1 className="logout-title">You have been logged out</h1>
       <p className="logout-message">
-        Thank you for using GroupGrade. You will be redirected to the login page shortly.
+        Thank you for using GroupGrade. You will be redirected shortly.
       </p>
     </div>
   );

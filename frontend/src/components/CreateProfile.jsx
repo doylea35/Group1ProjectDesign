@@ -2,6 +2,7 @@ import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import "../App.css";
+import { useNavigate } from 'react-router-dom';
 
 const CreateProfilePopup = ({ open, setOpen }) => {
   const [profile, setProfile] = React.useState({
@@ -11,6 +12,7 @@ const CreateProfilePopup = ({ open, setOpen }) => {
 
   const [errors, setErrors] = React.useState({ name: "", email: "" });
   const [submitted, setSubmitted] = React.useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -43,11 +45,12 @@ const CreateProfilePopup = ({ open, setOpen }) => {
     }
 
     console.log("Profile Created:", profile);
-    alert("Profile created successfully!");
 
     setProfile({ name: "", email: "" });
     setErrors({ name: "", email: "" });
     setSubmitted(true);
+    setOpen(false); 
+    navigate('/home');
   };
 
   return (
