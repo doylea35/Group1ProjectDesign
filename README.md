@@ -7,7 +7,7 @@
 
 ## **Key Features**  
 📌 **To-Do:** List the application's main features concisely.  
-
+📌 **To-Do:** Add lectures emails to Cloud Console for requesting the login.
 ---
 
 # **Step by Step**  
