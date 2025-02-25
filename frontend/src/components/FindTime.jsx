@@ -2,42 +2,66 @@ import React, { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Select from "@radix-ui/react-select";
 import { Cross2Icon, CheckIcon, ChevronDownIcon } from "@radix-ui/react-icons";
+import axios from "axios"; // For sending HTTP requests
 import "../App.css";
 
 const FindTime = ({ freeTimes }) => {
   const [selectedDay, setSelectedDay] = useState("");
   const [duration, setDuration] = useState(30); // Default duration is 30 minutes
   const [overlappingTimes, setOverlappingTimes] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const findOverlappingTimes = () => {
-    const selectedDayTimes = freeTimes[selectedDay] || [];
-    const overlapping = [];
+  // Fetch the token (you need to replace with your actual token logic)
+  const token = localStorage.getItem("token") || "";  // Assumes you're storing token in localStorage
 
-    selectedDayTimes.forEach((slot1, index) => {
-      const slot1Start = new Date(`1970-01-01T${slot1.startTime}:00`);
-      const slot1End = new Date(`1970-01-01T${slot1.endTime}:00`);
-      const slot1Duration = (slot1End - slot1Start) / 60000;
+  const findOverlappingTimes = async () => {
+    try {
+      // Hardcoded values for the user and group
+      const group_id = "67bdf8aa2642dc845b82fc19"; // Replace with actual group ID if needed
+      const hardcodedUserFreeTimes = {
+        "Monday": [{ start: "09:00", end: "10:00" }],
+        "Tuesday": [{ start: "10:00", end: "14:00" }],
+        "Thursday": [{ start: "12:00", end: "16:00" }],
+      };
 
-      if (slot1Duration >= duration) {
-        overlapping.push(slot1);
-      }
+      // Construct the free time slots for the group members
+      const freeTimeSlots = [
+        { free_time: hardcodedUserFreeTimes }, // Add more users if needed
+      ];
 
-      selectedDayTimes.forEach((slot2, i) => {
-        if (index !== i) {
-          const slot2Start = new Date(`1970-01-01T${slot2.startTime}:00`);
-          const slot2End = new Date(`1970-01-01T${slot2.endTime}:00`);
-
-          if (
-            (slot1Start < slot2End && slot1End > slot2Start) ||
-            slot1Start.getTime() === slot2Start.getTime()
-          ) {
-            overlapping.push({ slot1, slot2 });
-          }
+      // Send the request to the backend with Authorization header
+      const response = await axios.post(
+        "/api/calendar/getOverlappingTime",
+        {
+          free_time_slots: freeTimeSlots,
+          group_id: group_id, // Using the hardcoded group ID
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Add the token here for authentication
+          },
         }
-      });
-    });
+      );
 
-    setOverlappingTimes(overlapping);
+      // Handle response from the backend
+      const overlapping = response.data.data[selectedDay] || [];
+
+      if (overlapping.length === 0) {
+        setOverlappingTimes([]); // No overlapping slots, set empty
+        setErrorMessage("Available slots: None");
+      } else {
+        setOverlappingTimes(overlapping); // Update with overlapping times for the selected day
+        setErrorMessage(""); // Clear any error message
+      }
+    } catch (error) {
+      console.error("Error fetching overlapping times:", error);
+      if (error.response && error.response.status === 401) {
+        setErrorMessage("Unauthorized. Please log in again.");
+      } else {
+        setErrorMessage("Failed to find overlapping times.");
+      }
+      setOverlappingTimes([]); // Clear any existing overlapping times
+    }
   };
 
   return (
@@ -49,7 +73,9 @@ const FindTime = ({ freeTimes }) => {
         <Dialog.Overlay className="DialogOverlay" />
         <Dialog.Content className="DialogContent">
           <Dialog.Title className="DialogTitle">Find Overlapping Free Times</Dialog.Title>
-          <Dialog.Description className="DialogDescription">Select a day and duration to find overlapping free times.</Dialog.Description>
+          <Dialog.Description className="DialogDescription">
+            Select a day and duration to find overlapping free times.
+          </Dialog.Description>
 
           <fieldset className="Fieldset">
             <label className="Label">Select a Day</label>
@@ -99,20 +125,21 @@ const FindTime = ({ freeTimes }) => {
             Find Overlapping Time
           </button>
 
-          {overlappingTimes.length > 0 && (
+          {errorMessage && <p className="ErrorMessage">{errorMessage}</p>}
+
+          {overlappingTimes.length > 0 ? (
             <div className="overlap-results">
               <h3>Overlapping Free Times</h3>
               {overlappingTimes.map((overlap, index) => (
                 <div key={index} className="overlap-box">
                   <div>
-                    <strong>{overlap.slot1.startTime} - {overlap.slot1.endTime}</strong>
-                  </div>
-                  <div>
-                    <strong>{overlap.slot2.startTime} - {overlap.slot2.endTime}</strong>
+                    <strong>{overlap.start} - {overlap.end}</strong>
                   </div>
                 </div>
               ))}
             </div>
+          ) : (
+            !errorMessage && <p className="ErrorMessage">Available slots: None</p> // Display when no overlapping slots are found
           )}
 
           <Dialog.Close asChild>
@@ -127,4 +154,3 @@ const FindTime = ({ freeTimes }) => {
 };
 
 export default FindTime;
-
