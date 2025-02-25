@@ -5,10 +5,6 @@ on:
     secrets:
       VERCEL_TOKEN:
         required: true
-      VERCEL_PROJECT_ID:
-        required: true
-      VERCEL_ORG_ID:
-        required: true
 
 jobs:
   deploy:
@@ -30,5 +26,5 @@ jobs:
       - name: Deploy to Vercel
         run: |
           npm install -g vercel
-          vercel pull --yes --token=${{ secrets.VERCEL_TOKEN }} --project-id=${{ secrets.VERCEL_PROJECT_ID }} --org-id=${{ secrets.VERCEL_ORG_ID }}
-          vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }} --project-id=${{ secrets.VERCEL_PROJECT_ID }} --org-id=${{ secrets.VERCEL_ORG_ID }}
+          vercel pull --yes --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
