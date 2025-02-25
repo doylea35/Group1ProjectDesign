@@ -3,7 +3,7 @@ from typing import Dict, Optional
 from db.database import groups_collection, users_collection, tasks_collection, subteams_collection
 from db.models import User, Group, Task
 from db.schemas import users_serial, groups_serial, tasks_serial
-from api.request_model.user_request_schema import CreateUserRequest, DeleteUserRequest, UpdateUserRequest
+from api.request_model.user_request_schema import CreateUserRequest, DeleteUserRequest, UpdateUserRequest, UserRegisterRequest, UserLoginRequest
 from bson import ObjectId # mongodb uses ObjectId to store _id
 import bcrypt
 import jwt
@@ -63,17 +63,6 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
-
-# Pydantic models
-class UserRegisterRequest(BaseModel):
-    name: str
-    email: str
-    password: str
-    groups: list[str]
-
-class UserLoginRequest(BaseModel):
-    email: str
-    password: str
 
 @user_router.post("/register")
 async def register_user(request : UserRegisterRequest):
@@ -193,6 +182,8 @@ async def delete_user(request : DeleteUserRequest):
     # delete user from tasks
     tasks_collection.delete_many({"assigned_to": request.email})
 
+    return {"message": "User deleted successfully"}
+
 
 @user_router.put("/updateUser", status_code=status.HTTP_201_CREATED)
 async def update_user(request : UpdateUserRequest):
@@ -214,7 +205,7 @@ async def update_user(request : UpdateUserRequest):
     )
     updated_user = users_collection.find_one({"email": request.email})
 
-    return updated_user
+    return {"message":"User updated successfully", "data":updated_user}
 
 
 
