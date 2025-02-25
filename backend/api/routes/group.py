@@ -119,7 +119,7 @@ async def confirm_member(request:ConfirmGroupMembershipRequest):
     if user_email not in group["pending_members"]:
         return HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail={"message": f"{user_email} is not a pending memeber in the group: {group["name"]}"}
+                    detail={"message": f"{user_email} is not a pending memeber in the group: {group['name']}"}
                 )
 
     
