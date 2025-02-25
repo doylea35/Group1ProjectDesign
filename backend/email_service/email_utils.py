@@ -119,8 +119,8 @@ class EmailSender():
 email_sender : EmailSender = EmailSender()
 
 
-cred = load_credentials_from_env()
-if cred:
-    print("Refresh Token:", cred.refresh_token)
-else:
-    print("no refresh token")
+# cred = load_credentials_from_env()
+# if cred:
+#     print("Refresh Token:", cred.refresh_token)
+# else:
+#     print("no refresh token")
