@@ -52,9 +52,8 @@ async def get_all_freetime_for_user(request : GetAllFreeTimeRequest, current_use
         
     for member_email in cur_group["members"]:
       user = users_collection.find_one({"email": member_email})
-      free_time_slots = []
       if user is not None:
-        if len(user["free_time"]) > 0:
+        if user["free_time"] is not None:
           obj = {
               "name": user["name"],
               "email": user["email"],
@@ -153,13 +152,14 @@ MAX_TOKEN = 10000
 
 @calendar_router.post("/getOverlappingTime")
 async def ask_chatgpt_for_free_time(request: GetOverlappingTimeSlotRequest, current_user: dict = Depends(get_current_user)):
-    free_time_slots = []
+    free_time_slots : list[dict] = []
 
     if len(request.free_time_slots) > 0:
         free_time_slots = request.free_time_slots
     else:
-        cur_group = groups_collection.find_one({"_id": request.group_id})
-        if not cur_group:
+        cur_group = groups_collection.find_one({"_id": ObjectId(request.group_id)})
+        print(f"cur_group: {cur_group}")
+        if cur_group is None:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Group does not exist."
@@ -167,12 +167,15 @@ async def ask_chatgpt_for_free_time(request: GetOverlappingTimeSlotRequest, curr
 
         for member_email in cur_group["members"]:
           user = users_collection.find_one({"email": member_email})
+          print(f"user: {user}")
           if user is not None:
             if len(user["free_time"]) > 0:
               free_time_slots.append(user["free_time"])
     try:
         print("ask_chatgpt_for_free_time\n")
-
+        print(f"\n\nfree_time_slots: {free_time_slots}\n\n")
+        for slot in free_time_slots:
+            print(f"\n\slot: {slot}\n")
         processed_slots = [
         {
             day: [slot if isinstance(slot, dict) else slot.dict() for slot in slots]
