@@ -1,8 +1,11 @@
 import React, { useState } from "react";
+import axios from "axios"; 
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Select from "@radix-ui/react-select";
 import { Cross2Icon, CheckIcon, ChevronDownIcon, PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import "../App.css";
+
+const API_URI = "/api/calendar/updateFreeTime";  
 
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -17,17 +20,33 @@ const AddTime = ({ freeTimes, setFreeTimes }) => {
     setErrorMessage("");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedDay || timeSlots.some(slot => !slot.startTime || !slot.endTime)) {
       setErrorMessage("Please fill out all fields before saving.");
       return;
     }
     setErrorMessage(""); 
 
-    const newFreeTimes = { ...freeTimes, [selectedDay]: timeSlots };
-    setFreeTimes(newFreeTimes);
+    // Format the data to match the backend structure
+    const formattedFreeTime = { [selectedDay]: timeSlots.map(slot => ({
+      start: slot.startTime,
+      end: slot.endTime
+    })) };
 
-    alert(`Saved: ${selectedDay} with ${timeSlots.length} time slots`);
+    try {
+      // Send data to the backend
+      const response = await axios.put(API_URI, {
+        free_time: formattedFreeTime
+      });
+
+      // Handle response from backend (e.g., success)
+      alert(`Saved: ${selectedDay} with ${timeSlots.length} time slots`);
+      setFreeTimes(response.data.data);  // Update free times in state if needed
+    } catch (error) {
+      // Handle error (e.g., show error message)
+      setErrorMessage("Failed to save the free time.");
+      console.error("Error saving free time:", error);
+    }
   };
 
   const addTimeSlot = () => {
@@ -102,7 +121,6 @@ const AddTime = ({ freeTimes, setFreeTimes }) => {
                   />
                 </fieldset>
 
-                {/* Show delete button only if there's more than one slot */}
                 {timeSlots.length > 1 && (
                   <button className="DeleteButton" onClick={() => removeTimeSlot(slot.id)}>
                     🗑️
@@ -111,7 +129,6 @@ const AddTime = ({ freeTimes, setFreeTimes }) => {
               </div>
             ))}
           </div>
-
 
           <div className="ButtonContainer">
             <button className="plusButton" onClick={addTimeSlot}>

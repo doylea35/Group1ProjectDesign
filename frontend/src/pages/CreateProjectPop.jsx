@@ -1,32 +1,72 @@
 import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Cross2Icon } from "@radix-ui/react-icons";
+import axios from "axios";
 import "../App.css";
+
+const API_URI = "/api/group/"; 
+
+/**
+ * @desc GET request to fetch user profile
+ * @route GET /api/users/profile
+ * @access private
+ */
+const fetchUserProfile = async () => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = user?.token;
+
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  const res = await axios.get("/api/users/profile", config);
+  return res.data;
+};
+
+/**
+ * @desc POST request to create a new project
+ * @route POST /api/projects/create
+ * @access private
+ */
+const createProject = async (projectData) => {
+  const user = JSON.parse(localStorage.getItem("user")); 
+  const token = user?.token;
+
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  const res = await axios.post(API_URI + "create", projectData, config);
+  return res.data;
+};
 
 const CreateNewProjectPop = () => {
   const [projectName, setProjectName] = React.useState("");
   const [members, setMembers] = React.useState("");
   const [userEmail, setUserEmail] = React.useState("");
   const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState("");
 
-  // Fetch user email
+  // Fetch user email on component mount
   React.useEffect(() => {
-    const fetchUserProfile = async () => {
+    const getUserEmail = async () => {
       try {
-        const response = await fetch("/users/profile");
-        if (!response.ok) throw new Error("User profile not found");
-
-        const userData = await response.json();
+        const userData = await fetchUserProfile();
         setUserEmail(userData.email);
-        setMembers(userData.email);
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
+        setMembers(userData.email); 
+      } catch (err) {
+        console.error("Error fetching user:", err.response?.data || err.message);
+        setError("Failed to load user profile.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserProfile();
+    getUserEmail();
   }, []);
 
   const handleCreateProject = async (event) => {
@@ -40,18 +80,23 @@ const CreateNewProjectPop = () => {
       membersArray.unshift(userEmail);
     }
 
-    await fetch("/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        creator_email: userEmail,
-        group_name: projectName,
-        members: membersArray,
-      }),
-    });
+    const projectData = {
+      creator_email: userEmail,
+      group_name: projectName,
+      members: membersArray,
+    };
 
-    setProjectName("");
-    setMembers(userEmail);
+    try {
+      const createdProject = await createProject(projectData);
+      console.log("Project Created:", createdProject);
+
+      // Reset form
+      setProjectName("");
+      setMembers(userEmail);
+    } catch (err) {
+      console.error("Error creating project:", err.response?.data || err.message);
+      setError("Failed to create project. Try again.");
+    }
   };
 
   return (
@@ -67,6 +112,7 @@ const CreateNewProjectPop = () => {
           <p>Loading profile...</p>
         ) : (
           <form onSubmit={handleCreateProject}>
+            {error && <p className="error">{error}</p>} {/* Display error messages */}
             <fieldset className="Fieldset">
               <label className="Label" htmlFor="projectname">Project Name</label>
               <input
@@ -82,7 +128,7 @@ const CreateNewProjectPop = () => {
               <input
                 className="Input"
                 id="emails"
-                value={members}
+                value={members}  // 👈 This ensures the field updates with the fetched email
                 onChange={(e) => setMembers(e.target.value)}
                 placeholder="Enter comma-separated emails (Your email is auto-added)"
               />
@@ -107,4 +153,3 @@ const CreateNewProjectPop = () => {
 };
 
 export default CreateNewProjectPop;
-
