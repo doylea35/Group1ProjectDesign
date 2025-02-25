@@ -12,8 +12,8 @@ const API_URI = "/api/group/";
  * @access private
  */
 const fetchUserProfile = async () => {
-  // For testing, always use this default user
-  const user = { email: "nzhang@tcd.ie", token: null }; 
+  console.log("fetchUserProfile function called"); // Debugging log
+  const user = { email: "nzhang@tcd.ie", token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YmJhMzkxZjBiYzhhOGYzN2YzYWNjOCIsImVtYWlsIjoibnpoYW5nQHRjZC5pZSJ9.1hbzE78aogZ5Qqyb2SqMBz2N0Wlx10X72XgSnbFV3yU" };
 
   /*
   // Original Code (Uncomment after testing)
@@ -32,6 +32,7 @@ const fetchUserProfile = async () => {
   }
   */
   
+  console.log("Returning user data:", user); // Debugging log
   return user;
 };
 
@@ -41,20 +42,25 @@ const fetchUserProfile = async () => {
  * @access private
  */
 const createProject = async (projectData) => {
+  console.log("createProject function called"); // Debugging log
   console.log("Sending project data:", projectData); // Debugging log
 
-  const config = {
-    headers: {
-      "Content-Type": "application/json", // Ensure correct format
-      Authorization: "", // No token needed in test mode
-    },
-  };
-
   try {
-    const res = await axios.post(API_URI + "create", projectData, config);
+    // Send the project data in JSON format
+    const res = await axios.post(API_URI + "create", projectData, {
+      headers: {
+        "Content-Type": "application/json", // Make sure the correct content type is set
+      },
+    });
+    console.log("Project created successfully:", res.data); // Debugging response
     return res.data;
   } catch (err) {
     console.error("Error creating project:", err.response?.data || err.message);
+    // Enhanced error details
+    if (err.response) {
+      console.error("Error response status:", err.response.status);
+      console.error("Error response data:", err.response.data);
+    }
     throw err;
   }
 };
@@ -67,9 +73,12 @@ const CreateNewProjectPop = () => {
   const [error, setError] = React.useState("");
 
   React.useEffect(() => {
+    console.log("useEffect called - fetching user profile"); // Debugging log
     const getUserEmail = async () => {
       try {
+        console.log("Fetching user data...");
         const userData = await fetchUserProfile();
+        console.log("User data fetched:", userData); // Debugging log
         setUserEmail(userData.email);
         setMembers(userData.email); 
       } catch (err) {
@@ -77,6 +86,7 @@ const CreateNewProjectPop = () => {
         setError("Failed to load user profile.");
       } finally {
         setLoading(false);
+        console.log("useEffect finished"); // Debugging log
       }
     };
 
@@ -84,26 +94,34 @@ const CreateNewProjectPop = () => {
   }, []);
 
   const handleCreateProject = async (event) => {
-    event.preventDefault();
-
+    console.log("handleCreateProject function was called");
+  
+    event.preventDefault();  // Prevent form default behavior
+  
+    // Check if the event.preventDefault() works properly by logging
+    console.log("Form submission prevented");
+  
     const membersArray = members
       ? members.split(",").map((email) => email.trim())
       : [];
-
+  
+    // Ensure the user email is added to the members list
     if (!membersArray.includes(userEmail)) {
       membersArray.unshift(userEmail);
     }
-
+  
     const projectData = {
       creator_email: userEmail,
       group_name: projectName,
       members: membersArray,
     };
-
+  
+    console.log("Project data to send:", projectData);  // Log project data before sending
+  
     try {
       const createdProject = await createProject(projectData);
       console.log("Project Created:", createdProject);
-
+  
       // Reset form
       setProjectName("");
       setMembers(userEmail);
@@ -111,6 +129,7 @@ const CreateNewProjectPop = () => {
       setError("Failed to create project. Try again.");
     }
   };
+  
 
   return (
     <Dialog.Portal>
@@ -124,8 +143,10 @@ const CreateNewProjectPop = () => {
         {loading ? (
           <p>Loading profile...</p>
         ) : (
-          <form onSubmit={handleCreateProject}>
-            {error && <p className="error">{error}</p>}
+          <form onSubmit={(e) => { 
+            console.log("Form submitted", e);
+            handleCreateProject(e); // Calling your existing handler
+          }}>
             <fieldset className="Fieldset">
               <label className="Label" htmlFor="projectname">Project Name</label>
               <input
@@ -147,11 +168,10 @@ const CreateNewProjectPop = () => {
               />
             </fieldset>
             <div style={{ display: "flex", marginTop: 25, justifyContent: "flex-end" }}>
-              <Dialog.Close asChild>
-                <button type="submit" className="Button green">Create Project</button>
-              </Dialog.Close>
+              <button type="submit" className="Button green">Create Project</button>
             </div>
           </form>
+          
         )}
 
         <Dialog.Close asChild>
