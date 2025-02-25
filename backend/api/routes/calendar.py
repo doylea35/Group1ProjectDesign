@@ -201,7 +201,7 @@ async def ask_chatgpt_for_free_time(request: GetOverlappingTimeSlotRequest, curr
         # Parse JSON output from GPT
         try:
             overlapping_free_time = json.loads(gpt_response)
-            return overlapping_free_time  # Return the structured JSON response
+            return {"data":overlapping_free_time}  # Return the structured JSON response
         except json.JSONDecodeError:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
