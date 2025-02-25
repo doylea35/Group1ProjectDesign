@@ -10,3 +10,7 @@ class CreateSubteamRequest(BaseModel):
 class DeleteSubteamRequest(BaseModel):
     team_name: str
     email: str
+
+class AssignTaskToSubteamRequest(BaseModel):
+    team_name: str
+    task: str
