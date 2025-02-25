@@ -9,6 +9,9 @@ import LogoutPage from './pages/LogoutPage';
 import ProjectPage from './pages/ProjectPage';
 import SchedulingPage from './pages/SchedulingPage';
 import HomePage from './pages/HomePage';
+import axios from 'axios';
+
+axios.defaults.baseURL = 'https://group-grade-backend-5f919d63857a.herokuapp.com';
 
 function App() {
   return (

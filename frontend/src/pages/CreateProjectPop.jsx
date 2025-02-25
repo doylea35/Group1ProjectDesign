@@ -7,22 +7,32 @@ import "../App.css";
 const API_URI = "/api/group/"; 
 
 /**
- * @desc GET request to fetch user profile
+ * @desc Simulated GET request to fetch user profile for testing
  * @route GET /api/users/profile
  * @access private
  */
 const fetchUserProfile = async () => {
-  const user = JSON.parse(localStorage.getItem("user"));
+  // For testing, always use this default user
+  const user = { email: "nzhang@tcd.ie", token: null }; 
+
+  /*
+  // Original Code (Uncomment after testing)
+  let user = JSON.parse(localStorage.getItem("user"));
+  if (!user) {
+    user = { email: "nzhang@tcd.ie", token: null };
+  }
   const token = user?.token;
-
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-
-  const res = await axios.get("/api/users/profile", config);
-  return res.data;
+  const config = { headers: { Authorization: token ? `Bearer ${token}` : "" } };
+  try {
+    const res = await axios.get("/api/users/profile", config);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return null;
+  }
+  */
+  
+  return user;
 };
 
 /**
@@ -31,17 +41,22 @@ const fetchUserProfile = async () => {
  * @access private
  */
 const createProject = async (projectData) => {
-  const user = JSON.parse(localStorage.getItem("user")); 
-  const token = user?.token;
+  console.log("Sending project data:", projectData); // Debugging log
 
   const config = {
     headers: {
-      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json", // Ensure correct format
+      Authorization: "", // No token needed in test mode
     },
   };
 
-  const res = await axios.post(API_URI + "create", projectData, config);
-  return res.data;
+  try {
+    const res = await axios.post(API_URI + "create", projectData, config);
+    return res.data;
+  } catch (err) {
+    console.error("Error creating project:", err.response?.data || err.message);
+    throw err;
+  }
 };
 
 const CreateNewProjectPop = () => {
@@ -51,7 +66,6 @@ const CreateNewProjectPop = () => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
 
-  // Fetch user email on component mount
   React.useEffect(() => {
     const getUserEmail = async () => {
       try {
@@ -94,7 +108,6 @@ const CreateNewProjectPop = () => {
       setProjectName("");
       setMembers(userEmail);
     } catch (err) {
-      console.error("Error creating project:", err.response?.data || err.message);
       setError("Failed to create project. Try again.");
     }
   };
@@ -112,7 +125,7 @@ const CreateNewProjectPop = () => {
           <p>Loading profile...</p>
         ) : (
           <form onSubmit={handleCreateProject}>
-            {error && <p className="error">{error}</p>} {/* Display error messages */}
+            {error && <p className="error">{error}</p>}
             <fieldset className="Fieldset">
               <label className="Label" htmlFor="projectname">Project Name</label>
               <input
@@ -128,7 +141,7 @@ const CreateNewProjectPop = () => {
               <input
                 className="Input"
                 id="emails"
-                value={members}  // 👈 This ensures the field updates with the fetched email
+                value={members}
                 onChange={(e) => setMembers(e.target.value)}
                 placeholder="Enter comma-separated emails (Your email is auto-added)"
               />
@@ -141,7 +154,6 @@ const CreateNewProjectPop = () => {
           </form>
         )}
 
-        {/* Close Button */}
         <Dialog.Close asChild>
           <button className="IconButton" aria-label="Close">
             <Cross2Icon />
