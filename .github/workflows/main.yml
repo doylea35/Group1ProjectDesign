@@ -38,5 +38,3 @@ jobs:
     uses: ./.github/workflows/deployFrontend.yml
     secrets:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
