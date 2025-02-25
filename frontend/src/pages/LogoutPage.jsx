@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../App.css';
-import LoginPage from '../components/LoginPage';
 
 const LogoutPage = () => {
   const navigate = useNavigate();
