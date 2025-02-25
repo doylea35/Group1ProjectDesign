@@ -13,7 +13,7 @@
 # **Step by Step**  
 
 ## **Live Deployment**  
-- **Frontend:** Available at `<insert frontend URL>`  
+- **Frontend:** Available at🔗 [GroupGrade Frontend](https://groupgrade.vercel.app/)  
 - **Backend:** Hosted on **Heroku** at:  
   🔗 [GroupGrade Backend](https://group-grade-backend-5f919d63857a.herokuapp.com/)  
 
