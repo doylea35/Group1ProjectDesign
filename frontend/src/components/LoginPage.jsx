@@ -24,6 +24,12 @@ const LoginPage = ({ setOpen }) => {
         password: password
       });
       console.log("Login successful:", response.data); // Debugging log
+
+      // Store user data in localStorage
+      const { email, token } = response.data; // Assuming response contains email and token
+      localStorage.setItem('user', JSON.stringify({ email, token }));
+
+      // Navigate to home page
       navigate('/home');
       setOpen(false);
     } catch (error) {
