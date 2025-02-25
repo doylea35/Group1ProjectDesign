@@ -26,4 +26,5 @@ jobs:
       - name: Deploy to Vercel
         run: |
           npm install -g vercel
-          vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }} --project group_grade
+          vercel pull --yes --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
