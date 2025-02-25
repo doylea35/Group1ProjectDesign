@@ -83,13 +83,15 @@ input {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 90vw;
-  max-width: 500px;
-  max-height: 85vh;
+  width: auto; /* Let content determine the width */
+  max-width: 90vw; /* Maximum width constraint */
+  max-height: 85vh; /* Maximum height constraint */
   padding: 25px;
   z-index: 1000; /* Ensure the pop-up is above everything */
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  overflow: auto; /* Allow scroll if content overflows */
 }
+
 
 .DialogContent:focus {
 outline: none;
@@ -305,6 +307,7 @@ to {
   height: 20px;
   color: var(--violet-9);
 }
+
 
 /* Add More Time button */
 .ButtonContainer {
