@@ -11,18 +11,19 @@ from google.auth.transport.requests import Request
 from dotenv import load_dotenv, set_key
 import json
 
-API_NAME = os.getenv("GOOGLE_GMAIL_API_NAME")
-API_VERSION = os.getenv("GOOGLE_GMAIL_API_VERSION")
-SCOPES = [os.getenv("GOOGLE_GMAIL_SCOPES")]
-
-
 load_dotenv()
+
+API_NAME = os.getenv("GOOGLE_GMAIL_API_NAME", "gmail")
+API_VERSION = os.getenv("GOOGLE_GMAIL_API_VERSION", "v1")
+SCOPES = [os.getenv("GOOGLE_GMAIL_SCOPES", "https://mail.google.com/")]
+
+
 
 def save_credentials_to_env(credentials):
     """Save OAuth credentials as a base64 string in .env file."""
     creds_bytes = pickle.dumps(credentials)
     creds_base64 = base64.b64encode(creds_bytes).decode("utf-8")
-
+    print(f"creds_base64: {creds_base64}\n")
     # Save to .env
     set_key(".\.env", "GOOGLE_CREDENTIALS_BASE64", creds_base64)
 
@@ -63,8 +64,20 @@ def create_service(api_name, api_version, *scopes):
         print("No valid Google OAuth Credentials...")
         if cred and cred.expired and cred.refresh_token:
             print("Requesting a refresh token...")
-            cred.refresh(Request())
-            save_credentials_to_env(cred)
+            try:
+                cred.refresh(Request())
+                save_credentials_to_env(cred)
+            except Exception as e:
+                print("Error occurred when requesting a refresh token.")
+                print("Requesting a Google OAuth credential...")
+                client_secrets = get_google_client_secrets()
+            
+                flow = InstalledAppFlow.from_client_config(client_secrets, SCOPES)
+
+                cred = flow.run_local_server(access_type="offline", prompt="consent")
+
+                save_credentials_to_env(cred)
+
         else:
             print("Requesting a Google OAuth credential...")
             client_secrets = get_google_client_secrets()
@@ -106,8 +119,8 @@ class EmailSender():
 email_sender : EmailSender = EmailSender()
 
 
-# cred = load_credentials_from_env()
-# if cred:
-#     print("Refresh Token:", cred.refresh_token)
-# else:
-#     print("no refresh token")
+cred = load_credentials_from_env()
+if cred:
+    print("Refresh Token:", cred.refresh_token)
+else:
+    print("no refresh token")
