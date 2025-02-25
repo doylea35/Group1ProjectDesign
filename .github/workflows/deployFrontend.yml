@@ -1,0 +1,35 @@
+name: Deploy Frontend to Vercel
+
+on:
+  workflow_call:
+    secrets:
+      VERCEL_TOKEN:
+        required: true
+      VERCEL_PROJECT_ID:
+        required: true
+      VERCEL_ORG_ID:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Deploy to Vercel
+        run: |
+          npm install -g vercel
+          vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} \
+            --project-id=${{ secrets.VERCEL_PROJECT_ID }} \
+            --org-id=${{ secrets.VERCEL_ORG_ID }}

@@ -1,9 +1,12 @@
-name: Main Workflow
+name: Main Workflow 
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
 
 jobs:
   lint:
@@ -12,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Run Linter
-        run: echo "Running linting checks..." # modify this later if we really need a linter
+        run: echo "Running linting checks..." # Modify if needed
 
   test:
     runs-on: ubuntu-latest
@@ -20,11 +23,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Run Tests
-        run: echo "Running tests..." # modify this later
+        run: echo "Running tests..." # Modify if needed
 
-  deploy:
-    needs: [lint, test]  # Only deploy if linting and tests pass
+  deploy_backend:
+    needs: [lint, test]
+    if: contains(github.event.head_commit.modified, 'backend/')  # Deploy backend only if backend files changed
     uses: ./.github/workflows/deploy.yml
     secrets:
       HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+  deploy_frontend:
+    needs: [lint, test]
+    if: contains(github.event.head_commit.modified, 'frontend/')  # Deploy frontend only if frontend files changed
+    uses: ./.github/workflows/deployFrontend.yml
+    secrets:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
