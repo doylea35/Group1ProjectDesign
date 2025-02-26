@@ -102,7 +102,7 @@ async def register_user(request : UserRegisterRequest):
         {"$set": {"confirmation_code": unique_token}}
     )
 
-    confirmation_link = BASE_URL.format(frontend_url=frontend_url_dev,confirmationCode=confirmation_code)
+    confirmation_link = BASE_URL.format(frontend_url=frontend_url_dev,confirmationCode=unique_token)
 
     message = REGISTRATION_CONFIRMATION_EMAIL_TEMPLATE.format(
         user_name=request.name,
