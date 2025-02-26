@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useNavigate } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import axios from "axios";
@@ -36,22 +37,23 @@ const CreateNewProjectPop = () => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
 
-React.useEffect(() => {
-  const getUserEmail = () => {
-    const user = JSON.parse(localStorage.getItem("user")); // Retrieve the user from localStorage
-    console.log("User from localStorage:", user); // Debugging log
-    if (user && user.email) {
-      setUserEmail(user.email); // Set the email if it's available
-      setMembers(user.email);   // Automatically add the user's email to the members list
-    } else {
-      setError("Failed to load user profile. No user data found.");
-    }
-    setLoading(false); // Set loading to false once data is fetched
-  };
+  const navigate = useNavigate(); // Hook to navigate programmatically
 
-  getUserEmail(); // Get user email
-}, []);
+  React.useEffect(() => {
+    const getUserEmail = () => {
+      const user = JSON.parse(localStorage.getItem("user")); // Retrieve the user from localStorage
+      console.log("User from localStorage:", user); // Debugging log
+      if (user && user.email) {
+        setUserEmail(user.email); // Set the email if it's available
+        setMembers(user.email);   // Automatically add the user's email to the members list
+      } else {
+        setError("Failed to load user profile. No user data found.");
+      }
+      setLoading(false); // Set loading to false once data is fetched
+    };
 
+    getUserEmail(); // Get user email
+  }, []);
 
   const handleCreateProject = async (event) => {
     event.preventDefault();
@@ -74,6 +76,11 @@ React.useEffect(() => {
     try {
       const createdProject = await createProject(projectData);
       console.log("Project Created:", createdProject);
+
+      // Redirect to the newly created project page
+      navigate(`/projects/${createdProject._id}`);
+
+      // Reset form fields after creation
       setProjectName("");
       setMembers(userEmail); // Reset the members input after creation
     } catch (err) {

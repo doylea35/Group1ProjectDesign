@@ -11,7 +11,7 @@ const SchedulingPage = () => {
   console.log("🔍 SchedulingPage Loaded"); // LOG COMPONENT LOAD
 
   const { projectId } = useParams(); // ✅ Get projectId from the URL
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // To handle redirection
   const [freeTimes, setFreeTimes] = useState({}); // Holds the free times organized by day
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -85,7 +85,6 @@ const SchedulingPage = () => {
     }
   };
   
-  
   const formatFreeTimes = (data) => {
     // Format the response data to group free times by days
     const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -152,6 +151,21 @@ const SchedulingPage = () => {
   console.log("🔘 Rendering Buttons...");
   return (
     <div>
+      {/* Back Button - Positioned at the top left */}
+      <div
+        className="back-button"
+        style={{
+          position: "absolute",
+          top: "20px", // Positioning it a little down from the top
+          left: "300px", // Positioning it to the left
+          zIndex: "10", // Ensures the button stays above other elements
+        }}
+      >
+        <button onClick={() => navigate(`/projects/${projectId}`)} className="Button violet">
+          Back to Project
+        </button>
+      </div>
+
       <div className="button-section" style={{ display: "flex", justifyContent: "center", gap: "20px" }}>
         {projectId && user?.token ? (
           <>
