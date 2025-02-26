@@ -1,12 +1,16 @@
 # **Group Project Design Group 1**
 
-# **Overview**  
-
 ## **About the Application**  
-📌 **To-Do:** Add a brief overview of the application's purpose and functionality.  
+Our application is a streamlined group project management website for users to easily manage their college group projects. It allows users to manage their groups in one location, organising how they will complete their work so that they can deliver high-quality grouo projects on time.
 
 ## **Key Features**  
-📌 **To-Do:** List the application's main features concisely.  
+The key features of our application were designed to enhance the user expereince:
+  1. Users can create an account, verify their email and then log in to this account to promote security amongst users when creating accounts.
+  2. Users can create projects and add other members to these projects who will be prompted to join the group via an email link.
+  3. Users can add their free time for group meetings, view the available times of other members and find a time that all users are available for a meeting.
+  4. Users can create tasks and assign members to these tasks and view them on their home page and project page.
+  5. Users can create subteams and use these as a member to assign tasks to.
+
 📌 **To-Do:** Add lectures emails to Cloud Console for requesting the login.
 ---
 
