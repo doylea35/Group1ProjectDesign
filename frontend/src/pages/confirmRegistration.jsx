@@ -4,14 +4,13 @@ import axios from 'axios';
 
 const RegistrationPage = () => {
   const navigate = useNavigate();
-  const {confirmationCode} = useParams(confirmationCode)
+  const {confirmationCode} = useParams()
   const [message, setMessage] = useState("Verifying your email...");
 
   useEffect(() => {
 
     axios.get(`https://group-grade-backend-5f919d63857a.herokuapp.com/api/user/confirm/${confirmationCode}`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       }
