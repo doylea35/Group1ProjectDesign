@@ -8,8 +8,13 @@ function ProjectPage() {
   const navigate = useNavigate(); 
 
   const handleFindTimeClick = () => {
-    navigate("/schedule"); 
-  };
+    if (!projectId) {
+        console.error("❌ No projectId found!");
+        return;
+    }
+    navigate(`/schedule/${projectId}`); // ✅ Now the projectId is included in the URL
+};
+
 
   const handleCreateSubteam = (subteamName, members) => {
     alert(`Subteam "${subteamName}" created for Project ${projectId} with members: ${members.join(", ")}`);
