@@ -1,99 +1,163 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useParams, useNavigate } from "react-router-dom"; // Get projectId from URL
 import AddTime from "../components/AddTime";
 import FindTime from "../components/FindTime";
 import "../App.css";
 
-const API_URI = "/api/calendar/getUserFreeTime"; // Endpoint to fetch user's free times
+const API_URI = "/api/calendar/getGroupFreeTime"; // API to get project-based free times
 
 const SchedulingPage = () => {
-  const [freeTimes, setFreeTimes] = useState({}); // Start with an empty state
+  console.log("🔍 SchedulingPage Loaded"); // LOG COMPONENT LOAD
+
+  const { projectId } = useParams(); // ✅ Get projectId from the URL
+  const navigate = useNavigate();
+  const [freeTimes, setFreeTimes] = useState({}); // Holds the free times organized by day
   const [errorMessage, setErrorMessage] = useState("");
 
-  const user = {
-    email: "nzhang@tcd.ie", // Hardcoded user email
-    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YmJhMzkxZjBiYzhhOGYzN2YzYWNjOCIsImVtYWlsIjoibnpoYW5nQHRjZC5pZSJ9.1hbzE78aogZ5Qqyb2SqMBz2N0Wlx10X72XgSnbFV3yU" // Hardcoded user token
-  };
+  const user = JSON.parse(localStorage.getItem("user")); // ✅ Get user info from localStorage
+  console.log("👤 User:", user); // LOG USER INFO
 
   useEffect(() => {
+    if (!user || !user.token) {
+      setErrorMessage("User is not logged in.");
+      return;
+    }
+
+    if (!projectId) {
+      console.error("❌ No projectId found! Redirecting...");
+      navigate("/"); // Redirect user to home if no projectId
+      return;
+    }
+
     fetchFreeTimes();
-  }, []); // Run once when the component mounts
+  }, [projectId]); // Re-run when projectId changes
 
   const fetchFreeTimes = async () => {
+    console.log("🔄 API Call to Fetch Free Times...");
+    console.log("🆔 Project ID (Group ID):", projectId);
+  
+    if (!user || !user.token) {
+      console.error("❌ User is not logged in.");
+      setErrorMessage("User is not logged in.");
+      return;
+    }
+  
     try {
       const response = await axios.get(
-        API_URI,
+        `https://group-grade-backend-5f919d63857a.herokuapp.com/api/calendar/getGroupFreeTime`, 
         {
           headers: {
             Authorization: `Bearer ${user.token}`,
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         }
       );
-
-      console.log("Fetched free times:", response.data);
-      setFreeTimes(response.data.data); // Update state with fetched data
+  
+      console.log("✅ Full API Response:", response);
+  
+      if (response.data?.data) {
+        const formattedFreeTimes = formatFreeTimes(response.data.data); 
+        setFreeTimes(formattedFreeTimes);
+        console.log("🟢 Free Times Set in State:", formattedFreeTimes);
+      } else {
+        console.warn("⚠️ No free times found.");
+        setErrorMessage("No free times available.");
+      }
     } catch (error) {
-      console.error("Error fetching free times:", error.response?.data || error);
+      console.error("❌ Error Fetching Free Times:", error);
+  
+      if (error.response) {
+        console.error("🚨 Server Response Data:", error.response.data);
+        console.error("🚨 HTTP Status Code:", error.response.status);
+  
+        if (error.response.data && error.response.data.detail) {
+          console.error("🚨 Detailed Error Info:", JSON.stringify(error.response.data.detail, null, 2));
+        }
+      }
+  
       setErrorMessage("Failed to load schedule.");
     }
   };
+  
+  const formatFreeTimes = (data) => {
+    // Format the response data to group free times by days
+    const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    let formattedData = { Monday: [], Tuesday: [], Wednesday: [], Thursday: [], Friday: [], Saturday: [], Sunday: [] };
+
+    data.forEach((user) => {
+      const userName = user.name || "User"; // Default to "User" if name is missing
+      const freeTimes = user.free_time.free_time;
+
+      daysOfWeek.forEach((day) => {
+        if (freeTimes[day]) {
+          freeTimes[day].forEach((slot) => {
+            formattedData[day].push({
+              name: userName,
+              start: slot.start,
+              end: slot.end,
+            });
+          });
+        }
+      });
+    });
+
+    return formattedData;
+  };
 
   const renderSchedule = () => {
+    console.log("🛠 Rendering Schedule...");
+
     const daysOfWeek = [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-      "Sunday"
+      "Monday", "Tuesday", "Wednesday", "Thursday",
+      "Friday", "Saturday", "Sunday",
     ];
 
     return (
       <div className="show-free-times">
-        <h2>User's Schedule</h2>
+        <h2>Project Schedule</h2>
         {errorMessage && <p className="ErrorMessage">{errorMessage}</p>}
 
-        {/* Check if freeTimes is not empty */}
-        {Object.keys(freeTimes).length > 0 ? (
-          <div className="schedule-grid">
-            {daysOfWeek.map((day) => {
-              const times = freeTimes.free_time[day] || []; // Access free time for the day
-              return (
-                <div className="day-column" key={day}>
-                  <div className="day-box">{day}</div>
-                  {times.length > 0 ? (
-                    times.map((slot, index) => (
-                      <div key={index} className="free-time-box">
-                        <span className="name">{user.email}</span>
-                        <span className="time">
-                          {slot.start} - {slot.end}
-                        </span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="free-time-box no-availability">No Free Time</div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p>No schedules available yet.</p>
-        )}
+        <div className="schedule-grid">
+          {daysOfWeek.map((day) => {
+            const times = freeTimes[day] || [];
+
+            return (
+              <div className="day-column" key={day}>
+                <div className="day-box">{day}</div>
+                {times.length > 0 ? (
+                  times.map((slot, index) => (
+                    <div key={index} className="free-time-box">
+                      <span className="name">{slot.name}</span>
+                      <span className="time">{slot.start} - {slot.end}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="free-time-box no-availability">No Free Time</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   };
 
+  console.log("🔘 Rendering Buttons...");
   return (
     <div>
-      <div className="button-section">
-        <AddTime freeTimes={freeTimes} setFreeTimes={setFreeTimes} />
-        <FindTime freeTimes={freeTimes} />
+      <div className="button-section" style={{ display: "flex", justifyContent: "center", gap: "20px" }}>
+        {projectId && user?.token ? (
+          <>
+            <AddTime freeTimes={freeTimes} setFreeTimes={setFreeTimes} projectId={projectId} />
+            <FindTime freeTimes={freeTimes} projectId={projectId} />
+          </>
+        ) : (
+          <p className="ErrorMessage">{errorMessage}</p>
+        )}
       </div>
 
-      {renderSchedule()}
+      {renderSchedule()} {/* ✅ Now actually rendering the schedule */}
     </div>
   );
 };
