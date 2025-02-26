@@ -23,14 +23,18 @@ const Sidebar = () => {
         setLoading(false);
         return;
       }
-
+  
       try {
         const response = await axios.get("/api/group/", {
           headers: { Authorization: `Bearer ${user.token}` },
         });
-
+  
         if (response.data?.data) {
-          setProjects(response.data.data); // Fix response structure
+          // Filter projects where the user is a member
+          const userProjects = response.data.data.filter((project) =>
+            project.members.includes(user.email)  // Assuming `user.email` is in the `members` array
+          );
+          setProjects(userProjects);
         } else {
           setError("Invalid response structure.");
         }
@@ -40,9 +44,14 @@ const Sidebar = () => {
         setLoading(false);
       }
     };
-
+  
     fetchUserProjects();
   }, []);
+
+  const handleProjectClick = (project) => {
+    // Save the project details in localStorage
+    localStorage.setItem("selectedProject", JSON.stringify(project));
+  };
 
   const toggleSidebar = () => {
     setIsOpen((prev) => !prev);
@@ -94,6 +103,7 @@ const Sidebar = () => {
                     key={project._id} // Use unique project ID
                     to={`/projects/${project._id}`} // ✅ Now links to project page
                     className="nav-link"
+                    onClick={() => handleProjectClick(project)} // Save project details to localStorage on click
                   >
                     {project.name} {/* ✅ Displays project name */}
                   </Link>

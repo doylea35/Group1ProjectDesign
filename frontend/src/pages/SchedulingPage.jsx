@@ -11,7 +11,7 @@ const SchedulingPage = () => {
   console.log("🔍 SchedulingPage Loaded"); // LOG COMPONENT LOAD
 
   const { projectId } = useParams(); // ✅ Get projectId from the URL
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // To handle redirection
   const [freeTimes, setFreeTimes] = useState({}); // Holds the free times organized by day
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -44,8 +44,12 @@ const SchedulingPage = () => {
     }
   
     try {
-      const response = await axios.get(
-        `https://group-grade-backend-5f919d63857a.herokuapp.com/api/calendar/getGroupFreeTime`, 
+      // Make the PUT request to fetch free times
+      const response = await axios.put(
+        "https://group-grade-backend-5f919d63857a.herokuapp.com/api/calendar/getGroupFreeTime",
+        {
+          group_id: projectId, // Send the group/project ID in the body
+        },
         {
           headers: {
             Authorization: `Bearer ${user.token}`,
@@ -56,6 +60,7 @@ const SchedulingPage = () => {
   
       console.log("✅ Full API Response:", response);
   
+      // Check if response contains the free times and format them
       if (response.data?.data) {
         const formattedFreeTimes = formatFreeTimes(response.data.data); 
         setFreeTimes(formattedFreeTimes);
@@ -146,6 +151,21 @@ const SchedulingPage = () => {
   console.log("🔘 Rendering Buttons...");
   return (
     <div>
+      {/* Back Button - Positioned at the top left */}
+      <div
+        className="back-button"
+        style={{
+          position: "absolute",
+          top: "20px", // Positioning it a little down from the top
+          left: "300px", // Positioning it to the left
+          zIndex: "10", // Ensures the button stays above other elements
+        }}
+      >
+        <button onClick={() => navigate(`/projects/${projectId}`)} className="Button violet">
+          Back to Project
+        </button>
+      </div>
+
       <div className="button-section" style={{ display: "flex", justifyContent: "center", gap: "20px" }}>
         {projectId && user?.token ? (
           <>
