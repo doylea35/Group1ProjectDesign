@@ -69,19 +69,7 @@ const Sidebar = () => {
         </button>
         <nav className={`sidebar-links ${isOpen ? "active" : ""}`}>
           <Link to="/" className="nav-link">Home</Link>
-          <button className="nav-link" onClick={() => setCreateProfileOpen(true)}>Create Profile</button>
-
-          <Dialog.Root open={createProfileOpen} onOpenChange={setCreateProfileOpen}>
-            <Dialog.Portal>
-              <Dialog.Overlay className="DialogOverlay" />
-              <Dialog.Content className="DialogContent">
-                <CreateProfilePopup open={createProfileOpen} setOpen={setCreateProfileOpen} />
-                <Dialog.Close asChild>
-                  <button className="close-btn">Close</button>
-                </Dialog.Close>
-              </Dialog.Content>
-            </Dialog.Portal>
-          </Dialog.Root>
+        
 
           <Collapsible.Root open={isProjectsOpen} onOpenChange={setIsProjectsOpen}>
             <Collapsible.Trigger asChild>
@@ -101,11 +89,11 @@ const Sidebar = () => {
                 projects.map((project) => (
                   <Link
                     key={project._id} // Use unique project ID
-                    to={`/projects/${project._id}`} // ✅ Now links to project page
+                    to={`/projects/${project._id}`} 
                     className="nav-link"
                     onClick={() => handleProjectClick(project)} // Save project details to localStorage on click
                   >
-                    {project.name} {/* ✅ Displays project name */}
+                    {project.name} {/*  */}
                   </Link>
                 ))
               ) : (

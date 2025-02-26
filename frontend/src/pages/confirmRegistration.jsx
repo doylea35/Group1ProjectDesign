@@ -7,9 +7,9 @@ const RegistrationPage = () => {
   const {confirmationCode} = useParams()
   const [message, setMessage] = useState("Verifying your email...");
 
-  useEffect(async () => {
+  useEffect( () => {
 
-    await axios.get(`https://group-grade-backend-5f919d63857a.herokuapp.com/api/user/confirm/${confirmationCode}`, {
+    axios.get(`https://group-grade-backend-5f919d63857a.herokuapp.com/api/user/confirm/${confirmationCode}`, {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
