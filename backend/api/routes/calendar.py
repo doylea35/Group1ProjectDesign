@@ -40,7 +40,7 @@ async def get_user_freetime_for_user(current_user: dict = Depends(get_current_us
     return {"message": "Here are the free time slot", "data":user["free_time"]}
 
 
-@calendar_router.get("/getGroupFreeTime")
+@calendar_router.put("/getGroupFreeTime")
 async def get_all_freetime_for_user(request : GetAllFreeTimeRequest, current_user: dict = Depends(get_current_user)):
     free_time_slots = []
     cur_group = groups_collection.find_one({"_id": ObjectId(request.group_id)})
