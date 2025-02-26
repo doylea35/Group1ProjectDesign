@@ -18,7 +18,7 @@ const RegistrationPage = () => {
     })
     .then(response => {
       setMessage("Your email has been successfully verified! Redirecting to the home page...");
-      setTimeout(() => navigate('/home'), 3000); // Redirect to home after a delay
+      setTimeout(() => navigate('/'), 3000); // Redirect to home after a delay
     })
     .catch(error => {
       setMessage("Failed to verify email. The link may be expired or invalid.");
