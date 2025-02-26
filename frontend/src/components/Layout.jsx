@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import CreateNewProjectPop from "../pages/CreateProjectPop";
-import CreateProfilePopup from "./CreateProfile";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import * as Dialog from "@radix-ui/react-dialog";
 import axios from "axios";
@@ -10,7 +9,6 @@ import "../App.css";
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [isProjectsOpen, setIsProjectsOpen] = useState(false);
-  const [createProfileOpen, setCreateProfileOpen] = useState(false);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -69,20 +67,7 @@ const Sidebar = () => {
         </button>
         <nav className={`sidebar-links ${isOpen ? "active" : ""}`}>
           <Link to="/home" className="nav-link">Home</Link>
-          <button className="nav-link" onClick={() => setCreateProfileOpen(true)}>Create Profile</button>
-
-          <Dialog.Root open={createProfileOpen} onOpenChange={setCreateProfileOpen}>
-            <Dialog.Portal>
-              <Dialog.Overlay className="DialogOverlay" />
-              <Dialog.Content className="DialogContent">
-                <CreateProfilePopup open={createProfileOpen} setOpen={setCreateProfileOpen} />
-                <Dialog.Close asChild>
-                  <button className="close-btn">Close</button>
-                </Dialog.Close>
-              </Dialog.Content>
-            </Dialog.Portal>
-          </Dialog.Root>
-
+    
           <Collapsible.Root open={isProjectsOpen} onOpenChange={setIsProjectsOpen}>
             <Collapsible.Trigger asChild>
               <button className={`collapsible-btn ${isProjectsOpen ? "active" : ""}`}>
