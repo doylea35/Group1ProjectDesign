@@ -14,6 +14,7 @@ const SchedulingPage = () => {
   const navigate = useNavigate(); // To handle redirection
   const [freeTimes, setFreeTimes] = useState({}); // Holds the free times organized by day
   const [errorMessage, setErrorMessage] = useState("");
+  const [rawFreeTimeData, setRawFreeTimeData] = useState([]);
 
   const user = JSON.parse(localStorage.getItem("user")); // ✅ Get user info from localStorage
   console.log("👤 User:", user); // LOG USER INFO
@@ -36,13 +37,13 @@ const SchedulingPage = () => {
   const fetchFreeTimes = async () => {
     console.log("🔄 API Call to Fetch Free Times...");
     console.log("🆔 Project ID (Group ID):", projectId);
-  
+
     if (!user || !user.token) {
       console.error("❌ User is not logged in.");
       setErrorMessage("User is not logged in.");
       return;
     }
-  
+
     try {
       // Make the PUT request to fetch free times
       const response = await axios.put(
@@ -57,12 +58,21 @@ const SchedulingPage = () => {
           },
         }
       );
-  
+
       console.log("✅ Full API Response:", response);
-  
+
       // Check if response contains the free times and format them
       if (response.data?.data) {
-        const formattedFreeTimes = formatFreeTimes(response.data.data); 
+        const formattedFreeTimes = formatFreeTimes(response.data.data);
+
+        const a = response.data.data.map(
+          (person) => person.free_time.free_time
+        );
+
+        console.log(`raw in SchedulePage before setting: ${JSON.stringify(a)}`);
+        setRawFreeTimeData(a);
+        console.log(`raw in SchedulePage after setting: ${rawFreeTimeData}`);
+
         setFreeTimes(formattedFreeTimes);
         console.log("🟢 Free Times Set in State:", formattedFreeTimes);
       } else {
@@ -71,24 +81,43 @@ const SchedulingPage = () => {
       }
     } catch (error) {
       console.error("❌ Error Fetching Free Times:", error);
-  
+
       if (error.response) {
         console.error("🚨 Server Response Data:", error.response.data);
         console.error("🚨 HTTP Status Code:", error.response.status);
-  
+
         if (error.response.data && error.response.data.detail) {
-          console.error("🚨 Detailed Error Info:", JSON.stringify(error.response.data.detail, null, 2));
+          console.error(
+            "🚨 Detailed Error Info:",
+            JSON.stringify(error.response.data.detail, null, 2)
+          );
         }
       }
-  
+
       setErrorMessage("Failed to load schedule.");
     }
   };
-  
+
   const formatFreeTimes = (data) => {
     // Format the response data to group free times by days
-    const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-    let formattedData = { Monday: [], Tuesday: [], Wednesday: [], Thursday: [], Friday: [], Saturday: [], Sunday: [] };
+    const daysOfWeek = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
+    let formattedData = {
+      Monday: [],
+      Tuesday: [],
+      Wednesday: [],
+      Thursday: [],
+      Friday: [],
+      Saturday: [],
+      Sunday: [],
+    };
 
     data.forEach((user) => {
       const userName = user.name || "User"; // Default to "User" if name is missing
@@ -114,8 +143,13 @@ const SchedulingPage = () => {
     console.log("🛠 Rendering Schedule...");
 
     const daysOfWeek = [
-      "Monday", "Tuesday", "Wednesday", "Thursday",
-      "Friday", "Saturday", "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
     ];
 
     return (
@@ -134,11 +168,15 @@ const SchedulingPage = () => {
                   times.map((slot, index) => (
                     <div key={index} className="free-time-box">
                       <span className="name">{slot.name}</span>
-                      <span className="time">{slot.start} - {slot.end}</span>
+                      <span className="time">
+                        {slot.start} - {slot.end}
+                      </span>
                     </div>
                   ))
                 ) : (
-                  <div className="free-time-box no-availability">No Free Time</div>
+                  <div className="free-time-box no-availability">
+                    No Free Time
+                  </div>
                 )}
               </div>
             );
@@ -161,22 +199,34 @@ const SchedulingPage = () => {
           zIndex: "10", // Ensures the button stays above other elements
         }}
       >
-        <button onClick={() => navigate(`/projects/${projectId}`)} className="Button violet">
+        <button
+          onClick={() => navigate(`/projects/${projectId}`)}
+          className="Button violet"
+        >
           Back to Project
         </button>
       </div>
-
-      <div className="button-section" style={{ display: "flex", justifyContent: "center", gap: "20px" }}>
+      <div
+        className="button-section"
+        style={{ display: "flex", justifyContent: "center", gap: "20px" }}
+      >
         {projectId && user?.token ? (
           <>
-            <AddTime freeTimes={freeTimes} setFreeTimes={setFreeTimes} projectId={projectId} />
-            <FindTime freeTimes={freeTimes} projectId={projectId} />
+            <AddTime
+              freeTimes={freeTimes}
+              setFreeTimes={setFreeTimes}
+              projectId={projectId}
+            />
+            <FindTime
+              freeTimes={freeTimes}
+              raw_free_time_data={rawFreeTimeData}
+              projectId={projectId}
+            />
           </>
         ) : (
           <p className="ErrorMessage">{errorMessage}</p>
         )}
       </div>
-
       {renderSchedule()} {/* ✅ Now actually rendering the schedule */}
     </div>
   );
