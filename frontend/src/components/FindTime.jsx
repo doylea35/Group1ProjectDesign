@@ -52,31 +52,27 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
 
       // For now, we're using hardcoded times instead of sending a request to the API
       // Hardcoded overlapping slots
-      // const hardcodedOverlappingSlots = {
-      //   Tuesday: [
-      //     { start: "13:00", end: "17:00" },
-      //   ],
-      //   Thursday: [
-      //     { start: "11:00", end: "16:00" },
-      //   ]
-      // };
+      const hardcodedOverlappingSlots = {
+        Tuesday: [{ start: "13:00", end: "17:00" }],
+        Thursday: [{ start: "11:00", end: "16:00" }],
+      };
 
-      // // Simulate the overlapping times for the selected day
-      // if (hardcodedOverlappingSlots[selectedDay]) {
-      //   setOverlappingTimes(hardcodedOverlappingSlots[selectedDay]);
-      //   setErrorMessage("");
-      // } else {
-      //   setOverlappingTimes([]); // Clear previous results
-      //   setErrorMessage("No overlapping slots found.");
-      // }
+      // Simulate the overlapping times for the selected day
+      if (hardcodedOverlappingSlots[selectedDay]) {
+        setOverlappingTimes(hardcodedOverlappingSlots[selectedDay]);
+        setErrorMessage("");
+      } else {
+        setOverlappingTimes([]); // Clear previous results
+        setErrorMessage("No overlapping slots found.");
+      }
       ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // Uncomment the following code when API call is enabled
       // Get free times for the selected day
-      console.log(
-        `\n\ raw_free_time in findTime.jxs: ${JSON.stringify(
-          raw_free_time_data
-        )}\n\n`
-      );
+      // console.log(
+      //   `\n\ raw_free_time in findTime.jxs: ${JSON.stringify(
+      //     raw_free_time_data
+      //   )}\n\n`
+      // );
 
       // const dayFreeTimes = freeTimes[selectedDay] || [];
 
@@ -87,20 +83,20 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
       // }
 
       // Build the request body to send all free times for the selected day
-      const freeTimeRequest = {
-        free_time_slots: raw_free_time_data,
-        group_id: projectId,
-      };
+      // const freeTimeRequest = {
+      //   free_time_slots: raw_free_time_data,
+      //   group_id: projectId,
+      // };
 
-      // Send the accumulated free times for the selected day
-      const response = await axios.post(API_URI, freeTimeRequest, {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // // Send the accumulated free times for the selected day
+      // const response = await axios.post(API_URI, freeTimeRequest, {
+      //   headers: {
+      //     Authorization: `Bearer ${user.token}`,
+      //     "Content-Type": "application/json",
+      //   },
+      // });
 
-      console.log("API Response:", response);
+      // console.log("API Response:", response);
 
       // // Process the response as necessary
       // if (response.data && response.data.overlapping_times) {
