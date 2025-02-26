@@ -88,7 +88,7 @@ async def delete_group_handler(request : DeleteGroupRequest):
     # remove_task(group_id)
 
 
-@group_router.put("/confirmMembership/{user_email}/{group_id}")
+@group_router.get("/confirmMembership/{user_email}/{group_id}")
 async def confirm_member(user_email: str, group_id: str):
     # assume the user exist in our database
     # TODO ask the frontend to first check if the user exists or not, if not, ask user to register first then call this api
@@ -97,6 +97,7 @@ async def confirm_member(user_email: str, group_id: str):
 
     # group_id = request.group_id
     # user_email = request.user_email
+    print(f"\ngroup_id: {group_id}, user_email: {user_email}\n")
     
     group = groups_collection.find_one({"_id": ObjectId(group_id)})
     user = users_collection.find_one({"email":user_email})
