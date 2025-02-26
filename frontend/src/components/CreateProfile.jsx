@@ -2,7 +2,6 @@ import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import "../App.css";
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 axios.defaults.baseURL = 'https://group-grade-backend-5f919d63857a.herokuapp.com';
@@ -19,10 +18,11 @@ const CreateProfilePopup = ({ open, setOpen }) => {
     name: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    general: ""
   });
 
-  const navigate = useNavigate();
+  const [successMessage, setSuccessMessage] = React.useState("");
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -30,7 +30,6 @@ const CreateProfilePopup = ({ open, setOpen }) => {
       ...prevState,
       [name]: value,
     }));
-    console.log(`Input changed - ${name}: ${value}`); // Debugging log
     setErrors((prevErrors) => ({
       ...prevErrors,
       [name]: value.trim() ? "" : `${name} is required`,
@@ -65,8 +64,14 @@ const CreateProfilePopup = ({ open, setOpen }) => {
     try {
       const response = await axios.post('/api/user/register', userData);
       console.log("Profile Created:", response.data); // Debugging log
-      navigate('/home');
-      setOpen(false);
+      if (response.data && response.data.token) {
+      localStorage.setItem('token', response.data.token); // Store the token in localStorage
+      console.log("Token stored");
+    }
+      setSuccessMessage("Profile created! Please check your email to verify your account.");
+      setTimeout(() => {
+        setOpen(false); // Close the popup after a delay
+      }, 3000);
     } catch (error) {
       console.error("Error creating profile:", error.response ? error.response.data : error);
       const errorMessage = error.response && error.response.data.detail
@@ -87,6 +92,7 @@ const CreateProfilePopup = ({ open, setOpen }) => {
           </Dialog.Description>
           <form onSubmit={handleSubmit}>
             {errors.general && <p className="error-message">{errors.general}</p>}
+            {successMessage && <p className="success-message">{successMessage}</p>}
             <fieldset className="Fieldset">
               <label className="Label" htmlFor="name">Name:</label>
               <input

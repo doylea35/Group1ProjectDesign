@@ -3,20 +3,32 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const RegistrationPage = () => {
-  const { confirmationCode } = useParams(); // Get the confirmation code from the URL
   const navigate = useNavigate();
   const [message, setMessage] = useState("Verifying your email...");
 
   useEffect(() => {
-    axios.get(`/api/user/confirm/${confirmationCode}`)
-      .then(response => {
-        setMessage("Your email has been successfully verified! Redirecting to the home page...");
-        setTimeout(() => navigate('/home'), 3000); // Redirect to home after a delay
-      })
-      .catch(error => {
-        setMessage("Failed to verify email. The link may be expired or invalid.");
-      });
-  }, [confirmationCode, navigate]);
+    const token = localStorage.getItem('token'); // Retrieve the token from localStorage
+    if (!token) {
+      setMessage("Authentication token not found. Please log in.");
+      return;
+    }
+
+    axios.get(`https://group-grade-backend-5f919d63857a.herokuapp.com/api/user/confirm/${token}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      }
+    })
+    .then(response => {
+      setMessage("Your email has been successfully verified! Redirecting to the home page...");
+      setTimeout(() => navigate('/home'), 3000); // Redirect to home after a delay
+    })
+    .catch(error => {
+      setMessage("Failed to verify email. The link may be expired or invalid.");
+      console.error("Verification failed:", error.response ? error.response.data : error.message);
+    });
+  }, [navigate]);
 
   return (
     <div style={{ padding: '20px', textAlign: 'center' }}>
