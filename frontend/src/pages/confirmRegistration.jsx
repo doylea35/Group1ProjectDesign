@@ -4,16 +4,12 @@ import axios from 'axios';
 
 const RegistrationPage = () => {
   const navigate = useNavigate();
+  const {confirmationCode} = useParams(confirmationCode)
   const [message, setMessage] = useState("Verifying your email...");
 
   useEffect(() => {
-    const token = localStorage.getItem('token'); // Retrieve the token from localStorage
-    if (!token) {
-      setMessage("Authentication token not found. Please log in.");
-      return;
-    }
 
-    axios.get(`https://group-grade-backend-5f919d63857a.herokuapp.com/api/user/confirm/${token}`, {
+    axios.get(`https://group-grade-backend-5f919d63857a.herokuapp.com/api/user/confirm/${confirmationCode}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

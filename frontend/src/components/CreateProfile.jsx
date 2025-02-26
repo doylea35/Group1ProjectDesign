@@ -64,10 +64,6 @@ const CreateProfilePopup = ({ open, setOpen }) => {
     try {
       const response = await axios.post('/api/user/register', userData);
       console.log("Profile Created:", response.data); // Debugging log
-      if (response.data && response.data.token) {
-      localStorage.setItem('token', response.data.token); // Store the token in localStorage
-      console.log("Token stored");
-    }
       setSuccessMessage("Profile created! Please check your email to verify your account.");
       setTimeout(() => {
         setOpen(false); // Close the popup after a delay
