@@ -101,11 +101,11 @@ const Sidebar = () => {
                 projects.map((project) => (
                   <Link
                     key={project._id} // Use unique project ID
-                    to={`/projects/${project._id}`} // ✅ Now links to project page
+                    to={`/projects/${project._id}`} 
                     className="nav-link"
                     onClick={() => handleProjectClick(project)} // Save project details to localStorage on click
                   >
-                    {project.name} {/* ✅ Displays project name */}
+                    {project.name} {/*  */}
                   </Link>
                 ))
               ) : (

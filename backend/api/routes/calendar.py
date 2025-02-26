@@ -216,7 +216,7 @@ async def ask_chatgpt_for_free_time(request: GetOverlappingTimeSlotRequest, curr
         # Prepare the final prompt
         formatted_prompt = PROMPT_TEMPLATE.format(time_slots=str(processed_slots_json))
         # print("formyed prompts")
-        # print(f"\n\nformatted_prompt: {formatted_prompt}\n\n")
+        print(f"\n\nformatted_prompt: {formatted_prompt}\n\n")
         # Call OpenAI API
         response = openai.ChatCompletion.create(
             model="gpt-4o",  # Use "gpt-4o" for best performance
