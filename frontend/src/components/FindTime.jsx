@@ -21,6 +21,13 @@ const FindTime = ({ freeTimes }) => {
     setErrorMessage("User not logged in. Please log in to find overlapping time.");
   }
 
+  // Helper function to check if two time slots overlap
+  const checkOverlap = (slot1, slot2) => {
+    const [start1, end1] = [new Date(`1970-01-01T${slot1.start}`), new Date(`1970-01-01T${slot1.end}`)];
+    const [start2, end2] = [new Date(`1970-01-01T${slot2.start}`), new Date(`1970-01-01T${slot2.end}`)];
+    return start1 < end2 && start2 < end1; // If times overlap
+  };
+
   const findOverlappingTimes = async () => {
     if (!selectedDay) {
       setErrorMessage("Please select a day.");
@@ -29,29 +36,32 @@ const FindTime = ({ freeTimes }) => {
 
     try {
       console.log("📡 Fetching Overlapping Free Times...");
-      const group_id = "67bdf8aa2642dc845b82fc19"; // Hardcoded group ID for now
 
-      const response = await axios.post(
-        API_URI,
-        { group_id }, // Only sending group_id as per API structure
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // Get free times for the selected day
+      const dayFreeTimes = freeTimes[selectedDay] || [];
 
-      console.log("✅ Overlapping Times Fetched:", response.data);
-      const overlapping = response.data.data[selectedDay] || [];
-
-      if (overlapping.length === 0) {
-        setOverlappingTimes([]); // No overlapping slots
-        setErrorMessage("Available slots: None");
-      } else {
-        setOverlappingTimes(overlapping);
-        setErrorMessage(""); // Clear errors
+      if (dayFreeTimes.length === 0) {
+        setOverlappingTimes([]);
+        setErrorMessage("No available slots for the selected day.");
+        return;
       }
+
+      const requestedSlot = {
+        start: "10:00", // Placeholder for the user's desired start time, can be dynamic
+        end: `10:${duration < 60 ? duration : 0}`, // Add the duration to the end time
+      };
+
+      // Find overlapping slots
+      const overlaps = dayFreeTimes.filter((slot) => checkOverlap(slot, requestedSlot));
+
+      if (overlaps.length > 0) {
+        setOverlappingTimes(overlaps);
+        setErrorMessage("");
+      } else {
+        setOverlappingTimes([]);
+        setErrorMessage("No overlapping slots found.");
+      }
+
     } catch (error) {
       console.error("❌ Error fetching overlapping times:", error.response?.data || error);
       if (error.response && error.response.status === 401) {

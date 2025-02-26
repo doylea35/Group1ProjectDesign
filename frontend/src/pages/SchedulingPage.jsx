@@ -44,8 +44,12 @@ const SchedulingPage = () => {
     }
   
     try {
-      const response = await axios.get(
-        `https://group-grade-backend-5f919d63857a.herokuapp.com/api/calendar/getGroupFreeTime`, 
+      // Make the PUT request to fetch free times
+      const response = await axios.put(
+        "https://group-grade-backend-5f919d63857a.herokuapp.com/api/calendar/getGroupFreeTime",
+        {
+          group_id: projectId, // Send the group/project ID in the body
+        },
         {
           headers: {
             Authorization: `Bearer ${user.token}`,
@@ -56,6 +60,7 @@ const SchedulingPage = () => {
   
       console.log("✅ Full API Response:", response);
   
+      // Check if response contains the free times and format them
       if (response.data?.data) {
         const formattedFreeTimes = formatFreeTimes(response.data.data); 
         setFreeTimes(formattedFreeTimes);
@@ -79,6 +84,7 @@ const SchedulingPage = () => {
       setErrorMessage("Failed to load schedule.");
     }
   };
+  
   
   const formatFreeTimes = (data) => {
     // Format the response data to group free times by days
