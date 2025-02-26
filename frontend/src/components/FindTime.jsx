@@ -12,6 +12,7 @@ const FindTime = ({ freeTimes }) => {
   const [duration, setDuration] = useState(30); // Default duration is 30 minutes
   const [overlappingTimes, setOverlappingTimes] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [hasClickedFindTime, setHasClickedFindTime] = useState(false); // Track if the user clicked the "Find Overlapping Time" button inside the dialog
 
   // 🔹 Fetch User & Token from localStorage
   const user = JSON.parse(localStorage.getItem("user"));
@@ -29,38 +30,85 @@ const FindTime = ({ freeTimes }) => {
   };
 
   const findOverlappingTimes = async () => {
+    setOverlappingTimes([]); // Clear previous results
+    setErrorMessage(""); // Clear error message
+    setHasClickedFindTime(true); // Mark that the button was clicked inside the dialog
+  
     if (!selectedDay) {
       setErrorMessage("Please select a day.");
       return;
     }
-
+  
     try {
       console.log("📡 Fetching Overlapping Free Times...");
 
+      // For now, we're using hardcoded times instead of sending a request to the API
+      // Hardcoded overlapping slots
+      const hardcodedOverlappingSlots = {
+        Tuesday: [
+          { start: "13:00", end: "17:00" },
+        ],
+        Thursday: [
+          { start: "11:00", end: "16:00" },
+        ]
+      };
+
+      // Simulate the overlapping times for the selected day
+      if (hardcodedOverlappingSlots[selectedDay]) {
+        setOverlappingTimes(hardcodedOverlappingSlots[selectedDay]);
+        setErrorMessage("");
+      } else {
+        setOverlappingTimes([]); // Clear previous results
+        setErrorMessage("No overlapping slots found.");
+      }
+
+      // Uncomment the following code when API call is enabled
+      /*
       // Get free times for the selected day
       const dayFreeTimes = freeTimes[selectedDay] || [];
-
+  
       if (dayFreeTimes.length === 0) {
-        setOverlappingTimes([]);
+        setOverlappingTimes([]); // Clear previous results
         setErrorMessage("No available slots for the selected day.");
         return;
       }
-
-      const requestedSlot = {
-        start: "10:00", // Placeholder for the user's desired start time, can be dynamic
-        end: `10:${duration < 60 ? duration : 0}`, // Add the duration to the end time
+  
+      // Build the request body to send all free times for the selected day
+      const freeTimeRequest = {
+        free_time: {
+          [selectedDay]: dayFreeTimes.map((slot) => ({
+            start: slot.start,
+            end: slot.end,
+          })),
+        },
       };
-
-      // Find overlapping slots
-      const overlaps = dayFreeTimes.filter((slot) => checkOverlap(slot, requestedSlot));
-
-      if (overlaps.length > 0) {
-        setOverlappingTimes(overlaps);
-        setErrorMessage("");
+  
+      console.log("Request body being sent to the API:", freeTimeRequest);
+  
+      // Send the accumulated free times for the selected day
+      const response = await axios.post(API_URI, freeTimeRequest, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      console.log("API Response:", response);
+  
+      // Process the response as necessary
+      if (response.data && response.data.overlapping_times) {
+        const overlapping = response.data.overlapping_times;
+        if (overlapping.length > 0) {
+          setOverlappingTimes(overlapping);
+          setErrorMessage("");
+        } else {
+          setOverlappingTimes([]); // Clear previous results
+          setErrorMessage("No overlapping slots found.");
+        }
       } else {
-        setOverlappingTimes([]);
         setErrorMessage("No overlapping slots found.");
       }
+      */
 
     } catch (error) {
       console.error("❌ Error fetching overlapping times:", error.response?.data || error);
@@ -142,10 +190,10 @@ const FindTime = ({ freeTimes }) => {
           </button>
 
           {/* Error Messages */}
-          {errorMessage && <p className="ErrorMessage">{errorMessage}</p>}
+          {hasClickedFindTime && errorMessage && <p className="ErrorMessage">{errorMessage}</p>} {/* Show error after button click */}
 
           {/* Display Overlapping Times */}
-          {overlappingTimes.length > 0 ? (
+          {overlappingTimes.length > 0 && (
             <div className="overlap-results">
               <h3>Overlapping Free Times</h3>
               {overlappingTimes.map((overlap, index) => (
@@ -154,8 +202,6 @@ const FindTime = ({ freeTimes }) => {
                 </div>
               ))}
             </div>
-          ) : (
-            !errorMessage && <p className="ErrorMessage">Available slots: None</p>
           )}
 
           <Dialog.Close asChild>
