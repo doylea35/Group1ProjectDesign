@@ -19,6 +19,10 @@ const Sidebar = () => {
     <div className="app-layout">
       {/* Sidebar */}
       <div className={`sidebar ${isOpen ? "open" : "closed"}`}>
+      <div className="sidebar-header">
+        <img src="/hexlogo.png" alt="GroupGrade Logo" className="sidebar-logo" />
+        <h1 className="sidebar-title">GroupGrade</h1>
+      </div>
         <button onClick={toggleSidebar} className="toggle-button">
           {isOpen ? "⟨" : "⟩"}
         </button>

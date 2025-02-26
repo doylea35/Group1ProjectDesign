@@ -4,10 +4,10 @@
 @import "@radix-ui/colors/violet.css";
 
 #root {
-  max-width: 1280px;
+  max-width: 2560px;
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
+  /*text-align: center;*/
 }
 
 .logo {
@@ -52,7 +52,7 @@ body {
 
 /* Title font*/
 h1 {
-  position: absolute; 
+  position: static; 
   top: 20px; 
   left: 50px; 
   margin: 0; 
@@ -144,6 +144,27 @@ outline-color: var(--green-7);
 .Button.green:hover {
 background-color: var(--green-5);
 }
+
+.Button2 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  padding: 0 15px;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 500;
+  height: 35px;
+  user-select: none;
+  background-color: var(--green-11)
+  }
+  .Button2:focus:not(:focus-visible) {
+  outline: 0;
+  }
+  .Button2:focus-visible {
+  outline: 2px solid var(--green-6);
+  outline-offset: 1px;
+  }
 
 .IconButton {
   all: unset;
@@ -460,10 +481,12 @@ to {
 /* Main Content */
 .main-content {
   flex: 1;
-  display: flex;
-  justify-content: center;
-  padding: 1.5rem;
+  /*display: flex;*/
+  /*justify-content: center;
+  /*padding: 1.5rem;*/
   background-color: var(--gray-2);
+  height: 100;
+  width: 100;
 }
 /* Sidebar styling */
 .sidebar {
@@ -479,7 +502,31 @@ to {
   flex-direction: column;
   padding-top: 20px;
   outline: none;
-  box-shadow: none;
+  box-shadow: 5px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-header {
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0px;
+}
+
+.sidebar-header h1 {
+  position: static;
+}
+
+.sidebar-logo {
+  width: 36px;
+  height: 36px;
+  margin-left: 15px;
+}
+
+.sidebar-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--mauve-12);
+  margin: 0;
 }
 
 /* Collapsed sidebar */
@@ -564,6 +611,29 @@ to {
   text-align: center;
 }
 
+.page-header {
+  width: 100%;
+  height: 8vh;        
+  top: 0;   
+  left: 0;     
+  background-color: #f3f4f6;    
+  border-bottom: 2px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  padding-left: 1.5rem;       
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1),
+              0 4px 6px rgba(0, 0, 0, 0.05);
+  position: fixed;
+  z-index: 1;
+  padding-left: 280px;
+}
+
+.page-header h1 {
+  font-size: 1.875rem; 
+  font-weight: bold;
+  color: #4b5563;      
+  margin: 0;
+}
 .projects-list {
   list-style: none;
   padding: 0;
@@ -646,6 +716,15 @@ to {
   padding: 2rem;
 }
 
+.landing-card h1 {
+  position: static;
+  text-align: center;
+  font-size: 2.25rem;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+
 /* Logo styling */
 .logo {
   width: 8rem; /* 128px equivalent */
@@ -669,6 +748,7 @@ to {
   color: #6b7280;
 }
 
+
 /* Buttons common style */
 .button {
   width: 20rem; /* 320px equivalent */
@@ -681,14 +761,25 @@ to {
 }
 
 /* Specific login button style */
-.login-button, .create-account-button {
+.login-button {
   background-color: #5932EA;
   color: white;
   margin-top: 1.75rem;
 }
 
-.login-button:hover, .create-account-button:hover {
+.login-button:hover {
   background-color: #3111B6;
+}
+
+.create-account-button {
+  margin-top: 1rem;
+  outline: 5px solid #cacaca;
+  color:#6b7280
+}
+
+.create-account-button:hover {
+  background-color: #c0c0c0;
+  outline: 5px solid #888888;
 }
 
 .login-container {
@@ -998,4 +1089,35 @@ to {
 .TimeFieldset .Input:focus {
   border-color: var(--violet-10);
   box-shadow: 0 0 0 3px var(--violet-6);
+}
+
+.selection-container {
+  margin-top: 15px;
+}
+
+.selection-title {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.button-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.task-toggle-button {
+  background-color: #e2e8f0;
+  border: 1px solid #94a3b8;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.task-toggle-button.selected {
+  background-color: #6366f1;
+  color: white;
+  border: 1px solid #4f46e5;
 }
