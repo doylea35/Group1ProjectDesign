@@ -4,6 +4,8 @@ from db.database import groups_collection, users_collection, tasks_collection
 from db.models import User, Group, Task
 from db.schemas import users_serial, groups_serial, tasks_serial
 from bson import ObjectId # mongodb uses ObjectId to store _id
+from typing import List
+
 
 profiles_router = APIRouter()
 

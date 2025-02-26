@@ -68,7 +68,7 @@ const Sidebar = () => {
           {isOpen ? "⟨" : "⟩"}
         </button>
         <nav className={`sidebar-links ${isOpen ? "active" : ""}`}>
-          <Link to="/" className="nav-link">Home</Link>
+          <Link to="/home" className="nav-link">Home</Link>
           <button className="nav-link" onClick={() => setCreateProfileOpen(true)}>Create Profile</button>
 
           <Dialog.Root open={createProfileOpen} onOpenChange={setCreateProfileOpen}>
