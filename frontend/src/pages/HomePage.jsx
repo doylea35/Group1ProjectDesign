@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import axios from "axios";
-import "../App.css"; // Ensure styles are applied
+import "../App.css"; 
 
 export default function HomePage() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [projects, setProjects] = useState({}); // Store project names by ID
+  const [activeTaskId, setActiveTaskId] = useState(null);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -79,6 +80,14 @@ export default function HomePage() {
     fetchProjects();
   }, []);
 
+  const toggleTaskDescription = (taskId) => {
+    if (activeTaskId === taskId) {
+      setActiveTaskId(null);  // If the task is already active, clicking again hides it
+    } else {
+      setActiveTaskId(taskId);  // Else, set it as the active task
+    }
+  };
+
   if (loading) return <p>Loading tasks...</p>;
   if (error) return <p className="error-message">{error}</p>;
 
@@ -89,7 +98,7 @@ export default function HomePage() {
       {tasks.length > 0 ? (
         <div className="task-list-container">
           {tasks.map((task) => (
-            <div key={task._id} className="task-card">
+            <div key={task._id} className="task-card" onClick={() => toggleTaskDescription(task._id)}>
               <h4 className="task-title">{task.name}</h4>
               <p className="task-meta">
                 <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
@@ -100,6 +109,9 @@ export default function HomePage() {
               <p className="task-meta">
                 <strong>Status:</strong> {task.status} | <strong>Priority:</strong> {task.priority}
               </p>
+              {activeTaskId === task._id && (  // Conditionally render the task description
+                <p className="task-description">{task.description || "No description provided."}</p>
+              )}
             </div>
           ))}
         </div>

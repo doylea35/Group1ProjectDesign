@@ -13,7 +13,7 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
     const [errors, setErrors] = useState({});
     const [members, setMembers] = useState([]); // Members will be fetched from backend
 
-    const subteams = ["Frontend Subteam", "Backend Subteam"];
+    const subteams = ["Research", "Design"];
 
     useEffect(() => {
         console.log("CreateTask component mounted. Checking projectId:", projectId);
