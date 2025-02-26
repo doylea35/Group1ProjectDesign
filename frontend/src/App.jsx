@@ -23,7 +23,7 @@ function App() {
           <Route path="create-project" element={<CreateNewProjectPop />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="logout" element={<LogoutPage />} />
-          <Route path="confirmRegistration/:confirmationCode" element={<RegistrationPage />} /> 
+          <Route path="/confirmRegistration/:confirmationCode" element={<RegistrationPage />} /> 
           <Route path="projects/:projectId" element={<ProjectPage />} />
           <Route path="schedule/:projectId" element={<SchedulingPage />} />
           <Route path="home" element={<HomePage/>} />
