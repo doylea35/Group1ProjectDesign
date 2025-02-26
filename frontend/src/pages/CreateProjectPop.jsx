@@ -7,61 +7,25 @@ import "../App.css";
 const API_URI = "/api/group/"; 
 
 /**
- * @desc Simulated GET request to fetch user profile for testing
- * @route GET /api/users/profile
- * @access private
- */
-const fetchUserProfile = async () => {
-  console.log("fetchUserProfile function called"); // Debugging log
-  const user = { email: "nzhang@tcd.ie", token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YmJhMzkxZjBiYzhhOGYzN2YzYWNjOCIsImVtYWlsIjoibnpoYW5nQHRjZC5pZSJ9.1hbzE78aogZ5Qqyb2SqMBz2N0Wlx10X72XgSnbFV3yU" };
-
-  /*
-  // Original Code (Uncomment after testing)
-  let user = JSON.parse(localStorage.getItem("user"));
-  if (!user) {
-    user = { email: "nzhang@tcd.ie", token: null };
-  }
-  const token = user?.token;
-  const config = { headers: { Authorization: token ? `Bearer ${token}` : "" } };
-  try {
-    const res = await axios.get("/api/users/profile", config);
-    return res.data;
-  } catch (error) {
-    console.error("Error fetching user profile:", error);
-    return null;
-  }
-  */
-  
-  console.log("Returning user data:", user); // Debugging log
-  return user;
-};
-
-/**
  * @desc POST request to create a new project
  * @route POST /api/projects/create
  * @access private
  */
 const createProject = async (projectData) => {
-  console.log("createProject function called"); // Debugging log
-  console.log("Sending project data:", projectData); // Debugging log
-
   try {
-    // Send the project data in JSON format
     const res = await axios.post(API_URI + "create", projectData, {
       headers: {
-        "Content-Type": "application/json", // Make sure the correct content type is set
+        "Content-Type": "application/json", // Ensure proper content type
       },
     });
-    console.log("Project created successfully:", res.data); // Debugging response
     return res.data;
   } catch (err) {
     console.error("Error creating project:", err.response?.data || err.message);
-    // Enhanced error details
     if (err.response) {
       console.error("Error response status:", err.response.status);
       console.error("Error response data:", err.response.data);
     }
-    throw err;
+    throw err; // Re-throw the error
   }
 };
 
@@ -72,64 +36,50 @@ const CreateNewProjectPop = () => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
 
-  React.useEffect(() => {
-    console.log("useEffect called - fetching user profile"); // Debugging log
-    const getUserEmail = async () => {
-      try {
-        console.log("Fetching user data...");
-        const userData = await fetchUserProfile();
-        console.log("User data fetched:", userData); // Debugging log
-        setUserEmail(userData.email);
-        setMembers(userData.email); 
-      } catch (err) {
-        console.error("Error fetching user:", err.response?.data || err.message);
-        setError("Failed to load user profile.");
-      } finally {
-        setLoading(false);
-        console.log("useEffect finished"); // Debugging log
-      }
-    };
+React.useEffect(() => {
+  const getUserEmail = () => {
+    const user = JSON.parse(localStorage.getItem("user")); // Retrieve the user from localStorage
+    console.log("User from localStorage:", user); // Debugging log
+    if (user && user.email) {
+      setUserEmail(user.email); // Set the email if it's available
+      setMembers(user.email);   // Automatically add the user's email to the members list
+    } else {
+      setError("Failed to load user profile. No user data found.");
+    }
+    setLoading(false); // Set loading to false once data is fetched
+  };
 
-    getUserEmail();
-  }, []);
+  getUserEmail(); // Get user email
+}, []);
+
 
   const handleCreateProject = async (event) => {
-    console.log("handleCreateProject function was called");
-  
-    event.preventDefault();  // Prevent form default behavior
-  
-    // Check if the event.preventDefault() works properly by logging
-    console.log("Form submission prevented");
-  
+    event.preventDefault();
+
     const membersArray = members
       ? members.split(",").map((email) => email.trim())
       : [];
-  
-    // Ensure the user email is added to the members list
+
+    // Ensure the user's email is added to the list of members
     if (!membersArray.includes(userEmail)) {
       membersArray.unshift(userEmail);
     }
-  
+
     const projectData = {
       creator_email: userEmail,
       group_name: projectName,
       members: membersArray,
     };
-  
-    console.log("Project data to send:", projectData);  // Log project data before sending
-  
+
     try {
       const createdProject = await createProject(projectData);
       console.log("Project Created:", createdProject);
-  
-      // Reset form
       setProjectName("");
-      setMembers(userEmail);
+      setMembers(userEmail); // Reset the members input after creation
     } catch (err) {
-      setError("Failed to create project. Try again.");
+      setError("Failed to create project. Please try again.");
     }
   };
-  
 
   return (
     <Dialog.Portal>
@@ -143,10 +93,7 @@ const CreateNewProjectPop = () => {
         {loading ? (
           <p>Loading profile...</p>
         ) : (
-          <form onSubmit={(e) => { 
-            console.log("Form submitted", e);
-            handleCreateProject(e); // Calling your existing handler
-          }}>
+          <form onSubmit={handleCreateProject}>
             <fieldset className="Fieldset">
               <label className="Label" htmlFor="projectname">Project Name</label>
               <input
@@ -171,8 +118,9 @@ const CreateNewProjectPop = () => {
               <button type="submit" className="Button green">Create Project</button>
             </div>
           </form>
-          
         )}
+
+        {error && <p className="ErrorMessage">{error}</p>}
 
         <Dialog.Close asChild>
           <button className="IconButton" aria-label="Close">

@@ -1,31 +1,72 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import CreateNewProjectPop from "../pages/CreateProjectPop";
 import CreateProfilePopup from "./CreateProfile";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import * as Dialog from "@radix-ui/react-dialog";
+import axios from "axios";
 import "../App.css";
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
-  const [isProjectsOpen, setIsProjectsOpen] = useState(false); // Define collapsible state
+  const [isProjectsOpen, setIsProjectsOpen] = useState(false);
   const [createProfileOpen, setCreateProfileOpen] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
+  useEffect(() => {
+    const fetchUserProjects = async () => {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user || !user.token) {
+        setError("User not logged in.");
+        setLoading(false);
+        return;
+      }
+  
+      try {
+        const response = await axios.get("/api/group/", {
+          headers: { Authorization: `Bearer ${user.token}` },
+        });
+  
+        if (response.data?.data) {
+          // Filter projects where the user is a member
+          const userProjects = response.data.data.filter((project) =>
+            project.members.includes(user.email)  // Assuming `user.email` is in the `members` array
+          );
+          setProjects(userProjects);
+        } else {
+          setError("Invalid response structure.");
+        }
+      } catch (error) {
+        setError("Failed to load projects.");
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchUserProjects();
+  }, []);
+  
+  
   const toggleSidebar = () => {
     setIsOpen((prev) => !prev);
   };
 
   return (
     <div className="app-layout">
-      {/* Sidebar */}
       <div className={`sidebar ${isOpen ? "open" : "closed"}`}>
+        <div className="sidebar-header">
+          <img src="/hexlogo.png" alt="GroupGrade Logo" className="sidebar-logo" />
+          <h1 className="sidebar-title">GroupGrade</h1>
+        </div>
         <button onClick={toggleSidebar} className="toggle-button">
           {isOpen ? "⟨" : "⟩"}
         </button>
         <nav className={`sidebar-links ${isOpen ? "active" : ""}`}>
           <Link to="/" className="nav-link">Home</Link>
           <button className="nav-link" onClick={() => setCreateProfileOpen(true)}>Create Profile</button>
-          
+
           <Dialog.Root open={createProfileOpen} onOpenChange={setCreateProfileOpen}>
             <Dialog.Portal>
               <Dialog.Overlay className="DialogOverlay" />
@@ -47,9 +88,24 @@ const Sidebar = () => {
             </Collapsible.Trigger>
 
             <Collapsible.Content className="collapsible-content">
-              <Link to="/projects/project1" className="nav-link">Project 1</Link>
-              <Link to="/projects/project2" className="nav-link">Project 2</Link>
-              <Link to="/projects/project3" className="nav-link">Project 3</Link>
+              {/* Loading/Error Handling */}
+              {loading ? (
+                <p>Loading projects...</p>
+              ) : error ? (
+                <p className="error-message">{error}</p>
+              ) : projects.length > 0 ? (
+                projects.map((project) => (
+                  <Link
+                    key={project._id} // Use unique project ID
+                    to={`/projects/${project._id}`} // ✅ Now links to project page
+                    className="nav-link"
+                  >
+                    {project.name} {/* ✅ Displays project name */}
+                  </Link>
+                ))
+              ) : (
+                <p>No projects found</p>
+              )}
 
               {/* Dialog for Creating a New Project */}
               <Dialog.Root>

@@ -9,6 +9,7 @@ import LogoutPage from './pages/LogoutPage';
 import ProjectPage from './pages/ProjectPage';
 import SchedulingPage from './pages/SchedulingPage';
 import HomePage from './pages/HomePage';
+import RegistrationPage from './pages/confirmRegistration';
 import axios from 'axios';
 
 axios.defaults.baseURL = 'https://group-grade-backend-5f919d63857a.herokuapp.com';
@@ -22,8 +23,9 @@ function App() {
           <Route path="create-project" element={<CreateNewProjectPop />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="logout" element={<LogoutPage />} />
+          <Route path="confirmRegistration/:confirmationCode" element={<RegistrationPage />} /> 
           <Route path="projects/:projectId" element={<ProjectPage />} />
-          <Route path="schedule" element={<SchedulingPage />} />
+          <Route path="schedule/:projectId" element={<SchedulingPage />} />
           <Route path="home" element={<HomePage/>} />
 
         </Route>
