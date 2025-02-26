@@ -1,12 +1,3 @@
-import sys
-import os
-from unittest.mock import MagicMock
-
-# Mock Google OAuth when running pytest because of Google OAuth error
-if "pytest" in sys.modules:
-    sys.modules["email_service.email_utils"] = MagicMock()
-
-
 from fastapi import FastAPI
 from api.routes.greeting import greeting_router
 from api.routes.profiles import profiles_router
