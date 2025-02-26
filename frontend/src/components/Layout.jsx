@@ -47,8 +47,12 @@ const Sidebar = () => {
   
     fetchUserProjects();
   }, []);
-  
-  
+
+  const handleProjectClick = (project) => {
+    // Save the project details in localStorage
+    localStorage.setItem("selectedProject", JSON.stringify(project));
+  };
+
   const toggleSidebar = () => {
     setIsOpen((prev) => !prev);
   };
@@ -99,6 +103,7 @@ const Sidebar = () => {
                     key={project._id} // Use unique project ID
                     to={`/projects/${project._id}`} // ✅ Now links to project page
                     className="nav-link"
+                    onClick={() => handleProjectClick(project)} // Save project details to localStorage on click
                   >
                     {project.name} {/* ✅ Displays project name */}
                   </Link>
