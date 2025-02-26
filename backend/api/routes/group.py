@@ -119,7 +119,7 @@ async def confirm_member(request:ConfirmGroupMembershipRequest):
     if user_email not in group["pending_members"]:
         return HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail={"message": f"{user_email} is not a pending memeber in the group: {group["name"]}"}
+                    detail={"message": f"{user_email} is not a pending memeber in the group: {group['name']}"}
                 )
 
     
@@ -246,6 +246,6 @@ def send_project_invitation_email(user_emails:list[str], creator_email:str, new_
         email_content = INVITATION_EMAIL_TEMPLATE.format(
             creator_email=creator_email,
             project_name=new_group_name,
-            invitation_link=f"{BASE_URL.format(frontend_url=frontend_url_dev)}/{user_email_for_link}/{new_group_id}"
+            invitation_link=f"{BASE_URL.format(frontend_url=frontend_url_dev)}"
         )
         email_sender.send_email(receipient=user_email, email_message=email_content, subject_line=f"Group Invitation from: {creator_email}")

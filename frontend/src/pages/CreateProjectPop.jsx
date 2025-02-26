@@ -7,55 +7,25 @@ import "../App.css";
 const API_URI = "/api/group/"; 
 
 /**
- * @desc Simulated GET request to fetch user profile for testing
- * @route GET /api/users/profile
- * @access private
- */
-const fetchUserProfile = async () => {
-  // For testing, always use this default user
-  const user = { email: "nzhang@tcd.ie", token: null }; 
-
-  /*
-  // Original Code (Uncomment after testing)
-  let user = JSON.parse(localStorage.getItem("user"));
-  if (!user) {
-    user = { email: "nzhang@tcd.ie", token: null };
-  }
-  const token = user?.token;
-  const config = { headers: { Authorization: token ? `Bearer ${token}` : "" } };
-  try {
-    const res = await axios.get("/api/users/profile", config);
-    return res.data;
-  } catch (error) {
-    console.error("Error fetching user profile:", error);
-    return null;
-  }
-  */
-  
-  return user;
-};
-
-/**
  * @desc POST request to create a new project
  * @route POST /api/projects/create
  * @access private
  */
 const createProject = async (projectData) => {
-  console.log("Sending project data:", projectData); // Debugging log
-
-  const config = {
-    headers: {
-      "Content-Type": "application/json", // Ensure correct format
-      Authorization: "", // No token needed in test mode
-    },
-  };
-
   try {
-    const res = await axios.post(API_URI + "create", projectData, config);
+    const res = await axios.post(API_URI + "create", projectData, {
+      headers: {
+        "Content-Type": "application/json", // Ensure proper content type
+      },
+    });
     return res.data;
   } catch (err) {
     console.error("Error creating project:", err.response?.data || err.message);
-    throw err;
+    if (err.response) {
+      console.error("Error response status:", err.response.status);
+      console.error("Error response data:", err.response.data);
+    }
+    throw err; // Re-throw the error
   }
 };
 
@@ -66,22 +36,22 @@ const CreateNewProjectPop = () => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
 
-  React.useEffect(() => {
-    const getUserEmail = async () => {
-      try {
-        const userData = await fetchUserProfile();
-        setUserEmail(userData.email);
-        setMembers(userData.email); 
-      } catch (err) {
-        console.error("Error fetching user:", err.response?.data || err.message);
-        setError("Failed to load user profile.");
-      } finally {
-        setLoading(false);
-      }
-    };
+React.useEffect(() => {
+  const getUserEmail = () => {
+    const user = JSON.parse(localStorage.getItem("user")); // Retrieve the user from localStorage
+    console.log("User from localStorage:", user); // Debugging log
+    if (user && user.email) {
+      setUserEmail(user.email); // Set the email if it's available
+      setMembers(user.email);   // Automatically add the user's email to the members list
+    } else {
+      setError("Failed to load user profile. No user data found.");
+    }
+    setLoading(false); // Set loading to false once data is fetched
+  };
 
-    getUserEmail();
-  }, []);
+  getUserEmail(); // Get user email
+}, []);
+
 
   const handleCreateProject = async (event) => {
     event.preventDefault();
@@ -90,6 +60,7 @@ const CreateNewProjectPop = () => {
       ? members.split(",").map((email) => email.trim())
       : [];
 
+    // Ensure the user's email is added to the list of members
     if (!membersArray.includes(userEmail)) {
       membersArray.unshift(userEmail);
     }
@@ -103,12 +74,10 @@ const CreateNewProjectPop = () => {
     try {
       const createdProject = await createProject(projectData);
       console.log("Project Created:", createdProject);
-
-      // Reset form
       setProjectName("");
-      setMembers(userEmail);
+      setMembers(userEmail); // Reset the members input after creation
     } catch (err) {
-      setError("Failed to create project. Try again.");
+      setError("Failed to create project. Please try again.");
     }
   };
 
@@ -125,7 +94,6 @@ const CreateNewProjectPop = () => {
           <p>Loading profile...</p>
         ) : (
           <form onSubmit={handleCreateProject}>
-            {error && <p className="error">{error}</p>}
             <fieldset className="Fieldset">
               <label className="Label" htmlFor="projectname">Project Name</label>
               <input
@@ -147,12 +115,12 @@ const CreateNewProjectPop = () => {
               />
             </fieldset>
             <div style={{ display: "flex", marginTop: 25, justifyContent: "flex-end" }}>
-              <Dialog.Close asChild>
-                <button type="submit" className="Button green">Create Project</button>
-              </Dialog.Close>
+              <button type="submit" className="Button green">Create Project</button>
             </div>
           </form>
         )}
+
+        {error && <p className="ErrorMessage">{error}</p>}
 
         <Dialog.Close asChild>
           <button className="IconButton" aria-label="Close">

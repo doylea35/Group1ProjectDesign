@@ -1,70 +1,79 @@
 import React, { useState } from "react";
-import axios from "axios"; 
+import axios from "axios";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Select from "@radix-ui/react-select";
 import { Cross2Icon, CheckIcon, ChevronDownIcon, PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import "../App.css";
 
-const API_URI = "/api/calendar/updateFreeTime";  
+const API_URI = "/api/calendar/updateFreeTime";
 
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-const AddTime = ({ freeTimes, setFreeTimes }) => {
-  const [selectedDay, setSelectedDay] = useState("");
-  const [timeSlots, setTimeSlots] = useState([{ id: 1, startTime: "", endTime: "" }]);
+const AddTime = ({ freeTimes, setFreeTimes, onTimeAdded }) => {
+  const [timeSlots, setTimeSlots] = useState([{ id: 1, day: "", startTime: "", endTime: "" }]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isOpen, setIsOpen] = useState(false); // Control dialog state
 
   const resetForm = () => {
-    setSelectedDay("");
-    setTimeSlots([{ id: 1, startTime: "", endTime: "" }]);
+    setTimeSlots([{ id: 1, day: "", startTime: "", endTime: "" }]);
     setErrorMessage("");
   };
 
   const handleSave = async () => {
-    if (!selectedDay || timeSlots.some(slot => !slot.startTime || !slot.endTime)) {
+    if (timeSlots.some(slot => !slot.day || !slot.startTime || !slot.endTime)) {
       setErrorMessage("Please fill out all fields before saving.");
       return;
     }
-    setErrorMessage(""); 
 
-    // Format the data to match the backend structure
-    const formattedFreeTime = { [selectedDay]: timeSlots.map(slot => ({
-      start: slot.startTime,
-      end: slot.endTime
-    })) };
+    setErrorMessage("");
+
+    const formattedFreeTime = {};
+    timeSlots.forEach(slot => {
+      if (!formattedFreeTime[slot.day]) formattedFreeTime[slot.day] = [];
+      formattedFreeTime[slot.day].push({ start: slot.startTime, end: slot.endTime });
+    });
+
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || !user.token) {
+      setErrorMessage("User is not logged in.");
+      return;
+    }
 
     try {
-      // Send data to the backend
-      const response = await axios.put(API_URI, {
-        free_time: formattedFreeTime
-      });
+      const response = await axios.put(API_URI,
+        { free_time: formattedFreeTime },
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json"
+          },
+        }
+      );
 
-      // Handle response from backend (e.g., success)
-      alert(`Saved: ${selectedDay} with ${timeSlots.length} time slots`);
-      setFreeTimes(response.data.data);  // Update free times in state if needed
+      setFreeTimes(response.data.data);
+
+      // Close dialog and trigger parent component to refresh schedule
+      setTimeout(() => {
+        setIsOpen(false);
+        if (onTimeAdded) onTimeAdded(); // Notify SchedulingPage to refresh
+      }, 1000);
+
     } catch (error) {
-      // Handle error (e.g., show error message)
-      setErrorMessage("Failed to save the free time.");
-      console.error("Error saving free time:", error);
+      console.error("Error saving free time:", error.response?.data || error);
+      setErrorMessage(error.response?.data?.detail || "Failed to save free time.");
     }
   };
 
   const addTimeSlot = () => {
-    setTimeSlots([...timeSlots, { id: Date.now(), startTime: "", endTime: "" }]);
+    setTimeSlots([...timeSlots, { id: Date.now(), day: "", startTime: "", endTime: "" }]);
   };
 
   const removeTimeSlot = (id) => {
     setTimeSlots(timeSlots.filter(slot => slot.id !== id));
   };
 
-  const updateTimeSlot = (id, field, value) => {
-    setTimeSlots(timeSlots.map(slot =>
-      slot.id === id ? { ...slot, [field]: value } : slot
-    ));
-  };
-
   return (
-    <Dialog.Root onOpenChange={(open) => open && resetForm()}>
+    <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
       <Dialog.Trigger asChild>
         <button className="Button violet">Enter Free Time</button>
       </Dialog.Trigger>
@@ -72,69 +81,59 @@ const AddTime = ({ freeTimes, setFreeTimes }) => {
         <Dialog.Overlay className="DialogOverlay" />
         <Dialog.Content className="DialogContent">
           <Dialog.Title className="DialogTitle">Enter Your Free Time</Dialog.Title>
-          <Dialog.Description className="DialogDescription">Choose a day and your available time.</Dialog.Description>
+          <Dialog.Description className="DialogDescription">
+            Select multiple days and time slots.
+          </Dialog.Description>
 
           {errorMessage && <p className="ErrorMessage">{errorMessage}</p>}
 
-          <fieldset className="Fieldset">
-            <label className="Label">Select a Day</label>
-            <Select.Root value={selectedDay} onValueChange={setSelectedDay}>
-              <Select.Trigger className="CustomSelectTrigger">
-                <Select.Value placeholder="-" />
-                <ChevronDownIcon className="DropdownIcon" />
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Content className="CustomDropdownContent" sideOffset={5}>
-                  <Select.Viewport className="CustomDropdownViewport">
-                    {daysOfWeek.map(day => (
-                      <Select.Item key={day} value={day} className="CustomDropdownItem">
-                        <Select.ItemText>{day}</Select.ItemText>
-                        <Select.ItemIndicator><CheckIcon className="CheckIcon" /></Select.ItemIndicator>
-                      </Select.Item>
-                    ))}
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
-            </Select.Root>
-          </fieldset>
-
           <div className="TimeSelectionWrapper">
-            {timeSlots.map((slot) => (
+            {timeSlots.map((slot, index) => (
               <div className="TimeSelectionContainer" key={slot.id}>
+                <fieldset className="Fieldset">
+                  <label className="Label">Select a Day</label>
+                  <Select.Root value={slot.day} onValueChange={(value) => setTimeSlots(timeSlots.map(s => s.id === slot.id ? { ...s, day: value } : s))}>
+                    <Select.Trigger className="CustomSelectTrigger">
+                      <Select.Value placeholder="-" />
+                      <ChevronDownIcon className="DropdownIcon" />
+                    </Select.Trigger>
+                    <Select.Portal>
+                      <Select.Content className="CustomDropdownContent">
+                        <Select.Viewport>
+                          {daysOfWeek.map(day => (
+                            <Select.Item key={day} value={day} className="CustomDropdownItem">
+                              <Select.ItemText>{day}</Select.ItemText>
+                              <Select.ItemIndicator><CheckIcon className="CheckIcon" /></Select.ItemIndicator>
+                            </Select.Item>
+                          ))}
+                        </Select.Viewport>
+                      </Select.Content>
+                    </Select.Portal>
+                  </Select.Root>
+                </fieldset>
+
                 <fieldset className="TimeFieldset">
                   <label>Start Time</label>
-                  <input
-                    type="time"
-                    className="Input"
-                    value={slot.startTime}
-                    onChange={(e) => updateTimeSlot(slot.id, "startTime", e.target.value)}
-                  />
+                  <input type="time" className="Input" value={slot.startTime} onChange={(e) => setTimeSlots(timeSlots.map(s => s.id === slot.id ? { ...s, startTime: e.target.value } : s))} />
                 </fieldset>
 
                 <fieldset className="TimeFieldset">
                   <label>End Time</label>
-                  <input
-                    type="time"
-                    className="Input"
-                    value={slot.endTime}
-                    onChange={(e) => updateTimeSlot(slot.id, "endTime", e.target.value)}
-                  />
+                  <input type="time" className="Input" value={slot.endTime} onChange={(e) => setTimeSlots(timeSlots.map(s => s.id === slot.id ? { ...s, endTime: e.target.value } : s))} />
                 </fieldset>
 
                 {timeSlots.length > 1 && (
                   <button className="DeleteButton" onClick={() => removeTimeSlot(slot.id)}>
-                    🗑️
+                    <TrashIcon />
                   </button>
                 )}
               </div>
             ))}
           </div>
 
-          <div className="ButtonContainer">
-            <button className="plusButton" onClick={addTimeSlot}>
-              <PlusIcon /> Add Another Time
-            </button>
-          </div>
+          <button className="plusButton" onClick={addTimeSlot}>
+            <PlusIcon /> Add Another Time Slot
+          </button>
 
           <div style={{ display: "flex", marginTop: 25, justifyContent: "flex-end" }}>
             <button className="Button green" onClick={handleSave}>Save</button>

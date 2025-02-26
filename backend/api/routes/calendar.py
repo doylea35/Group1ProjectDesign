@@ -52,9 +52,8 @@ async def get_all_freetime_for_user(request : GetAllFreeTimeRequest, current_use
         
     for member_email in cur_group["members"]:
       user = users_collection.find_one({"email": member_email})
-      free_time_slots = []
       if user is not None:
-        if len(user["free_time"]) > 0:
+        if user["free_time"] is not None:
           obj = {
               "name": user["name"],
               "email": user["email"],
@@ -108,7 +107,7 @@ PROMPT_TEMPLATE = """
 You are given a list of free time slots for multiple people. Your task is to find the overlapping time slots across all users.
 Now, given the following free time slots: {time_slots}, find the overlapping free time slots (if any).
 
-### **Example Input:**
+### **Example Input 1:**
 [
   {{
     "Monday": [],
@@ -133,7 +132,7 @@ Now, given the following free time slots: {time_slots}, find the overlapping fre
     ]
   }}
 ]
-Expected output: 
+Expected output 1: 
 {{
   "Monday": [],
   "Wednesday": [
@@ -145,7 +144,36 @@ Expected output:
     {{ "start": "15:50", "end": "16:00" }}
   ]
 }}
-Return the response strictly in JSON format like the example above, with no additional text or explanations. If no overlapping slots exist, return an empty JSON object {{}} with out ```joson ```. so pure text only.. 
+
+### **Example Input 2:**
+[
+  {{
+    "Monday": [],
+    "Friday": [
+      {{ "start": "09:00", "end": "10:30" }},
+      {{ "start": "15:00", "end": "16:00" }}
+    ],
+    "Thursday": [
+      {{ "start": "09:00", "end": "10:30" }},
+      {{ "start": "15:00", "end": "16:00" }}
+    ]
+  }},
+  {{
+    "Monday": [],
+    "Wednesday": [
+      {{ "start": "09:00", "end": "10:00" }},
+      {{ "start": "15:00", "end": "16:00" }}
+    ],
+    "Saturday": [
+      {{ "start": "09:00", "end": "10:00" }},
+      {{ "start": "15:50", "end": "16:00" }}
+    ]
+  }}
+]
+Expected output 2: 
+{{}}
+
+Return the response strictly in JSON format like the example above, with no additional text or explanations. If no overlapping slots exist, return an empty JSON object {{}} with out ```json ```. so pure text only. Please follow the output format strictly. I don't want you to output any extra text in the response other than either a dictionary containing the free times or an empty dictionary {{}} when there is no overlapping free time. 
 """
 
 
@@ -153,13 +181,14 @@ MAX_TOKEN = 10000
 
 @calendar_router.post("/getOverlappingTime")
 async def ask_chatgpt_for_free_time(request: GetOverlappingTimeSlotRequest, current_user: dict = Depends(get_current_user)):
-    free_time_slots = []
+    free_time_slots : list[dict] = []
 
     if len(request.free_time_slots) > 0:
         free_time_slots = request.free_time_slots
     else:
-        cur_group = groups_collection.find_one({"_id": request.group_id})
-        if not cur_group:
+        cur_group = groups_collection.find_one({"_id": ObjectId(request.group_id)})
+        # print(f"cur_group: {cur_group}")
+        if cur_group is None:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Group does not exist."
@@ -167,27 +196,27 @@ async def ask_chatgpt_for_free_time(request: GetOverlappingTimeSlotRequest, curr
 
         for member_email in cur_group["members"]:
           user = users_collection.find_one({"email": member_email})
+          # print(f"user: {user}")
           if user is not None:
             if len(user["free_time"]) > 0:
               free_time_slots.append(user["free_time"])
     try:
-        print("ask_chatgpt_for_free_time\n")
-
         processed_slots = [
         {
-            day: [slot if isinstance(slot, dict) else slot.dict() for slot in slots]
-            for day, slots in user_slots.items()
+            day: [slot if isinstance(slot, dict) else json.loads(slot) if isinstance(slot, str) else slot for slot in slots]
+            for day, slots in user_slots.get("free_time", {}).items()
         }
-        for user_slots in free_time_slots
+            for user_slots in free_time_slots
         ]
 
         processed_slots_json = json.dumps(processed_slots, indent=2)
+        # print(f"processed_slots_json: {str(processed_slots_json)}")
         # print(f"processed_slots: {str(processed_slots_json)}")
 
         # Prepare the final prompt
         formatted_prompt = PROMPT_TEMPLATE.format(time_slots=str(processed_slots_json))
         # print("formyed prompts")
-
+        # print(f"\n\nformatted_prompt: {formatted_prompt}\n\n")
         # Call OpenAI API
         response = openai.ChatCompletion.create(
             model="gpt-4o",  # Use "gpt-4o" for best performance
