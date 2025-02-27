@@ -173,7 +173,14 @@ BlackBoard **auto-corrects** the file name `.env` and replaces invalid character
 - Regardless of whether it is named `.env` or `_env`, please **download it** and **rename it** to `.env`.  
 
 #### 📌 **File Placement**
-Once you have downloaded and renamed `.env`, place it in the following directory:
+Once you have have the `.env` file, navigate to:
+
+```sh
+<path-to-repository-directory>\Group1ProjectDesign\backend
+```
+And move ".env" file in the `backend\` folder.
+
+Therefore the correct path to the `.env` file after this should be:
 
 ```sh
 <path-to-repository-directory>\Group1ProjectDesign\backend\.env
