@@ -141,13 +141,17 @@ Swagger UI: http://127.0.0.1:8000/docs
 ReDoc: http://127.0.0.1:8000/redoc
 
 ## **Login**
-Credentials to test our application:
-Username/email: zhangnuoxi24@gmail.com
-Password: 123456
 
-If the above doesn't work, please try:
-Username/email: nzhang@tcd.ie
-Password: 123456
+### 🔑 **Test Credentials**
+You can use the following credentials to log in and test our application:
+
+- **Username/Email:** `zhangnuoxi24@gmail.com`  
+  **Password:** `123456`
+
+If the above credentials do not work, please try:
+
+- **Username/Email:** `nzhang@tcd.ie`  
+  **Password:** `123456`
 
 # **Backends**
 
