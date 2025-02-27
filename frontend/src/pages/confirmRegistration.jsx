@@ -9,7 +9,7 @@ const RegistrationPage = () => {
 
   useEffect( () => {
 
-    axios.get(`https://group-grade-backend-5f919d63857a.herokuapp.com/api/user/confirm/${confirmationCode}`, {
+    axios.get(`/api/user/confirm/${confirmationCode}`, {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

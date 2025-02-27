@@ -4,7 +4,7 @@ import { Cross2Icon } from "@radix-ui/react-icons";
 import "../App.css";
 import axios from 'axios';
 
-axios.defaults.baseURL = 'https://group-grade-backend-5f919d63857a.herokuapp.com';
+// axios.defaults.baseURL = 'https://group-grade-backend-5f919d63857a.herokuapp.com';
 
 const CreateProfilePopup = ({ open, setOpen }) => {
   const [profile, setProfile] = React.useState({

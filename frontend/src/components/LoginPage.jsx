@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import '../App.css';
 import axios from 'axios';
 
-axios.defaults.baseURL = 'https://group-grade-backend-5f919d63857a.herokuapp.com';
+// axios.defaults.baseURL = 'https://group-grade-backend-5f919d63857a.herokuapp.com';
 
 const LoginPage = ({ setOpen }) => {
   const [username, setUsername] = useState('');

@@ -13,6 +13,7 @@ const SchedulingPage = () => {
   const { projectId } = useParams(); // ✅ Get projectId from the URL
   const navigate = useNavigate(); // To handle redirection
   const [freeTimes, setFreeTimes] = useState({}); // Holds the free times organized by day
+  const [newFreeTimes, setNewFreeTimes] = useState({}); // Holds the free times organized by day
   const [errorMessage, setErrorMessage] = useState("");
   const [rawFreeTimeData, setRawFreeTimeData] = useState([]);
 
@@ -47,7 +48,7 @@ const SchedulingPage = () => {
     try {
       // Make the PUT request to fetch free times
       const response = await axios.put(
-        "https://group-grade-backend-5f919d63857a.herokuapp.com/api/calendar/getGroupFreeTime",
+        "/api/calendar/getGroupFreeTime",
         {
           group_id: projectId, // Send the group/project ID in the body
         },
@@ -118,22 +119,33 @@ const SchedulingPage = () => {
       Saturday: [],
       Sunday: [],
     };
-
+    console.log("inside schedule.page" + JSON.stringify(data));
     data.forEach((user) => {
       const userName = user.name || "User"; // Default to "User" if name is missing
-      const freeTimes = user.free_time.free_time;
-
-      daysOfWeek.forEach((day) => {
-        if (freeTimes[day]) {
-          freeTimes[day].forEach((slot) => {
-            formattedData[day].push({
-              name: userName,
-              start: slot.start,
-              end: slot.end,
+      if (user.free_time.free_time !== undefined) {
+        // const freeTimes = user.free_time.free_time;
+        // setFreeTimes(user.free_time.free_time);
+        // console.log(
+        //   "----user.free_time.free_time:" +
+        //     JSON.stringify(user.free_time.free_time)
+        // );
+        setNewFreeTimes(user.free_time.free_time);
+        // console.log(
+        //   "newFreeTimes inside schedule.page" + JSON.stringify(newFreeTimes)
+        // );
+        daysOfWeek.forEach((day) => {
+          if (user.free_time.free_time[day]) {
+            console.log("------day: " + day);
+            user.free_time.free_time[day].forEach((slot) => {
+              formattedData[day].push({
+                name: userName,
+                start: slot.start,
+                end: slot.end,
+              });
             });
-          });
-        }
-      });
+          }
+        });
+      }
     });
 
     return formattedData;
