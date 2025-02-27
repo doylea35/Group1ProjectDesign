@@ -160,11 +160,20 @@ Run:
 pip install -r requirements.txt
 ```
 
-##### 🔹 Step 3: Add .env file
+##### 🔹 **Step 3: Add `.env` File**  
 
-Please go to our BlackBoard submission and download the ".env" file, which contains all the environmental variables necessary for our backend including sensitive API keys, OAuth credentials. And Git is preventing us to commit ".env" file.
+Please go to our **BlackBoard submission** and download the `.env` file, which contains all the **environmental variables** necessary for our backend, including **sensitive API keys** and **OAuth credentials**.  
 
-Once you have ".env" downloaded. Please place it at:
+🚫 **Note:** Git **prevents** us from committing the `.env` file for security reasons.
+
+#### ⚠️ **BlackBoard File Name Issue**
+BlackBoard **auto-corrects** the file name `.env` and replaces invalid characters with `_`, because filenames cannot contain a `.` at the beginning.  
+
+- **On BlackBoard, you may see the file named as** `_.env` instead of `.env`.  
+- Regardless of whether it is named `.env` or `_env`, please **download it** and **rename it** to `.env`.  
+
+#### 📌 **File Placement**
+Once you have downloaded and renamed `.env`, place it in the following directory:
 
 ```sh
 <path-to-repository-directory>\Group1ProjectDesign\backend\.env
