@@ -1,5 +1,5 @@
 # **Group Project Design Group 1**
-
+# **Overview**
 ## **About the Application**  
 Our application is a streamlined group project management website for users to easily manage their college group projects. It allows users to manage their groups in one location, organising how they will complete their work so that they can deliver high-quality grouo projects on time.
 
