@@ -33,8 +33,10 @@ If you prefer to run and test the application (both frontend and backend) on you
 - **Note:** If you run the frontend locally, it will make API calls to the **backend running on your local host**.  
 - However, if you want the local frontend to make calls to the **deployed backend**, follow these steps:  
 
-1. Navigate to the following file in the repository:  
+1. Navigate to the following file in the repository: 
+ ```sh 
 <path-to-repository-directory>\Group1ProjectDesign\frontend\src\App.jsx
+```
 
 2. **Modify the `axios.defaults.baseURL` setting:**  
 - **Uncomment** the following line:  
@@ -122,9 +124,9 @@ pip install -r requirements.txt
 Please go to our BlackBoard submission and download the ".env" file, which contains all the environmental variables necessary for our backend including sensitive API keys, OAuth credentials. And Git is preventing us to commit ".env" file.
 
 Once you have ".env" downloaded. Please place it at:
-
+ ```sh
 <path-to-repository-directory>\Group1ProjectDesign\backend\.env
-
+```
 
 ##### 🔹 Step 4: Start the backend server
 Run:
