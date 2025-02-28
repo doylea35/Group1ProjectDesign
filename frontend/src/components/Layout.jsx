@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, Outlet } from "react-router-dom";
 import CreateNewProjectPop from "../pages/CreateProjectPop";
-import CreateProfilePopup from "./CreateProfile";
 import * as Collapsible from "@radix-ui/react-collapsible";
 import * as Dialog from "@radix-ui/react-dialog";
 import axios from "axios";
@@ -10,7 +9,6 @@ import "../App.css";
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [isProjectsOpen, setIsProjectsOpen] = useState(false);
-  const [createProfileOpen, setCreateProfileOpen] = useState(false);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -68,21 +66,8 @@ const Sidebar = () => {
           {isOpen ? "⟨" : "⟩"}
         </button>
         <nav className={`sidebar-links ${isOpen ? "active" : ""}`}>
-          <Link to="/" className="nav-link">Home</Link>
-          <button className="nav-link" onClick={() => setCreateProfileOpen(true)}>Create Profile</button>
-
-          <Dialog.Root open={createProfileOpen} onOpenChange={setCreateProfileOpen}>
-            <Dialog.Portal>
-              <Dialog.Overlay className="DialogOverlay" />
-              <Dialog.Content className="DialogContent">
-                <CreateProfilePopup open={createProfileOpen} setOpen={setCreateProfileOpen} />
-                <Dialog.Close asChild>
-                  <button className="close-btn">Close</button>
-                </Dialog.Close>
-              </Dialog.Content>
-            </Dialog.Portal>
-          </Dialog.Root>
-
+          <Link to="/home" className="nav-link">Home</Link>
+    
           <Collapsible.Root open={isProjectsOpen} onOpenChange={setIsProjectsOpen}>
             <Collapsible.Trigger asChild>
               <button className={`collapsible-btn ${isProjectsOpen ? "active" : ""}`}>
@@ -101,11 +86,11 @@ const Sidebar = () => {
                 projects.map((project) => (
                   <Link
                     key={project._id} // Use unique project ID
-                    to={`/projects/${project._id}`} // ✅ Now links to project page
+                    to={`/projects/${project._id}`} 
                     className="nav-link"
                     onClick={() => handleProjectClick(project)} // Save project details to localStorage on click
                   >
-                    {project.name} {/* ✅ Displays project name */}
+                    {project.name} {/*  */}
                   </Link>
                 ))
               ) : (

@@ -16,7 +16,7 @@ group_router = APIRouter()
 
 frontend_url_dev = os.getenv("FRONTEND_URL_DEV")
 
-BASE_URL = "{frontend_url}/confirmMembership"
+BASE_URL = "{frontend_url}/confirmMembership/{user_email}/{group_id}"
 
 
 @group_router.get("/")
@@ -88,15 +88,16 @@ async def delete_group_handler(request : DeleteGroupRequest):
     # remove_task(group_id)
 
 
-@group_router.put("/confirmMembership")
-async def confirm_member(request:ConfirmGroupMembershipRequest):
+@group_router.get("/confirmMembership/{user_email}/{group_id}")
+async def confirm_member(user_email: str, group_id: str):
     # assume the user exist in our database
     # TODO ask the frontend to first check if the user exists or not, if not, ask user to register first then call this api
     # if not is_valid_email(user_email):
     #     return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, content={"message": f"User with emai{user_email}' is not a registered user."})
 
-    group_id = request.group_id
-    user_email = request.user_email
+    # group_id = request.group_id
+    # user_email = request.user_email
+    print(f"\ngroup_id: {group_id}, user_email: {user_email}\n")
     
     group = groups_collection.find_one({"_id": ObjectId(group_id)})
     user = users_collection.find_one({"email":user_email})
@@ -246,6 +247,6 @@ def send_project_invitation_email(user_emails:list[str], creator_email:str, new_
         email_content = INVITATION_EMAIL_TEMPLATE.format(
             creator_email=creator_email,
             project_name=new_group_name,
-            invitation_link=f"{BASE_URL.format(frontend_url=frontend_url_dev)}"
+            invitation_link=f"{BASE_URL.format(frontend_url=frontend_url_dev, user_email=user_email_for_link, group_id=new_group_id)}"
         )
         email_sender.send_email(receipient=user_email, email_message=email_content, subject_line=f"Group Invitation from: {creator_email}")

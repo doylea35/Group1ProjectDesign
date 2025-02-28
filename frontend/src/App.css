@@ -1112,8 +1112,8 @@ to {
 
 .task-toggle-button {
   background-color: #e2e8f0;
-  border: 1px solid #94a3b8;
-  border-radius: 6px;
+  /*border: 1px solid #94a3b8;
+  border-radius: 6px;*/
   padding: 6px 12px;
   cursor: pointer;
   font-size: 14px;
@@ -1122,5 +1122,52 @@ to {
 .task-toggle-button.selected {
   background-color: #6366f1;
   color: white;
-  border: 1px solid #4f46e5;
+  /*border: 1px solid #4f46e5;*/
+}
+
+.task-card {
+  background: var(--mauve-3);
+  padding: 15px;
+  border-radius: 8px;
+  width: 300px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: 0.2s ease-in-out;
+}
+
+.task-card:hover {
+  transform: scale(1.02);
+  background: var(--mauve-4);
+}
+
+.task-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--violet-12);
+  margin-bottom: 5px;
+}
+
+.task-meta {
+  font-size: 14px;
+  color: var(--mauve-11);
+}
+
+.task-section {
+  width: 100%;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.task-header {
+  margin-bottom: 10px;
+  font-size: 22px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.task-list-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; 
+  gap: 15px;
+  margin-top: 10px;
 }

@@ -43,6 +43,7 @@ def verify_password(plain_password: str, hashed_password : str) -> bool:
     # if type(hash_password) is bytes:
     #     real_password.decode("utf-8")
     # else:
+    print(f"plain_password: {plain_password},hashed_password.encode(utf-8): {hashed_password.encode("utf-8")} ")
     return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
@@ -102,7 +103,7 @@ async def register_user(request : UserRegisterRequest):
         {"$set": {"confirmation_code": unique_token}}
     )
 
-    confirmation_link = BASE_URL.format(frontend_url=frontend_url_dev,confirmationCode=confirmation_code)
+    confirmation_link = BASE_URL.format(frontend_url=frontend_url_dev,confirmationCode=unique_token)
 
     message = REGISTRATION_CONFIRMATION_EMAIL_TEMPLATE.format(
         user_name=request.name,
@@ -145,9 +146,13 @@ async def login_user(request: UserLoginRequest):
     if user["status"] != "Active":
         raise HTTPException(status_code=401, detail="Pending Account. Please Verify Your Email")
 
-    if not verify_password(request.password, user["password"]):
-        raise HTTPException(status_code=400, detail="Invalid password")
 
+    try:
+        if not verify_password(request.password, user["password"]):
+            raise HTTPException(status_code=400, detail="Invalid password")
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=400, detail="Invalid password")
     return {
         "name": user["name"],
         "email": user["email"],
