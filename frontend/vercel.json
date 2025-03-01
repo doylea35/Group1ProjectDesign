@@ -1,0 +1,15 @@
+{
+  "rewrites": [
+    {
+      "source": "/confirmRegistration/:confirmationCode",
+      "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/confirmRegistration/:confirmationCode",
+      "destination": "/confirmRegistration/:confirmationCode",
+      "statusCode": 200
+    }
+  ]
+}
