@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/confirmRegistration/:confirmationCode",
-      "destination": "/index.html"
+      "destination": "/src/pages/confirmRegistration.jsx"
     }
   ],
   "redirects": [
