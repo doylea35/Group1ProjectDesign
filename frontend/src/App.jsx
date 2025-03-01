@@ -13,9 +13,9 @@ import RegistrationPage from "./pages/confirmRegistration";
 import ConfirmGroupMembershipPage from "./pages/confirmMembership";
 import axios from "axios";
 
-axios.defaults.baseURL = "https://group-grade-backend-5f919d63857a.herokuapp.com";
+// axios.defaults.baseURL = "https://group-grade-backend-5f919d63857a.herokuapp.com";
 // uncomment the following if you want to the frontend to point to the local frontend
-// axios.defaults.baseURL = "http://127.0.0.1:8000";
+axios.defaults.baseURL = "http://127.0.0.1:8000";
 function App() {
   return (
     <Routes>
