@@ -1,58 +1,44 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import axios from "axios";
 import "../App.css";
 
-const API_URI = "/api/group/"; 
+const API_URI = "/api/group/";
 
-/**
- * @desc POST request to create a new project
- * @route POST /api/projects/create
- * @access private
- */
 const createProject = async (projectData) => {
   try {
     const res = await axios.post(API_URI + "create", projectData, {
       headers: {
-        "Content-Type": "application/json", // Ensure proper content type
+        "Content-Type": "application/json",
       },
     });
     return res.data;
   } catch (err) {
     console.error("Error creating project:", err.response?.data || err.message);
-    if (err.response) {
-      console.error("Error response status:", err.response.status);
-      console.error("Error response data:", err.response.data);
-    }
-    throw err; // Re-throw the error
+    throw err;
   }
 };
 
-const CreateNewProjectPop = () => {
+const CreateNewProjectPop = ({ onSuccess }) => {
   const [projectName, setProjectName] = React.useState("");
   const [members, setMembers] = React.useState("");
   const [userEmail, setUserEmail] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
 
-  const navigate = useNavigate(); // Hook to navigate programmatically
-
   React.useEffect(() => {
     const getUserEmail = () => {
-      const user = JSON.parse(localStorage.getItem("user")); // Retrieve the user from localStorage
-      console.log("User from localStorage:", user); // Debugging log
+      const user = JSON.parse(localStorage.getItem("user"));
       if (user && user.email) {
-        setUserEmail(user.email); // Set the email if it's available
-        setMembers(user.email);   // Automatically add the user's email to the members list
+        setUserEmail(user.email);
+        setMembers(user.email); // auto-add the user's email
       } else {
         setError("Failed to load user profile. No user data found.");
       }
-      setLoading(false); // Set loading to false once data is fetched
+      setLoading(false);
     };
-
-    getUserEmail(); // Get user email
+    getUserEmail();
   }, []);
 
   const handleCreateProject = async (event) => {
@@ -61,8 +47,6 @@ const CreateNewProjectPop = () => {
     const membersArray = members
       ? members.split(",").map((email) => email.trim())
       : [];
-
-    // Ensure the user's email is added to the list of members
     if (!membersArray.includes(userEmail)) {
       membersArray.unshift(userEmail);
     }
@@ -77,12 +61,27 @@ const CreateNewProjectPop = () => {
       const createdProject = await createProject(projectData);
       console.log("Project Created:", createdProject);
 
-      // Redirect to the newly created project page
-      navigate(`/projects/${createdProject._id}`);
+      // Extract the project ID from the response
+      const projectId =
+        createdProject._id ||
+        createdProject.id ||
+        (createdProject.data && (createdProject.data._id || createdProject.data.id));
 
-      // Reset form fields after creation
-      setProjectName("");
-      setMembers(userEmail); // Reset the members input after creation
+      if (!projectId) {
+        throw new Error("Project ID is missing in the response");
+      }
+
+      // Optionally save the new project in localStorage
+      localStorage.setItem("selectedProject", JSON.stringify(createdProject));
+
+      // Close the dialog immediately
+      if (onSuccess) {
+        onSuccess();
+      }
+      // Force a full page refresh after a short delay so the sidebar updates
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     } catch (err) {
       setError("Failed to create project. Please try again.");
     }
@@ -102,7 +101,9 @@ const CreateNewProjectPop = () => {
         ) : (
           <form onSubmit={handleCreateProject}>
             <fieldset className="Fieldset">
-              <label className="Label" htmlFor="projectname">Project Name</label>
+              <label className="Label" htmlFor="projectname">
+                Project Name
+              </label>
               <input
                 className="Input"
                 id="projectname"
@@ -112,7 +113,9 @@ const CreateNewProjectPop = () => {
               />
             </fieldset>
             <fieldset className="Fieldset">
-              <label className="Label" htmlFor="emails">Team Member Emails</label>
+              <label className="Label" htmlFor="emails">
+                Team Member Emails
+              </label>
               <input
                 className="Input"
                 id="emails"
@@ -122,7 +125,9 @@ const CreateNewProjectPop = () => {
               />
             </fieldset>
             <div style={{ display: "flex", marginTop: 25, justifyContent: "flex-end" }}>
-              <button type="submit" className="Button green">Create Project</button>
+              <button type="submit" className="Button green">
+                Create Project
+              </button>
             </div>
           </form>
         )}
