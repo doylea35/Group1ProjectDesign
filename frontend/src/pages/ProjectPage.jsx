@@ -80,6 +80,105 @@ function TaskList({ projectId }) {
   );
 }
 
+function GroupMembers({ projectId }) {
+  const [acceptedMembers, setAcceptedMembers] = useState([]);
+  const [pendingMembers, setPendingMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    console.log("GroupMembers component mounted. Checking projectId:", projectId);
+
+    const fetchMembers = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || !user.token) {
+          console.error("User not authenticated.");
+          setError("User not authenticated.");
+          setLoading(false);
+          return;
+        }
+
+        console.log("Fetching all groups for the user...");
+
+        // Fetch all groups
+        const response = await axios.get("/api/group/", {
+          headers: { Authorization: `Bearer ${user.token}` }
+        });
+
+        console.log("API Response:", response.data);
+
+        if (response.data?.data) {
+          // Find the project with matching projectId
+          const project = response.data.data.find(p => p._id === projectId);
+          if (project) {
+            setAcceptedMembers(project.members || []);
+            setPendingMembers(project.pending_members || []);
+            console.log("Accepted Members:", project.members);
+            console.log("Pending Members:", project.pending_members);
+          } else {
+            setError("Project not found in response.");
+          }
+        } else {
+          setError("Invalid response format.");
+        }
+      } catch (error) {
+        console.error("Error fetching members:", error);
+        setError("Failed to load group members.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (projectId) {
+      fetchMembers();
+    } else {
+      console.warn("Project ID is missing, not fetching members.");
+    }
+  }, [projectId]);
+
+  if (loading) return <p>Loading group members...</p>;
+  if (error) return <p className="error-message">{error}</p>;
+
+  return (
+    <div className="group-members-section">
+      <h3 className="group-members-header">Group Members</h3>
+      
+      <div className="members-category">
+        <h4>Accepted Members</h4>
+        {acceptedMembers.length > 0 ? (
+          acceptedMembers.map((email, index) => (
+            <div key={index} className="member-card">
+              <h4 className="member-name">{email}</h4>
+              <p className="member-status">
+                <strong>Status:</strong> accepted
+              </p>
+            </div>
+          ))
+        ) : (
+          <p>No accepted members available.</p>
+        )}
+      </div>
+
+      <div className="members-category">
+        <h4>Invited (Pending Acceptance)</h4>
+        {pendingMembers.length > 0 ? (
+          pendingMembers.map((email, index) => (
+            <div key={index} className="member-card">
+              <h4 className="member-name">{email}</h4>
+              <p className="member-status">
+                <strong>Status:</strong> invited
+              </p>
+            </div>
+          ))
+        ) : (
+          <p>No pending invitations available.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ProjectPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -108,9 +207,8 @@ function ProjectPage() {
     alert(`Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(", ")}`);
   };
 
-  // onCreate is passed to CreateTask but its functionality is now handled within CreateTask (refresh).
   const handleCreateTask = () => {
-    // You may do additional stuff here if necessary.
+    // Additional logic if needed.
   };
 
   if (loading) {
@@ -119,7 +217,7 @@ function ProjectPage() {
 
   return (
     <div className="project-page-container">
-      <PageHeader title={`${projectName}`} />
+      <PageHeader title={projectName} />
 
       <div className="button-container">
         <button className="Button violet" onClick={handleFindTimeClick}>
@@ -130,6 +228,7 @@ function ProjectPage() {
       </div>
 
       <TaskList projectId={projectId} />
+      <GroupMembers projectId={projectId} />
     </div>
   );
 }
