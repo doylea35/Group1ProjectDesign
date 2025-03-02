@@ -4,7 +4,7 @@ import PageHeader from "../components/PageHeader";
 import CreateSubteam from "../components/CreateSubteam";
 import CreateTask from "../components/CreateTask";
 import axios from "axios";
-import "../App.css"; // Ensure styling is applied
+import "../App.css";
 
 function TaskList({ projectId }) {
   const [tasks, setTasks] = useState([]);
@@ -88,7 +88,6 @@ function ProjectPage() {
 
   useEffect(() => {
     const projectFromStorage = JSON.parse(localStorage.getItem("selectedProject"));
-
     if (projectFromStorage && projectFromStorage._id === projectId) {
       setProjectName(projectFromStorage.name);
       setLoading(false);
@@ -109,13 +108,9 @@ function ProjectPage() {
     alert(`Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(", ")}`);
   };
 
-  const handleCreateTask = (taskName, taskDescription, dueDate, subteams, members) => {
-    alert(`Task created with:
-    - Name: ${taskName}
-    - Description: ${taskDescription}
-    - Due Date: ${dueDate}
-    - Assigned Subteams: ${subteams.length > 0 ? subteams.join(", ") : "None"}
-    - Assigned Members: ${members.length > 0 ? members.join(", ") : "None"}`);
+  // onCreate is passed to CreateTask but its functionality is now handled within CreateTask (refresh).
+  const handleCreateTask = () => {
+    // You may do additional stuff here if necessary.
   };
 
   if (loading) {
@@ -126,7 +121,6 @@ function ProjectPage() {
     <div className="project-page-container">
       <PageHeader title={`${projectName}`} />
 
-      {/* Button Container - Centered */}
       <div className="button-container">
         <button className="Button violet" onClick={handleFindTimeClick}>
           Find a Time to Meet
@@ -135,7 +129,6 @@ function ProjectPage() {
         <CreateTask projectName={projectName} projectId={projectId} onCreate={handleCreateTask} />
       </div>
 
-      {/* Task List Component */}
       <TaskList projectId={projectId} />
     </div>
   );

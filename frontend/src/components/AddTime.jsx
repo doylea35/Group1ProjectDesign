@@ -50,7 +50,7 @@ const AddTime = ({ freeTimes, setFreeTimes, projectId }) => { // ✅ Accept proj
   
     try {
       const response = await axios.put(
-        "/api/calendar/updateFreeTime", // 🔥 Using original endpoint (NO projectId in URL)
+        "/api/calendar/updateFreeTime",
         { free_time: formattedFreeTime },
         {
           headers: {
@@ -60,14 +60,19 @@ const AddTime = ({ freeTimes, setFreeTimes, projectId }) => { // ✅ Accept proj
         }
       );
       
-  
-      console.log("✅ Response from Server:", response.data);
-      setFreeTimes(response.data.data); // ✅ Update schedule
+      setFreeTimes(response.data.data); // Update state with new free times
       setSuccessMessage("✅ Free time saved successfully!");
-      setIsOpen(false); // ✅ Close modal
+  
+      // Close the dialog and then reload the page after a short delay
+      setTimeout(() => {
+        setIsOpen(false);
+        window.location.reload();
+      }, 500);
     } catch (error) {
-      console.error("❌ Error Saving Free Time:", error.response?.data || error);
-      setErrorMessage(error.response?.data?.detail || "Failed to save free time.");
+      // ... (error handling)
+      setErrorMessage(
+        error.response?.data?.detail || "Failed to save free time."
+      );
     }
   };
   

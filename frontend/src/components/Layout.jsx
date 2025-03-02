@@ -12,6 +12,7 @@ const Sidebar = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserProjects = async () => {
@@ -21,16 +22,14 @@ const Sidebar = () => {
         setLoading(false);
         return;
       }
-  
       try {
         const response = await axios.get("/api/group/", {
           headers: { Authorization: `Bearer ${user.token}` },
         });
-  
         if (response.data?.data) {
           // Filter projects where the user is a member
           const userProjects = response.data.data.filter((project) =>
-            project.members.includes(user.email)  // Assuming `user.email` is in the `members` array
+            project.members.includes(user.email)
           );
           setProjects(userProjects);
         } else {
@@ -42,17 +41,20 @@ const Sidebar = () => {
         setLoading(false);
       }
     };
-  
     fetchUserProjects();
   }, []);
 
   const handleProjectClick = (project) => {
-    // Save the project details in localStorage
     localStorage.setItem("selectedProject", JSON.stringify(project));
   };
 
   const toggleSidebar = () => {
     setIsOpen((prev) => !prev);
+  };
+
+  // onSuccess callback simply closes the dialog.
+  const handleProjectCreationSuccess = () => {
+    setDialogOpen(false);
   };
 
   return (
@@ -66,8 +68,10 @@ const Sidebar = () => {
           {isOpen ? "⟨" : "⟩"}
         </button>
         <nav className={`sidebar-links ${isOpen ? "active" : ""}`}>
-          <Link to="/home" className="nav-link">Home</Link>
-    
+          <Link to="/home" className="nav-link">
+            Home
+          </Link>
+
           <Collapsible.Root open={isProjectsOpen} onOpenChange={setIsProjectsOpen}>
             <Collapsible.Trigger asChild>
               <button className={`collapsible-btn ${isProjectsOpen ? "active" : ""}`}>
@@ -77,7 +81,6 @@ const Sidebar = () => {
             </Collapsible.Trigger>
 
             <Collapsible.Content className="collapsible-content">
-              {/* Loading/Error Handling */}
               {loading ? (
                 <p>Loading projects...</p>
               ) : error ? (
@@ -85,12 +88,12 @@ const Sidebar = () => {
               ) : projects.length > 0 ? (
                 projects.map((project) => (
                   <Link
-                    key={project._id} // Use unique project ID
-                    to={`/projects/${project._id}`} 
+                    key={project._id}
+                    to={`/projects/${project._id}`}
                     className="nav-link"
-                    onClick={() => handleProjectClick(project)} // Save project details to localStorage on click
+                    onClick={() => handleProjectClick(project)}
                   >
-                    {project.name} {/*  */}
+                    {project.name}
                   </Link>
                 ))
               ) : (
@@ -98,14 +101,16 @@ const Sidebar = () => {
               )}
 
               {/* Dialog for Creating a New Project */}
-              <Dialog.Root>
+              <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
                 <Dialog.Trigger asChild>
-                  <button className="create-btn">Create New Project</button>
+                  <button className="create-btn" onClick={() => setDialogOpen(true)}>
+                    Create New Project
+                  </button>
                 </Dialog.Trigger>
                 <Dialog.Portal>
                   <Dialog.Overlay className="DialogOverlay" />
                   <Dialog.Content className="DialogContent">
-                    <CreateNewProjectPop />
+                    <CreateNewProjectPop onSuccess={handleProjectCreationSuccess} />
                     <Dialog.Close asChild>
                       <button className="close-btn">Close</button>
                     </Dialog.Close>
@@ -115,7 +120,9 @@ const Sidebar = () => {
             </Collapsible.Content>
           </Collapsible.Root>
 
-          <Link to="/logout" className="nav-link">Log Out</Link>
+          <Link to="/logout" className="nav-link">
+            Log Out
+          </Link>
         </nav>
       </div>
 

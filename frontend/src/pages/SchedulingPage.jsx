@@ -228,6 +228,7 @@ const SchedulingPage = () => {
               freeTimes={freeTimes}
               setFreeTimes={setFreeTimes}
               projectId={projectId}
+              refreshFreeTimes={fetchFreeTimes}
             />
             <FindTime
               freeTimes={freeTimes}
