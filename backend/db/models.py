@@ -25,7 +25,7 @@ class Group(BaseModel): #_id as Primary key, automatically created, can be found
     pending_members:Optional[List[str]] =[]
 
 class Task(BaseModel): #_id as Primary key, automatically created, can be found using ObjectID
-    assigned_to: str # Foreign Key referencing User.email
+    assigned_to: List[str]
     name: str
     description: str
     due_date: str
