@@ -184,7 +184,7 @@ async def delete_user(request : DeleteUserRequest):
     # if there are no members in the subteam, delete it
     subteams_collection.delete_many({"members": []})
 
-    
+    # remove the departing user's email from the list
     tasks_collection.update_many(
         {"assigned_to": request.email},
         {"$pull": {"assigned_to": request.email}}

@@ -24,21 +24,19 @@ async def get_tasks(assigned_to: Optional[str] = Query(None, description="User e
 def create_task(task: Task):
 
     # Check if user exists
-    assigned_users = [user for user in task.assigned_to if users_collection.find_one({"email": user})]
-    
+    assigned_users = [user for user in task.assigned_to if users_collection.find_one({"email": user})]    
     if not assigned_users:
         raise HTTPException(status_code=400, detail=f"User(s) {task.assigned_to} do not exist")
-    
-
+    # Assign only valid users
     task.assigned_to = assigned_users
 
-    
+    # Check if group exists
     assigned_group = groups_collection.find_one({"_id": ObjectId(task.group)})
     
     if not assigned_group:
         raise HTTPException(status_code=400, detail=f"Group {task.group} does not exist")
 
-    
+    # Check if all assigned users are members of the group 
     non_members = [user for user in task.assigned_to if user not in assigned_group["members"]]
 
     if non_members:
@@ -95,7 +93,7 @@ def assign_task(task_id: str, new_user_email: str):
     # task assignment
     tasks_collection.update_one(
         {"_id": ObjectId(task_id)},
-        {"$addToSet": {"assigned_to": new_user_email}} 
+        {"$addToSet": {"assigned_to": new_user_email}}  # add user to existing list
     )
 
     return {"message": "task assigned successfully", "task_id": task_id, "assigned_to": new_user_email}
