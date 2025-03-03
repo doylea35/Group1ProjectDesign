@@ -103,26 +103,32 @@ def update_task(task_id: str, request_body: dict):
     print(f"Received task_id: {task_id}")
     print(f"Updated fields received: {request_body}")
 
-    # Extract 'updated_fields' from request body correctly
+    # extract 'updated_fields' from request body 
     updated_fields = request_body.get("updated_fields", {})
 
     task = tasks_collection.find_one({"_id": ObjectId(task_id)})
+
+    # If no task is found, return a 404 error
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
+    # Define the list of allowed fields that can be updated
     allowed_fields = ["name", "description", "due_date", "status", "priority"]
+
+    # Filter out any fields that are not in the allowed list
     update_data = {key: value for key, value in updated_fields.items() if key in allowed_fields}
 
-    print(f"Update Data after filtering: {update_data}")
-
+     # If no valid fields remain after filtering, return a 400 error
     if not update_data:
         raise HTTPException(status_code=400, detail="No valid fields to update")
 
+    # Perform the update in the database by setting the new values
     tasks_collection.update_one(
         {"_id": ObjectId(task_id)},
         {"$set": update_data}
     )
 
+    # Return a success response with the updated fields
     return {"message": "Task updated successfully", "task_id": task_id, "updated_fields": update_data}
 
 
