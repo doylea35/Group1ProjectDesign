@@ -97,3 +97,32 @@ def assign_task(task_id: str, new_user_email: str):
     )
 
     return {"message": "task assigned successfully", "task_id": task_id, "assigned_to": new_user_email}
+
+@profiles_router.put("/tasks/edit/")
+def update_task(task_id: str, request_body: dict):
+    print(f"Received task_id: {task_id}")
+    print(f"Updated fields received: {request_body}")
+
+    # Extract 'updated_fields' from request body correctly
+    updated_fields = request_body.get("updated_fields", {})
+
+    task = tasks_collection.find_one({"_id": ObjectId(task_id)})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    allowed_fields = ["name", "description", "due_date", "status", "priority"]
+    update_data = {key: value for key, value in updated_fields.items() if key in allowed_fields}
+
+    print(f"Update Data after filtering: {update_data}")
+
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+
+    tasks_collection.update_one(
+        {"_id": ObjectId(task_id)},
+        {"$set": update_data}
+    )
+
+    return {"message": "Task updated successfully", "task_id": task_id, "updated_fields": update_data}
+
+
