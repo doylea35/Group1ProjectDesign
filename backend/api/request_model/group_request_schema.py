@@ -15,4 +15,9 @@ class DeleteGroupRequest(BaseModel):
 class ConfirmGroupMembershipRequest(BaseModel):
     user_email: str
     group_id: str
-    
+
+class UpdateGroupRequest(BaseModel):
+    modification_email: str # who's making the modifications
+    group_id: str
+    new_group_name: str
+    new_members: List[str]

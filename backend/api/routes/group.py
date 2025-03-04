@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Query, Depends
 from db.database import groups_collection, users_collection
 from db.models import Group
 from db.schemas import groups_serial
-from api.request_model.group_request_schema import CreateGroupRequest, DeleteGroupRequest,ConfirmGroupMembershipRequest
+from api.request_model.group_request_schema import CreateGroupRequest, DeleteGroupRequest, ConfirmGroupMembershipRequest, UpdateGroupRequest
 from bson import ObjectId
 from email_service.email_utils import email_sender
 from api.utils import is_valid_email
@@ -250,3 +250,44 @@ def send_project_invitation_email(user_emails:list[str], creator_email:str, new_
             invitation_link=f"{BASE_URL.format(frontend_url=frontend_url_dev, user_email=user_email_for_link, group_id=new_group_id)}"
         )
         email_sender.send_email(receipient=user_email, email_message=email_content, subject_line=f"Group Invitation from: {creator_email}")
+
+
+@group_router.put("/updateGroup", status_code=status.HTTP_200_OK)
+async def update_group_handler(request: UpdateGroupRequest):
+    group = groups_collection.find_one({"_id": ObjectId(request.group_id)})
+    if not group:
+        return HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"message": f"Group with id: {request.group_id} does not exist."}
+            )
+    
+    new_members = []
+    new_pending_members = []
+
+    # check if there are new members
+    for member in request.new_members:
+        if not users_collection.find_one({"email": member}): # the member doesn't exist (yet)
+            new_pending_members.append(member)
+        else: #the member exists
+            new_members.append(member)
+
+    # update group
+    updated_group = groups_collection.find_one_and_update(
+        {"_id": ObjectId(request.group_id)},
+        {
+            "$set": {"name": request.new_group_name},
+            "$set": {"members": new_members},
+            "$addToSet": {"pending_members": {"$each": new_pending_members}}
+        }
+        , return_document=True)
+    
+    # send invitation email to the user
+    send_project_invitation_email(new_pending_members, request.modification_email, str(request.group_id), request.new_group_name)
+    
+    if not updated_group:
+        return HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"message": f"Something went wrong when updating the group"}
+            )
+
+    return {"message": "Group updated successfully", "data": updated_group}
