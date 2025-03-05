@@ -36,11 +36,11 @@ const SchedulingPage = () => {
   }, [projectId]); // Re-run when projectId changes
 
   const fetchFreeTimes = async () => {
-    console.log("🔄 API Call to Fetch Free Times...");
-    console.log("🆔 Project ID (Group ID):", projectId);
+    // console.log("🔄 API Call to Fetch Free Times...");
+    // console.log("🆔 Project ID (Group ID):", projectId);
 
     if (!user || !user.token) {
-      console.error("❌ User is not logged in.");
+      // console.error("❌ User is not logged in.");
       setErrorMessage("User is not logged in.");
       return;
     }
@@ -60,7 +60,7 @@ const SchedulingPage = () => {
         }
       );
 
-      console.log("✅ Full API Response:", response);
+      // console.log("✅ Full API Response:", response);
 
       // Check if response contains the free times and format them
       if (response.data?.data) {
@@ -70,14 +70,14 @@ const SchedulingPage = () => {
           (person) => person.free_time.free_time
         );
 
-        console.log(`raw in SchedulePage before setting: ${JSON.stringify(a)}`);
+        // console.log(`raw in SchedulePage before setting: ${JSON.stringify(a)}`);
         setRawFreeTimeData(a);
-        console.log(`raw in SchedulePage after setting: ${rawFreeTimeData}`);
+        // console.log(`raw in SchedulePage after setting: ${rawFreeTimeData}`);
 
         setFreeTimes(formattedFreeTimes);
-        console.log("🟢 Free Times Set in State:", formattedFreeTimes);
+        // console.log("🟢 Free Times Set in State:", formattedFreeTimes);
       } else {
-        console.warn("⚠️ No free times found.");
+        // console.warn("⚠️ No free times found.");
         setErrorMessage("No free times available.");
       }
     } catch (error) {
@@ -125,17 +125,17 @@ const SchedulingPage = () => {
       if (user.free_time.free_time !== undefined) {
         // const freeTimes = user.free_time.free_time;
         // setFreeTimes(user.free_time.free_time);
-        // console.log(
-        //   "----user.free_time.free_time:" +
-        //     JSON.stringify(user.free_time.free_time)
-        // );
+        console.log(
+          "----user.free_time.free_time:" +
+            JSON.stringify(user.free_time.free_time)
+        );
         setNewFreeTimes(user.free_time.free_time);
         // console.log(
         //   "newFreeTimes inside schedule.page" + JSON.stringify(newFreeTimes)
         // );
         daysOfWeek.forEach((day) => {
           if (user.free_time.free_time[day]) {
-            console.log("------day: " + day);
+            // console.log("------day: " + day);
             user.free_time.free_time[day].forEach((slot) => {
               formattedData[day].push({
                 name: userName,
@@ -198,7 +198,7 @@ const SchedulingPage = () => {
     );
   };
 
-  console.log("🔘 Rendering Buttons...");
+  // console.log("🔘 Rendering Buttons...");
   return (
     <div>
       {/* Back Button - Positioned at the top left */}
