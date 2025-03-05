@@ -23,7 +23,6 @@ function TaskList({ projectId }) {
 
         console.log(`Fetching tasks for project: ${projectId}`);
 
-        // Fetch all tasks and filter for the specific project
         const response = await axios.get(`/tasks/`, {
           headers: { Authorization: `Bearer ${user.token}` }
         });
@@ -31,7 +30,6 @@ function TaskList({ projectId }) {
         console.log("Tasks API Response:", response.data);
 
         if (response.data) {
-          // Filter tasks for the current project and sort by due date
           const projectTasks = response.data
             .filter(task => task.group === projectId)
             .sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
@@ -101,23 +99,22 @@ function GroupMembers({ projectId }) {
 
         console.log("Fetching all groups for the user...");
 
-        // Fetch all groups
         const response = await axios.get("/api/group/", {
           headers: { Authorization: `Bearer ${user.token}` }
         });
 
-        console.log("API Response:", response.data);
+        console.log("Group API Response:", response.data);
 
         if (response.data?.data) {
-          // Find the project with matching projectId
           const project = response.data.data.find(p => p._id === projectId);
           if (project) {
+            // These should match the structure returned by your backend.
             setAcceptedMembers(project.members || []);
             setPendingMembers(project.pending_members || []);
             console.log("Accepted Members:", project.members);
             console.log("Pending Members:", project.pending_members);
           } else {
-            setError("Project not found in response.");
+            setError("Group not found in response.");
           }
         } else {
           setError("Invalid response format.");
@@ -143,7 +140,7 @@ function GroupMembers({ projectId }) {
   return (
     <div className="group-members-section">
       <h3 className="group-members-header">Group Members</h3>
-      
+
       <div className="members-category">
         <h4>Accepted Members</h4>
         {acceptedMembers.length > 0 ? (
