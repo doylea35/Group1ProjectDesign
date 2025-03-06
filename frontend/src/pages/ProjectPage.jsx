@@ -1,3 +1,4 @@
+// ProjectPage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
@@ -5,6 +6,7 @@ import CreateSubteam from "../components/CreateSubteam";
 import CreateTask from "../components/CreateTask";
 import axios from "axios";
 import "../App.css";
+import ProjectNavigation from "../components/ProjectNavigator"; // Make sure the path is correct
 
 function TaskList({ projectId }) {
   const [tasks, setTasks] = useState([]);
@@ -20,22 +22,13 @@ function TaskList({ projectId }) {
           setLoading(false);
           return;
         }
-
-        console.log(`Fetching tasks for project: ${projectId}`);
-
-        // Fetch all tasks and filter for the specific project
         const response = await axios.get(`/tasks/`, {
           headers: { Authorization: `Bearer ${user.token}` }
         });
-
-        console.log("Tasks API Response:", response.data);
-
         if (response.data) {
-          // Filter tasks for the current project and sort by due date
           const projectTasks = response.data
-            .filter(task => task.group === projectId)
+            .filter((task) => task.group === projectId)
             .sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
-
           setTasks(projectTasks);
         } else {
           setError("No tasks found.");
@@ -68,7 +61,8 @@ function TaskList({ projectId }) {
                 <strong>Due:</strong> {task.due_date}
               </p>
               <p className="task-meta">
-                <strong>Status:</strong> {task.status} | <strong>Priority:</strong> {task.priority}
+                <strong>Status:</strong> {task.status} |{" "}
+                <strong>Priority:</strong> {task.priority}
               </p>
             </div>
           ))
@@ -96,21 +90,14 @@ function ProjectPage() {
     }
   }, [projectId]);
 
-  const handleFindTimeClick = () => {
-    if (!projectId) {
-      console.error("No projectId found!");
-      return;
-    }
-    navigate(`/schedule/${projectId}`);
-  };
-
   const handleCreateSubteam = (subteamName, members) => {
-    alert(`Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(", ")}`);
+    alert(
+      `Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(", ")}`
+    );
   };
 
-  // onCreate is passed to CreateTask but its functionality is now handled within CreateTask (refresh).
   const handleCreateTask = () => {
-    // You may do additional stuff here if necessary.
+    // Additional logic if needed.
   };
 
   if (loading) {
@@ -119,12 +106,12 @@ function ProjectPage() {
 
   return (
     <div className="project-page-container">
-      <PageHeader title={`${projectName}`} />
+      <div className="project-header-container">
+        <PageHeader title={projectName} />
+        <ProjectNavigation projectId={projectId} />
+      </div>
 
       <div className="button-container">
-        <button className="Button violet" onClick={handleFindTimeClick}>
-          Find a Time to Meet
-        </button>
         <CreateSubteam projectName={projectName} onCreate={handleCreateSubteam} />
         <CreateTask projectName={projectName} projectId={projectId} onCreate={handleCreateTask} />
       </div>
