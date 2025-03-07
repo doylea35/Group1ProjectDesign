@@ -1222,32 +1222,160 @@ to {
   gap: 2px;
 }
 
-.member-table {
-  background-color: #f5f5f5; 
-  padding: 16px;
-  border-radius: 6px;
-  display: grid;
-  gap: 16px; 
+.settings-page-container {
+  margin-left: 100px;
+  padding: 24px;
+  max-width: 1000px;
+  margin: 0 auto;   
+  font-family: "Inter", sans-serif; 
 }
 
-.member-table-header {
-  display: grid;
-  grid-template-columns: 3fr 1fr; 
-  font-weight: bold;
-  background-color: var(--violet-7); 
-  color: white; 
-  padding: 8px;
-  border-radius: 4px 4px 0 0;
-  margin-bottom: 12px;
+.top-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
 }
 
-.member-table-row {
-  display: grid;
-  grid-template-columns: 3fr 1fr;
-  gap: 16px; 
-  padding: 8px;
-  background-color: white;
+.back-project-btn {
+  background-color: var(--violet-8);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
   border-radius: 4px;
-  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  font-size: 14px;
+}
+.back-project-btn:hover {
+  background-color: var(--violet-9);
+}
+
+.project-info-card {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.project-info-card label {
+  font-weight: 600;
+}
+.project-info-card input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.edit-name-btn {
+  background-color: var(--violet-9);
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.edit-name-btn:hover {
+  background-color: var(--violet-10);
+}
+
+.members-card {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.members-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.members-card-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.edit-toggle-btn {
+  background-color: var(--violet-9);
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.edit-toggle-btn:hover {
+  background-color: var(--violet-10);
+}
+
+/* Edit members section in settings page */
+.edit-members-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.edit-members-form input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.edit-members-form button {
+  align-self: flex-start;
+  background-color: var(--violet-9);
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.edit-members-form button:hover {
+  background-color: var(--violet-10);
+}
+
+/* Member table - Settings page */
+.members-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.members-table-header {
+  background-color: var(--violet-8);
+  color: #fff;
+  font-weight: 600;
+}
+
+.members-table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  padding: 8px 0;
+  border-bottom: 1px solid #eaeaea;
+  align-items: center;
+}
+
+.members-table-cell {
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+.members-table-row:last-child {
+  border-bottom: none;
+}
+
+.success-message {
+  color: #2e7d32; 
+  margin-top: 8px;
+}
+
+.error-message {
+  color: #d32f2f; 
+  margin-top: 8px;
 }
 
