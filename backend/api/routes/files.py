@@ -21,8 +21,11 @@ s3_client = boto3.client(
 files_router = APIRouter()
 
 
-@files_router.get("/file/{filename}")
+@files_router.get("/files/{filename}")
 async def get_presigned_url(filename: str):
+    """
+    generates a temporary (pre signed) URL for downloading a file from AWS S3
+    """
     try:
 
         presigned_url = s3_client.generate_presigned_url(
@@ -44,7 +47,7 @@ async def upload_file(file: UploadFile = File(...)):
     uploads a file to AWS S3 and returns the file's public URL
     """
     try:
-
+        
         # upload file
         s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME, file.filename)
 
