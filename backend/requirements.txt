@@ -11,3 +11,4 @@ openai==0.28.1
 bcrypt==4.2.1
 pyjwt==2.10.1
 python-multipart==0.0.17
+boto3==1.37.11
