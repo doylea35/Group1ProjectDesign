@@ -32,6 +32,7 @@ class Task(BaseModel): #_id as Primary key, automatically created, can be found 
     status: str # ["To Do", "In Progress", "Completed"]
     group: str # Foreign Key referencing Group.id
     priority: str # ["Low", "Medium", "High"]
+    labels: Optional[List[str]] = [] # array of labels, optional
 
 class SubTeam(BaseModel): #_id as Primary key, automatically created, can be found using ObjectID
     id: Optional[str] = Field(alias="_id", default=None)

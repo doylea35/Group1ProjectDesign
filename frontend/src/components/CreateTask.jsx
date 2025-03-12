@@ -11,10 +11,10 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
   const [selectedSubteams, setSelectedSubteams] = useState([]);
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [errors, setErrors] = useState({});
-  const [members, setMembers] = useState([]); // Members will be fetched from backend
+  const [members, setMembers] = useState([]); 
   const [taskPriority, setTaskPriority] = useState("Medium");
 
-  const subteams = ["Research", "Design"];
+  const [subteams, setSubteams] = useState([]);
 
   useEffect(() => {
     console.log("CreateTask component mounted. Checking projectId:", projectId);
@@ -29,7 +29,6 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
 
         console.log("Fetching all groups for the user...");
 
-        // Fetch all groups
         const response = await axios.get("/api/group/", {
           headers: { Authorization: `Bearer ${user.token}` }
         });
@@ -37,7 +36,6 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
         console.log("API Response:", response.data);
 
         if (response.data?.data) {
-          // Find the project with matching projectId
           const project = response.data.data.find(p => p._id === projectId);
 
           if (project) {
@@ -54,10 +52,41 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
       }
     };
 
+    const fetchSubteams = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || !user.token) {
+          console.error("User not authenticated.");
+          return;
+        }
+
+        console.log("Fetching subteams for project:", projectId);
+
+        const subteamRes = await axios.get("/subteam/getSubteamsByGroup", {
+          headers: { Authorization: `Bearer ${user.token}` },
+          params: { group_id: projectId } 
+        });
+
+        console.log("Subteam API response:", subteamRes.data);
+
+        const returnedData = subteamRes.data?.data?.subteams;
+        if (Array.isArray(returnedData)) {
+          const subteamNames = returnedData.map((st) => st.team_name);
+          setSubteams(subteamNames);
+          console.log("Subteams set:", subteamNames);
+        } else {
+          console.error("No subteams field found in response:", subteamRes.data);
+        }
+      } catch (error) {
+        console.error("Error fetching subteams:", error);
+      }
+    };
+
     if (projectId) {
       fetchMembers();
+      fetchSubteams();
     } else {
-      console.warn("Project ID is missing, not fetching members.");
+      console.warn("Project ID is missing, not fetching members/subteams.");
     }
   }, [projectId]);
 
@@ -120,7 +149,7 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
       setSelectedMembers([]);
       setErrors({});
 
-      // Call parent's onCreate callback if provided
+
       if (onCreate) {
         onCreate();
       }
@@ -200,7 +229,7 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
               </select>
             </fieldset>
 
-            {/* Subteam Selection */}
+            {/* Subteam Selection (NOW FROM BACKEND) */}
             <div className="selection-container">
               <p className="selection-title">Assign to Subteams:</p>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -208,7 +237,9 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
                   <button
                     type="button"
                     key={subteam}
-                    className={`task-toggle-button ${selectedSubteams.includes(subteam) ? "selected" : ""}`}
+                    className={`task-toggle-button ${
+                      selectedSubteams.includes(subteam) ? "selected" : ""
+                    }`}
                     onClick={() => toggleSubteam(subteam)}
                   >
                     {subteam}
@@ -225,7 +256,9 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
                   <button
                     type="button"
                     key={member}
-                    className={`task-toggle-button ${selectedMembers.includes(member) ? "selected" : ""}`}
+                    className={`task-toggle-button ${
+                      selectedMembers.includes(member) ? "selected" : ""
+                    }`}
                     onClick={() => toggleMember(member)}
                   >
                     {member}

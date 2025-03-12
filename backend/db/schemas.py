@@ -36,6 +36,7 @@ def _task_serial(task: dict) -> Task:
         "status": task["status"],
         "group": str(task["group"]),
         "priority": task["priority"]
+        "labels": task.get("labels", [])
     }
 
 def _subteam_serial(subteam: dict) -> SubTeam:

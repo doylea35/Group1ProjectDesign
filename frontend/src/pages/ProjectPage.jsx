@@ -13,6 +13,9 @@ function TaskList({ projectId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // NEW: For label filtering
+  const [labelFilter, setLabelFilter] = useState("");
+
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -26,9 +29,21 @@ function TaskList({ projectId }) {
           headers: { Authorization: `Bearer ${user.token}` }
         });
         if (response.data) {
+          // Define a priority order so "High" sorts before "Medium" before "Low"
+          const priorityOrder = { High: 0, Medium: 1, Low: 2 };
+          
+          // Filter tasks for this project, then sort by priority, then by due date
           const projectTasks = response.data
             .filter((task) => task.group === projectId)
-            .sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+            .sort((a, b) => {
+              const prioA = priorityOrder[a.priority] ?? 999;
+              const prioB = priorityOrder[b.priority] ?? 999;
+              if (prioA !== prioB) {
+                return prioA - prioB; // lower number → higher priority
+              }
+              // Same priority: compare deadlines
+              return new Date(a.due_date) - new Date(b.due_date);
+            });
           setTasks(projectTasks);
         } else {
           setError("No tasks found.");
@@ -49,24 +64,64 @@ function TaskList({ projectId }) {
   if (loading) return <p>Loading tasks...</p>;
   if (error) return <p className="error-message">{error}</p>;
 
+  // NEW: parse comma-separated labels from labelFilter
+  const desiredLabels = labelFilter
+    .split(",")
+    .map((l) => l.trim())
+    .filter((l) => l !== "");
+
+  // Simple helper to see if there's overlap between task labels & desiredLabels
+  function labelsMatch(taskLabels, wanted) {
+    if (!wanted.length) return true; // If no filter typed, show all tasks
+    return wanted.some((label) => taskLabels?.includes(label));
+  }
+
+  // NEW: final filtered tasks
+  const filteredTasks = tasks.filter((task) =>
+    labelsMatch(task.labels || [], desiredLabels)
+  );
+
   return (
     <div className="task-section">
       <h3 className="task-header">Tasks To Do</h3>
+
+      {/* NEW: Label Filter Input */}
+      <div style={{ marginBottom: "1rem" }}>
+        <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
+          Filter by labels (comma-separated):
+        </label>
+        <input
+          id="labelFilter"
+          type="text"
+          value={labelFilter}
+          onChange={(e) => setLabelFilter(e.target.value)}
+          placeholder="e.g. urgent, design, homework"
+          style={{ width: "300px" }}
+        />
+      </div>
+
       <div className="task-list-container">
-        {tasks.length > 0 ? (
-          tasks.map((task) => (
+        {filteredTasks.length > 0 ? (
+          filteredTasks.map((task) => (
             <div key={task._id} className="task-card">
               <h4 className="task-title">{task.name}</h4>
               <p className="task-meta">
                 <strong>Due:</strong> {task.due_date}
               </p>
               <p className="task-meta">
-                <strong>Status:</strong> {task.status} | 
+                <strong>Status:</strong> {task.status} |{" "}
                 <strong>Priority:</strong> {task.priority}
               </p>
               <p className="task-meta">
                 <strong>Assigned To:</strong> {task.assigned_to?.join(", ")}
               </p>
+
+              {/* NEW: Show labels, if any */}
+              {task.labels && task.labels.length > 0 && (
+                <p className="task-meta">
+                  <strong>Labels:</strong> {task.labels.join(", ")}
+                </p>
+              )}
             </div>
           ))
         ) : (
