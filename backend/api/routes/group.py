@@ -254,6 +254,7 @@ def send_project_invitation_email(user_emails:list[str], creator_email:str, new_
 
 @group_router.put("/updateGroup", status_code=status.HTTP_200_OK)
 async def update_group_handler(request: UpdateGroupRequest):
+    # find group
     group = groups_collection.find_one({"_id": ObjectId(request.group_id)})
     if not group:
         return HTTPException(
@@ -261,28 +262,41 @@ async def update_group_handler(request: UpdateGroupRequest):
                 detail={"message": f"Group with id: {request.group_id} does not exist."}
             )
     
-    new_members = []
-    new_pending_members = []
+    update_fields = {}
 
-    # check if there are new members
-    for member in request.new_members:
-        if not users_collection.find_one({"email": member}): # the member doesn't exist (yet)
-            new_pending_members.append(member)
-        else: #the member exists
-            new_members.append(member)
+    # change name
+    if request.new_name:
+        update_fields["name"] = request.new_name
+
+    # add members
+    existing_members = set(group["members"])
+    pending_members = set(group.get("pending_members", []))
+    
+    for email in request.new_members:
+        user = users_collection.find_one({"email": email})
+        if user:
+            existing_members.add(email)  # if user already registered, we add him to the group
+        else:
+            pending_members.add(email)  # if user not registered, we add him to pending members 
+            send_project_invitation_email(email, request.modification_email, str(request.group_id), group["name"]) # and we send him the invitation email
+
+    # remove members
+    for email in request.remove_members:
+        existing_members.discard(email)
+        pending_members.discard(email)
 
     # update group
-    updated_group = groups_collection.find_one_and_update(
-        {"_id": ObjectId(request.group_id)},
+    update_fields["members"] = list(existing_members)
+    update_fields["pending_members"] = list(pending_members)
+
+    updated_group = groups_collection.update_one(
+        {"_id": ObjectId(request.group_id)}, 
         {
-            "$set": {"name": request.new_group_name},
-            "$set": {"members": new_members},
-            "$addToSet": {"pending_members": {"$each": new_pending_members}}
+            "$set": {"name": update_fields["name"]},
+            "$set": {"members": update_fields["members"]},
+            "$set": {"pending_members": update_fields["pending_members"]}
         }
-        , return_document=True)
-    
-    # send invitation email to the user
-    send_project_invitation_email(new_pending_members, request.modification_email, str(request.group_id), request.new_group_name)
+        )
     
     if not updated_group:
         return HTTPException(
