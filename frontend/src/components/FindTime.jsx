@@ -50,6 +50,9 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
     try {
       console.log("📡 Fetching Overlapping Free Times...");
 
+      console.log("freeTimes", JSON.stringify(freeTimes));
+      console.log("raw_free_time_data", JSON.stringify(freeTimes));
+
       // For now, we're using hardcoded times instead of sending a request to the API
       // Hardcoded overlapping slots
       const hardcodedOverlappingSlots = {
