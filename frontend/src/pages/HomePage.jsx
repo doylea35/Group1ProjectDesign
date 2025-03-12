@@ -109,6 +109,9 @@ export default function HomePage() {
               <p className="task-meta">
                 <strong>Status:</strong> {task.status} | <strong>Priority:</strong> {task.priority}
               </p>
+              <p className="task-meta">
+                <strong>Assigned To:</strong> {task.assigned_to?.join(", ")}
+              </p>
               {activeTaskId === task._id && (  // Conditionally render the task description
                 <p className="task-description">{task.description || "No description provided."}</p>
               )}

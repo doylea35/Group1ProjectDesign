@@ -61,8 +61,11 @@ function TaskList({ projectId }) {
                 <strong>Due:</strong> {task.due_date}
               </p>
               <p className="task-meta">
-                <strong>Status:</strong> {task.status} |{" "}
+                <strong>Status:</strong> {task.status} | 
                 <strong>Priority:</strong> {task.priority}
+              </p>
+              <p className="task-meta">
+                <strong>Assigned To:</strong> {task.assigned_to?.join(", ")}
               </p>
             </div>
           ))

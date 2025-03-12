@@ -12,6 +12,7 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [errors, setErrors] = useState({});
   const [members, setMembers] = useState([]); // Members will be fetched from backend
+  const [taskPriority, setTaskPriority] = useState("Medium");
 
   const subteams = ["Research", "Design"];
 
@@ -89,11 +90,11 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
       name: taskName,
       description: taskDescription,
       due_date: dueDate,
-      assigned_to: selectedMembers[0] || "", // Assign to the first selected member (if any)
+      assigned_to: selectedMembers,
       group: projectId,
-      subteams: selectedSubteams, // Ensure this is included
+      subteams: selectedSubteams,
       status: "To Do",
-      priority: "Medium"
+      priority: taskPriority
     };
 
     try {
@@ -183,6 +184,20 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
                 onChange={(e) => setDueDate(e.target.value)}
               />
               {errors.dueDate && <p className="error-message">{errors.dueDate}</p>}
+            </fieldset>
+
+            <fieldset className="Fieldset">
+              <label className="Label" htmlFor="task-priority">Task Priority:</label>
+              <select
+                className="Input"
+                id="task-priority"
+                value={taskPriority}
+                onChange={(e) => setTaskPriority(e.target.value)}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
             </fieldset>
 
             {/* Subteam Selection */}
