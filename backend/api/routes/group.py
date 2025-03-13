@@ -9,6 +9,8 @@ from api.utils import is_valid_email
 from api.utils import get_current_user
 from dotenv import load_dotenv
 import os
+from pymongo import ReturnDocument
+
 # Load environment variables
 load_dotenv()
 
@@ -267,6 +269,8 @@ async def update_group_handler(request: UpdateGroupRequest):
     # change name
     if request.new_name:
         update_fields["name"] = request.new_name
+    else:
+        update_fields["name"] = group["name"]
 
     # add members
     existing_members = set(group["members"])
@@ -289,13 +293,10 @@ async def update_group_handler(request: UpdateGroupRequest):
     update_fields["members"] = list(existing_members)
     update_fields["pending_members"] = list(pending_members)
 
-    updated_group = groups_collection.update_one(
+    updated_group = groups_collection.find_one_and_update(
         {"_id": ObjectId(request.group_id)}, 
-        {
-            "$set": {"name": update_fields["name"]},
-            "$set": {"members": update_fields["members"]},
-            "$set": {"pending_members": update_fields["pending_members"]}
-        }
+        {"$set": update_fields},
+        return_document=ReturnDocument.AFTER
         )
     
     if not updated_group:
@@ -303,5 +304,7 @@ async def update_group_handler(request: UpdateGroupRequest):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={"message": f"Something went wrong when updating the group"}
             )
+    
+    updated_group["_id"] = str(updated_group["_id"])
 
     return {"message": "Group updated successfully", "data": updated_group}
