@@ -33,14 +33,12 @@ function GroupMembers({ projectId, projectName }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // -- States for "Edit Members" form --
   const [showEdit, setShowEdit] = useState(false);
   const [newMembersInput, setNewMembersInput] = useState("");
   const [updateMessage, setUpdateMessage] = useState("");
   const [updateError, setUpdateError] = useState("");
   const [updateLoading, setUpdateLoading] = useState(false);
 
-  // Fetch members from backend
   const fetchMembers = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -50,7 +48,7 @@ function GroupMembers({ projectId, projectName }) {
         return;
       }
       const response = await axios.get("/api/group/", {
-        headers: { Authorization: `Bearer ${user.token}` }
+        headers: { Authorization: `Bearer ${user.token}` },
       });
 
       if (response.data?.data) {
@@ -78,13 +76,11 @@ function GroupMembers({ projectId, projectName }) {
     }
   }, [projectId]);
 
-  // Combine accepted + pending into one array
   const combinedMembers = [
     ...acceptedMembers.map((member) => ({ email: member, status: "accepted" })),
     ...pendingMembers.map((member) => ({ email: member, status: "invited" })),
   ];
 
-  // Submit new members to backend
   const handleUpdateMembers = async (e) => {
     e.preventDefault();
     setUpdateLoading(true);
@@ -103,26 +99,26 @@ function GroupMembers({ projectId, projectName }) {
       .map((m) => m.trim())
       .filter((m) => m.length > 0);
 
-      try {
-        const groupData = {
-          modification_email: user.email,
-          group_id: projectId,
-          new_group_name: projectName, // Keep the existing name
-          new_members: newMembersArray,
-        };
-        const response = await updateGroup(groupData);
-        if (response && response.message) {
-          setUpdateMessage(response.message);
-          fetchMembers(); // Refresh the list
-        } else {
-          setUpdateError("Unexpected response from server.");
-        }
-      } catch (error) {
-        console.error("Update error:", error);
-        setUpdateError("Failed to update group info.");
-      } finally {
-        setUpdateLoading(false);
+    try {
+      const groupData = {
+        modification_email: user.email,
+        group_id: projectId,
+        new_group_name: projectName,
+        new_members: newMembersArray,
+      };
+      const response = await updateGroup(groupData);
+      if (response && response.message) {
+        setUpdateMessage(response.message);
+        fetchMembers();
+      } else {
+        setUpdateError("Unexpected response from server.");
       }
+    } catch (error) {
+      console.error("Update error:", error);
+      setUpdateError("Failed to update group info.");
+    } finally {
+      setUpdateLoading(false);
+    }
   };
 
   if (loading) return <p>Loading group members...</p>;
@@ -153,7 +149,9 @@ function GroupMembers({ projectId, projectName }) {
           <button type="submit" disabled={updateLoading}>
             {updateLoading ? "Updating..." : "Update"}
           </button>
-          {updateMessage && <p className="success-message">{updateMessage}</p>}
+          {updateMessage && (
+            <p className="success-message">{updateMessage}</p>
+          )}
           {updateError && <p className="error-message">{updateError}</p>}
         </form>
       )}
@@ -186,26 +184,67 @@ function ProjectSettingsPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [projectName, setProjectName] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [editingName, setEditingName] = useState(false);
+  const [updateNameMessage, setUpdateNameMessage] = useState("");
+  const [updateNameError, setUpdateNameError] = useState("");
+  const [updateNameLoading, setUpdateNameLoading] = useState(false);
 
   useEffect(() => {
-    const projectFromStorage = JSON.parse(localStorage.getItem("selectedProject"));
+    const projectFromStorage = JSON.parse(
+      localStorage.getItem("selectedProject")
+    );
     if (projectFromStorage && projectFromStorage._id === projectId) {
       setProjectName(projectFromStorage.name);
+      setNewProjectName(projectFromStorage.name);
       setLoading(false);
     } else {
       setLoading(true);
     }
   }, [projectId]);
 
+  const handleUpdateName = async (e) => {
+    e.preventDefault();
+    setUpdateNameLoading(true);
+    setUpdateNameMessage("");
+    setUpdateNameError("");
+
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || !user.token) {
+      setUpdateNameError("User not authenticated.");
+      setUpdateNameLoading(false);
+      return;
+    }
+
+    try {
+      const groupData = {
+        modification_email: user.email,
+        group_id: projectId,
+        new_group_name: newProjectName,
+        new_members: [],
+      };
+      const response = await updateGroup(groupData);
+      if (response && response.message) {
+        setUpdateNameMessage(response.message);
+        setProjectName(newProjectName);
+        setEditingName(false);
+      } else {
+        setUpdateNameError("Unexpected response from server.");
+      }
+    } catch (error) {
+      console.error("Update name error:", error);
+      setUpdateNameError("Failed to update project name.");
+    } finally {
+      setUpdateNameLoading(false);
+    }
+  };
+
   if (loading) return <p>Loading project settings...</p>;
 
   return (
     <div className="settings-page-container">
-      {/* PageHeader can show "ProjectName: Settings" in a large font */}
       <PageHeader title={`${projectName} Settings`} />
-
-      {/* (Optional) top row for 'Back to project' & other nav */}
       <div className="top-row">
         <button
           onClick={() => navigate(`/projects/${projectId}`)}
@@ -215,20 +254,47 @@ function ProjectSettingsPage() {
         </button>
       </div>
 
-      {/* Example: project name editing (optional) */}
       <div className="project-info-card">
         <label>Project Name:</label>
-        <input
-          type="text"
-          value={projectName}
-          readOnly
-          // or if you want to make it editable, remove readOnly and
-          // handle changes in local state
-        />
-        <button className="edit-name-btn">Edit Name</button>
+        {editingName ? (
+          <form onSubmit={handleUpdateName}>
+            <input
+              type="text"
+              value={newProjectName}
+              onChange={(e) => setNewProjectName(e.target.value)}
+            />
+            <button type="submit" disabled={updateNameLoading}>
+              {updateNameLoading ? "Updating..." : "Save"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditingName(false);
+                setNewProjectName(projectName);
+              }}
+            >
+              Cancel
+            </button>
+            {updateNameMessage && (
+              <p className="success-message">{updateNameMessage}</p>
+            )}
+            {updateNameError && (
+              <p className="error-message">{updateNameError}</p>
+            )}
+          </form>
+        ) : (
+          <>
+            <input type="text" value={projectName} readOnly />
+            <button
+              className="edit-name-btn"
+              onClick={() => setEditingName(true)}
+            >
+              Edit Name
+            </button>
+          </>
+        )}
       </div>
 
-      {/* The members card */}
       <GroupMembers projectId={projectId} projectName={projectName} />
     </div>
   );
