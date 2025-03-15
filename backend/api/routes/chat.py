@@ -72,28 +72,63 @@ async def send_message(req: SendMessageQuery, current_user: dict = Depends(get_c
     #         await ws.send_json(msg.dict())
     return {"Message": "Message sent", "data":updated_chat}
 
-# # REST API: Get chat history
-# @chat_router.get("/messages/{chat_id}")
-# async def get_messages(chat_id: str):
-#     return [msg for msg in messages if msg["chat_id"] == chat_id]
 
-# # WebSocket: Handle real-time chat
-# @chat_router.websocket("/ws/chat/{chat_id}")
-# async def websocket_chat(chat_id: str, websocket: WebSocket):
-#     await websocket.accept()
+# wscat -c ws://localhost:8000/api/chat/ws/chat/67d5cf2f40c6349bfba2112d
 
-#     if chat_id not in active_connections:
-#         active_connections[chat_id] = []
+
+
+import asyncio
+# Active WebSocket connections
+active_connections = {}
+
+@chat_router.websocket("/ws/chat/{user_email}/{chat_id}")
+async def websocket_chat(user_email: str, chat_id: str, websocket: WebSocket):
+    print("Waiting to accept WebSocket connection...")
+    await websocket.accept()
+
+    # Add WebSocket to active connections
+    if chat_id not in active_connections:
+        active_connections[chat_id] = []
     
-#     active_connections[chat_id].append(websocket)
+    active_connections[chat_id].append(websocket)
+    print(f"Added WebSocket to chat: {chat_id}")
 
-#     try:
-#         while True:
-#             message = await websocket.receive_text()
-#             # Store message in "DB"
-#             messages.append({"chat_id": chat_id, "sender": "unknown", "message": message})
-#             # Broadcast to all clients in this chat
-#             for ws in active_connections[chat_id]:
-#                 await ws.send_text(message)
-#     except WebSocketDisconnect:
-#         active_connections[chat_id].remove(websocket)
+    try:
+        while True:
+            try:
+                # Set a timeout of 30 seconds for receiving messages
+                message = await asyncio.wait_for(websocket.receive_text(), timeout=30.0)
+
+                # Create message object
+                new_msg_obj = {
+                    "sender": user_email, 
+                    "message": message,
+                    "delivered_time": datetime.utcnow()  # Use UTC time for consistency
+                }
+                
+                # Save to MongoDB chat history
+                chat_collection.find_one_and_update(
+                    {"_id": ObjectId(chat_id)},
+                    {"$addToSet": {"chat_history": new_msg_obj}},
+                    return_document=True
+                )    
+
+                # Broadcast to all clients in this chat
+                for ws in active_connections[chat_id]:
+                    await ws.send_text(message)
+
+            except asyncio.TimeoutError:
+                print(f"WebSocket for chat {chat_id} inactive for 30s. Closing connection.")
+                
+                break  # Exit the loop to close the connection
+
+    except WebSocketDisconnect:
+        print(f"WebSocket disconnected from chat {chat_id}")
+
+    finally:
+        # Cleanup: Remove WebSocket connection
+        active_connections[chat_id].remove(websocket)
+        if len(active_connections[chat_id]) == 0:
+            del active_connections[chat_id]
+        await websocket.close()
+        print(f"WebSocket connection for chat {chat_id} closed")
