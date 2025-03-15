@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useParams, useNavigate } from "react-router-dom"; // Get projectId from URL
+import { useParams, useNavigate } from "react-router-dom"; 
 import AddTime from "../components/AddTime";
 import FindTime from "../components/FindTime";
 import "../App.css";
 
-const API_URI = "/api/calendar/getGroupFreeTime"; // API to get project-based free times
+const API_URI = "/api/calendar/getGroupFreeTime"; 
 
 const SchedulingPage = () => {
-  console.log("🔍 SchedulingPage Loaded"); // LOG COMPONENT LOAD
-
-  const { projectId } = useParams(); // ✅ Get projectId from the URL
-  const navigate = useNavigate(); // To handle redirection
-  const [freeTimes, setFreeTimes] = useState({}); // Holds the free times organized by day
-  const [newFreeTimes, setNewFreeTimes] = useState({}); // Holds the free times organized by day
+  console.log("🔍 SchedulingPage Loaded"); 
+  const { projectId } = useParams(); 
+  const navigate = useNavigate(); 
+  const [freeTimes, setFreeTimes] = useState({}); 
+  const [newFreeTimes, setNewFreeTimes] = useState({}); 
   const [errorMessage, setErrorMessage] = useState("");
   const [rawFreeTimeData, setRawFreeTimeData] = useState([]);
 
-  const user = JSON.parse(localStorage.getItem("user")); // ✅ Get user info from localStorage
-  console.log("👤 User:", user); // LOG USER INFO
+  const user = JSON.parse(localStorage.getItem("user")); 
+  console.log("👤 User:", user);
 
   useEffect(() => {
     if (!user || !user.token) {
@@ -28,29 +27,25 @@ const SchedulingPage = () => {
 
     if (!projectId) {
       console.error("❌ No projectId found! Redirecting...");
-      navigate("/"); // Redirect user to home if no projectId
+      navigate("/"); 
       return;
     }
 
     fetchFreeTimes();
-  }, [projectId]); // Re-run when projectId changes
+  }, [projectId]); 
 
   const fetchFreeTimes = async () => {
-    // console.log("🔄 API Call to Fetch Free Times...");
-    // console.log("🆔 Project ID (Group ID):", projectId);
 
     if (!user || !user.token) {
-      // console.error("❌ User is not logged in.");
       setErrorMessage("User is not logged in.");
       return;
     }
 
     try {
-      // Make the PUT request to fetch free times
       const response = await axios.put(
         "/api/calendar/getGroupFreeTime",
         {
-          group_id: projectId, // Send the group/project ID in the body
+          group_id: projectId, 
         },
         {
           headers: {
@@ -60,24 +55,15 @@ const SchedulingPage = () => {
         }
       );
 
-      // console.log("✅ Full API Response:", response);
-
-      // Check if response contains the free times and format them
       if (response.data?.data) {
         const formattedFreeTimes = formatFreeTimes(response.data.data);
 
         const a = response.data.data.map(
           (person) => person.free_time.free_time
         );
-
-        // console.log(`raw in SchedulePage before setting: ${JSON.stringify(a)}`);
         setRawFreeTimeData(a);
-        // console.log(`raw in SchedulePage after setting: ${rawFreeTimeData}`);
-
         setFreeTimes(formattedFreeTimes);
-        // console.log("🟢 Free Times Set in State:", formattedFreeTimes);
       } else {
-        // console.warn("⚠️ No free times found.");
         setErrorMessage("No free times available.");
       }
     } catch (error) {
@@ -100,7 +86,6 @@ const SchedulingPage = () => {
   };
 
   const formatFreeTimes = (data) => {
-    // Format the response data to group free times by days
     const daysOfWeek = [
       "Monday",
       "Tuesday",
@@ -121,21 +106,15 @@ const SchedulingPage = () => {
     };
     console.log("inside schedule.page" + JSON.stringify(data));
     data.forEach((user) => {
-      const userName = user.name || "User"; // Default to "User" if name is missing
+      const userName = user.name || "User"; 
       if (user.free_time.free_time !== undefined) {
-        // const freeTimes = user.free_time.free_time;
-        // setFreeTimes(user.free_time.free_time);
         console.log(
           "----user.free_time.free_time:" +
             JSON.stringify(user.free_time.free_time)
         );
         setNewFreeTimes(user.free_time.free_time);
-        // console.log(
-        //   "newFreeTimes inside schedule.page" + JSON.stringify(newFreeTimes)
-        // );
         daysOfWeek.forEach((day) => {
           if (user.free_time.free_time[day]) {
-            // console.log("------day: " + day);
             user.free_time.free_time[day].forEach((slot) => {
               formattedData[day].push({
                 name: userName,
@@ -198,17 +177,15 @@ const SchedulingPage = () => {
     );
   };
 
-  // console.log("🔘 Rendering Buttons...");
   return (
     <div>
-      {/* Back Button - Positioned at the top left */}
       <div
         className="back-button"
         style={{
           position: "absolute",
-          top: "20px", // Positioning it a little down from the top
-          left: "300px", // Positioning it to the left
-          zIndex: "10", // Ensures the button stays above other elements
+          top: "20px", 
+          left: "300px", 
+          zIndex: "10", 
         }}
       >
         <button
@@ -240,7 +217,7 @@ const SchedulingPage = () => {
           <p className="ErrorMessage">{errorMessage}</p>
         )}
       </div>
-      {renderSchedule()} {/* ✅ Now actually rendering the schedule */}
+      {renderSchedule()} 
     </div>
   );
 };
