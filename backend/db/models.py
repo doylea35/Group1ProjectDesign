@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 from bson import ObjectId
+import datetime
 
 class FreeTimeSlot(BaseModel):
     start: str
@@ -39,3 +40,12 @@ class SubTeam(BaseModel): #_id as Primary key, automatically created, can be fou
     members: List[str]  # List of Foreign Keys referencing User.email
     tasks: List[str] # List of Foreign Keys referencing Task.id
     group: str # Foreign Key referencing Group.id
+
+class FileMetadata(BaseModel):
+    filename: str
+    uploaded_by: str
+    file_url: str
+    group_id: Optional[str] = None
+    task_id: Optional[str] = None
+    upload_date: datetime.datetime
+
