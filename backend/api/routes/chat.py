@@ -1,11 +1,9 @@
 from fastapi import WebSocket, WebSocketDisconnect, APIRouter, HTTPException, status,Depends
 from db.database import chat_collection
 from pydantic import BaseModel
-from db.models import Chat, Message
 from bson import ObjectId
 from datetime import datetime
 from api.utils import get_current_user
-from db.models import User
 chat_router = APIRouter()
 
 active_connections = {}
