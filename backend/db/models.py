@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 from bson import ObjectId
-
+from datetime import datetime
 class FreeTimeSlot(BaseModel):
     start: str
     end: str
@@ -39,3 +39,17 @@ class SubTeam(BaseModel): #_id as Primary key, automatically created, can be fou
     members: List[str]  # List of Foreign Keys referencing User.email
     tasks: List[str] # List of Foreign Keys referencing Task.id
     group: str # Foreign Key referencing Group.id
+
+
+class Message(BaseModel):
+    message_id: str = Field(alias="_id", default=None)
+    sender: str
+    message: str
+    delivered_time : datetime
+    
+class Chat(BaseModel):
+    chat_id: str = Field(alias="_id", default=None)
+    is_groupchat: bool = False
+    participants: list[str] = []
+    chat_history: list[Message] = []
+    group_id : str = None
