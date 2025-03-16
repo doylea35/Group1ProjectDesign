@@ -83,7 +83,7 @@ async def get_groupchat(group_id : str, current_user: dict = Depends(get_current
 active_connections = {}
 
 # guide for frontend:
-# The frontend should send a heatbeat message to the websock every 50 seconds
+# The frontend should send a heatbeat message to the websock every 40 seconds
 # We are going to keep the socket connection open all the time after the user open the "Chat" until the user close the chat
 # Conditions where the conection ends:
 #   User close the browser (no longer sending heatbeat message and the server will disconnect automaticallu ) OR
@@ -95,6 +95,16 @@ active_connections = {}
 #     "close_connection" : bool
 #     "is_heartbeat_msg" : bool
 # }
+#  You should call:
+#  "ws://group-grade-backend-5f919d63857a.herokuapp.com/ws/chat/67d5cf2f40c6349bfba2112d/zhangnuoxi24@gmail.com"
+#    AND
+#   "ws://group-grade-backend-5f919d63857a.herokuapp.com/ws/chat/67d5cf2f40c6349bfba2112d/nzhang@tcd.ie"
+#   to establish the code.
+#  Note: 
+# Due to the limitation of Heroku instances, it may take few seconds for the active connections to be updated in memory.
+# So, after you establish a websocket connection, you should wait for 10-20 seconds before you open a new connection so that
+# both connections are aware of each other.
+
 
 @chat_router.websocket("/ws/chat/{chat_id}/{sender_email}")
 async def websocket_chat(chat_id: str, sender_email : str, websocket: WebSocket):
@@ -183,4 +193,4 @@ async def websocket_chat(chat_id: str, sender_email : str, websocket: WebSocket)
 
 
 
-# '{"message": "test 3", "close_connection" : "True", "is_heartbeat_msg" : "False"}'
+# '{"message": "test 3", "close_connection" : "False", "is_heartbeat_msg" : "False"}'
