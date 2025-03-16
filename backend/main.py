@@ -48,7 +48,7 @@ app.include_router(group_router, prefix="/api/group", tags=["Group"])
 app.include_router(calendar_router, prefix="/api/calendar", tags=["Calendar"])
 app.include_router(user_router, prefix="/api/user", tags=["User"])
 app.include_router(files_router, prefix="/api/files", tags=["Files"])
-app.include_router(chat_router, prefix="/api/chat", tags=["Chat"])
+app.include_router(chat_router, tags=["Chat"])
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
