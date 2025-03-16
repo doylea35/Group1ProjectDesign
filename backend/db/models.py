@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 from bson import ObjectId
-import datetime
+from datetime import datetime
 
 class FreeTimeSlot(BaseModel):
     start: str
