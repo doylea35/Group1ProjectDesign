@@ -1,3 +1,4 @@
+import bson.errors
 from fastapi import WebSocket, WebSocketDisconnect, APIRouter, HTTPException, status,Depends
 from db.database import chat_collection
 from pydantic import BaseModel
@@ -5,6 +6,7 @@ from bson import ObjectId
 from datetime import datetime
 from api.utils import get_current_user
 import asyncio
+import bson
 chat_router = APIRouter()
 
 active_connections = {}
@@ -81,10 +83,10 @@ async def get_groupchat(group_id : str, current_user: dict = Depends(get_current
 active_connections = {}
 
 # guide for frontend:
-# The frontend should send a heatbeat message to the websock every 40 seconds (timeout is 55 seconds on Heroku)
-# We are going to keep the socket connection open all the time when the user open the "Chat"
+# The frontend should send a heatbeat message to the websock every 50 seconds
+# We are going to keep the socket connection open all the time after the user open the "Chat" until the user close the chat
 # Conditions where the conection ends:
-#   User close the browser (no longer sending heatbeat message and the server will disconnect automaticallu )OR
+#   User close the browser (no longer sending heatbeat message and the server will disconnect automaticallu ) OR
 #   Or When the frontend send in a message with "close_connection" as True
 
 # message format from frontend:
@@ -92,28 +94,36 @@ active_connections = {}
 #     "message": str
 #     "close_connection" : bool
 #     "is_heartbeat_msg" : bool
-#     "sender_email": str
 # }
 
-@chat_router.websocket("/ws/chat/{chat_id}")
-async def websocket_chat( chat_id: str, websocket: WebSocket):
+@chat_router.websocket("/ws/chat/{chat_id}/{sender_email}")
+async def websocket_chat(chat_id: str, sender_email : str, websocket: WebSocket):
+    print(f"New WebSocket connection request for chat: {chat_id}")
     await websocket.accept()
+    print(f"WebSocket connection accepted for chat: {chat_id}")
     
-    # chat = chat_collection.find_one({"_id": ObjectId(chat_id)})
-    # if not chat:
-    #     await websocket.send_text(f"Chat {chat_id} does not exist")
-    #     await websocket.close()
-    #     return  # Exit the function
+    try:
+        chat = chat_collection.find_one({"_id": ObjectId(chat_id)})
+    except bson.errors.BSONError:
+        await websocket.send_json({"message":f"Chat {chat_id} does not exist"})
+        await websocket.close()
+        return  # Exit the function
+    
+    if not chat:
+        await websocket.send_json({"message":f"Chat {chat_id} does not exist"})
+        await websocket.close()
+        return  # Exit the function
+    # print(chat)
     # print("participants", chat["participants"])
-    # if user_email not in chat["participants"]:
-    #     await websocket.send_text("You are not authorized to join this chat")
-    #     await websocket.close()
-    #     return
+    if sender_email not in chat["participants"]:
+        await websocket.send_json({"message" : "You are not authorized to join this chat"})
+        await websocket.close()
+        return
 
     # Add WebSocket to active connections
     if chat_id not in active_connections:
         active_connections[chat_id] = []
-    
+    print(f"Added websocket to chat: {chat_id}")
     active_connections[chat_id].append(websocket)
 
     try:
@@ -121,35 +131,36 @@ async def websocket_chat( chat_id: str, websocket: WebSocket):
             try:
                 # Set a timeout of 30 seconds for receiving messages
                 message = await asyncio.wait_for(websocket.receive_json(), timeout=50)
-                
+                # print("message", message)
                 if "close_connection" in message:
                     if message["close_connection"] == True or message["close_connection"] == "True":
                         print(f"Received close request from {message["sender_email"]} in chat {chat_id}")
-                        break  # Exit loop to close connection
+                        await websocket.send_json({"message":"Close Connection request is successful"})
+                        break
                     
-                elif "is_heartbeat_msg" in message:
+                if "is_heartbeat_msg" in message:
                     if message["is_heartbeat_msg"] == True or message["is_heartbeat_msg"] == "True":
                         await websocket.send_json({"message": "Health ping received!", "live_users": len(active_connections[chat_id])})
-                        return
-                else: 
-                    # Create message object
-                    new_msg_obj = {
-                        "sender": message["sender_email"], 
-                        "message": message["message"],
-                        "delivered_time": datetime.now()  # Use UTC time for consistency
-                    }
+                        continue
                 
-                    # Save to MongoDB chat history
-                    chat_collection.find_one_and_update(
-                        {"_id": ObjectId(chat_id)},
-                        {"$addToSet": {"chat_history": new_msg_obj}},
-                        return_document=True
-                    )
-                    new_msg_obj["delivered_time"] = new_msg_obj["delivered_time"].isoformat()
-                    new_msg_obj["live_users"] = len(active_connections[chat_id])
-                    # Broadcast to all clients in this chat
-                    for ws in active_connections[chat_id]:
-                        await ws.send_json(new_msg_obj)
+                # Create message object
+                new_msg_obj = {
+                    "sender": sender_email, 
+                    "message": message["message"],
+                    "delivered_time": datetime.now()  # Use UTC time for consistency
+                }
+            
+                # Save to MongoDB chat history
+                chat_collection.find_one_and_update(
+                    {"_id": ObjectId(chat_id)},
+                    {"$addToSet": {"chat_history": new_msg_obj}},
+                    return_document=True
+                )
+                new_msg_obj["delivered_time"] = new_msg_obj["delivered_time"].isoformat()
+                new_msg_obj["live_users"] = len(active_connections[chat_id])
+                # Broadcast to all clients in this chat
+                for ws  in active_connections[chat_id]:
+                    await ws.send_json(new_msg_obj)
 
             except asyncio.TimeoutError:
                 print(f"WebSocket for chat {chat_id} inactive for 30s. Closing connection.")
@@ -166,11 +177,10 @@ async def websocket_chat( chat_id: str, websocket: WebSocket):
         
         if not active_connections[chat_id]:
             del active_connections[chat_id]
-            await websocket.send_json({"message": "You are the only person in the chat. Please send the message via REST API ", "last_person": True})
 
         await websocket.close()
         print(f"WebSocket connection for chat {chat_id} closed")
 
 
 
-{"message": "test 3", "close_connection" : "False", "is_heartbeat_msg" : "True", "sender_email": "nzhang@tcd.ie"}
+# '{"message": "test 3", "close_connection" : "True", "is_heartbeat_msg" : "False"}'
