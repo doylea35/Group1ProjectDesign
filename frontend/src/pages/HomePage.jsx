@@ -91,33 +91,94 @@ export default function HomePage() {
   if (loading) return <p>Loading tasks...</p>;
   if (error) return <p className="error-message">{error}</p>;
 
+  const todoTasks = tasks.filter(task => task.status === "To Do");
+  const inProgressTasks = tasks.filter(task => task.status === "In Progress");
+  const completedTasks = tasks.filter(task => task.status === "Completed");
+
   return (
-    <div>
+    <div className="page-container">
       <PageHeader title="Home" />
-      <h3>Your assigned tasks across all projects</h3>
-      {tasks.length > 0 ? (
-        <div className="task-list-container">
-          {tasks.map((task) => (
-            <div key={task._id} className="task-card" onClick={() => toggleTaskDescription(task._id)}>
-              <h4 className="task-title">{task.name}</h4>
-              <p className="task-meta">
-                <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
-              </p>
-              <p className="task-meta">
-                <strong>Due:</strong> {task.due_date}
-              </p>
-              <p className="task-meta">
-                <strong>Status:</strong> {task.status} | <strong>Priority:</strong> {task.priority}
-              </p>
-              {activeTaskId === task._id && (  // Conditionally render the task description
-                <p className="task-description">{task.description || "No description provided."}</p>
-              )}
-            </div>
-          ))}
+      <h3>Your tasks</h3>
+      <div className="task-columns">
+        <div className="task-column">
+          <h3>To Do</h3>
+          <div className="task-items">
+            {todoTasks.length > 0 ? (
+              todoTasks.map((task) => (
+                <div key={task._id} className="task-card" onClick={() => toggleTaskDescription(task._id)}>
+                  <h4 className="task-title">{task.name}</h4>
+                  <p className="task-meta">
+                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                  </p>
+                  <p className="task-meta">
+                    <strong>Due:</strong> {task.due_date}
+                  </p>
+                  <p className="task-meta">
+                    <strong>Status:</strong> {task.status} | <strong>Priority:</strong> {task.priority}
+                  </p>
+                  {activeTaskId === task._id && (
+                    <p className="task-description">{task.description || "No description provided."}</p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p>No tasks in this category.</p>
+            )}
+          </div>
         </div>
-      ) : (
-        <p>No tasks assigned to you.</p>
-      )}
+        <div className="task-column">
+          <h3>In Progress</h3>
+          <div className="task-items">
+            {inProgressTasks.length > 0 ? (
+              inProgressTasks.map((task) => (
+                <div key={task._id} className="task-card" onClick={() => toggleTaskDescription(task._id)}>
+                  <h4 className="task-title">{task.name}</h4>
+                  <p className="task-meta">
+                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                  </p>
+                  <p className="task-meta">
+                    <strong>Due:</strong> {task.due_date}
+                  </p>
+                  <p className="task-meta">
+                    <strong>Status:</strong> {task.status} | <strong>Priority:</strong> {task.priority}
+                  </p>
+                  {activeTaskId === task._id && (
+                    <p className="task-description">{task.description || "No description provided."}</p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p>No tasks in this category.</p>
+            )}
+          </div>
+        </div>
+        <div className="task-column">
+          <h3>Completed</h3>
+          <div className="task-items">
+            {completedTasks.length > 0 ? (
+              completedTasks.map((task) => (
+                <div key={task._id} className="task-card" onClick={() => toggleTaskDescription(task._id)}>
+                  <h4 className="task-title">{task.name}</h4>
+                  <p className="task-meta">
+                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                  </p>
+                  <p className="task-meta">
+                    <strong>Due:</strong> {task.due_date}
+                  </p>
+                  <p className="task-meta">
+                    <strong>Status:</strong> {task.status} | <strong>Priority:</strong> {task.priority}
+                  </p>
+                  {activeTaskId === task._id && (
+                    <p className="task-description">{task.description || "No description provided."}</p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p>No tasks in this category.</p>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
