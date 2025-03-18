@@ -1410,3 +1410,29 @@ to {
   margin-top: 8px;
 }
 
+.files-page-container {
+  padding: 20px;
+}
+
+.top-row {
+  margin-bottom: 20px;
+}
+
+
+.upload-container {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+  margin-top: 20px;
+}
+
+.upload-container:hover {
+  border-color: #999;
+}
+
+.upload-input {
+  display: none;
+}
