@@ -11,8 +11,9 @@ class DeleteUserRequest(BaseModel):
 
 class UpdateUserRequest(BaseModel):
     email: str
-    new_group_id : str
-    new_name : str
+    new_name : Optional[str] = None # if the user wants to update their name
+    add_skills: Optional[List[str]] = None # if the user wants to update their skills
+    remove_skills: Optional[List[str]] = None # if the user wants to remove their skills
 
 class UserRegisterRequest(BaseModel):
     name: str
