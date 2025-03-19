@@ -167,7 +167,7 @@ export default function HomePage() {
                   </div>
                 ))
               ) : (
-                <p>No tasks in this category.</p>
+                <p></p>
               )}
             </div>
           </div>
