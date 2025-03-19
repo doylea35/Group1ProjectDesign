@@ -7,7 +7,6 @@ import axios from "axios";
 import "../App.css";
 
 const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(true);
   const [isProjectsOpen, setIsProjectsOpen] = useState(false);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,10 +47,6 @@ const Sidebar = () => {
     localStorage.setItem("selectedProject", JSON.stringify(project));
   };
 
-  const toggleSidebar = () => {
-    setIsOpen((prev) => !prev);
-  };
-
   // onSuccess callback simply closes the dialog.
   const handleProjectCreationSuccess = () => {
     setDialogOpen(false);
@@ -59,15 +54,17 @@ const Sidebar = () => {
 
   return (
     <div className="app-layout">
-      <div className={`sidebar ${isOpen ? "open" : "closed"}`}>
+      <div className="sidebar open">
         <div className="sidebar-header">
-          <img src="/hexlogo.png" alt="GroupGrade Logo" className="sidebar-logo" />
+          <img
+            src="/hexlogo.png"
+            alt="GroupGrade Logo"
+            className="sidebar-logo"
+          />
           <h1 className="sidebar-title">GroupGrade</h1>
         </div>
-        <button onClick={toggleSidebar} className="toggle-button">
-          {isOpen ? "⟨" : "⟩"}
-        </button>
-        <nav className={`sidebar-links ${isOpen ? "active" : ""}`}>
+        {/* Toggle button removed to always keep sidebar open */}
+        <nav className="sidebar-links active">
           <Link to="/home" className="nav-link">
             Home
           </Link>
@@ -103,7 +100,10 @@ const Sidebar = () => {
               {/* Dialog for Creating a New Project */}
               <Dialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
                 <Dialog.Trigger asChild>
-                  <button className="create-btn" onClick={() => setDialogOpen(true)}>
+                  <button
+                    className="create-btn"
+                    onClick={() => setDialogOpen(true)}
+                  >
                     Create New Project
                   </button>
                 </Dialog.Trigger>
@@ -126,7 +126,7 @@ const Sidebar = () => {
         </nav>
       </div>
 
-      <div className={`main-content ${isOpen ? "expanded" : "collapsed"}`}>
+      <div className="main-content expanded">
         <Outlet />
       </div>
     </div>

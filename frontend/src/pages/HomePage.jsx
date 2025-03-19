@@ -136,7 +136,6 @@ export default function HomePage() {
     <div className="page-container">
       <PageHeader title="Home" />
 
-      {/* Display the stats bar */}
       <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
 
       <div className="task-columns-wrapper">
@@ -200,7 +199,7 @@ export default function HomePage() {
                   </div>
                 ))
               ) : (
-                <p>No tasks in this category.</p>
+                <p></p>
               )}
             </div>
           </div>
@@ -232,7 +231,7 @@ export default function HomePage() {
                   </div>
                 ))
               ) : (
-                <p>No tasks in this category.</p>
+                <p></p>
               )}
             </div>
           </div>
