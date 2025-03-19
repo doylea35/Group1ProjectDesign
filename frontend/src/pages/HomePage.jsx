@@ -1,13 +1,62 @@
 import React, { useEffect, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import axios from "axios";
-import "../App.css"; 
+import "../App.css";
+
+function StatsBar({ totalTasks, completedTasks }) {
+  const progressPercent =
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const remainingTasks = totalTasks - completedTasks;
+
+  return (
+    <div className="stats-container">
+      <div className="stats-item">
+        <div className="stats-icon-circle">
+          <img
+            src="https://img.icons8.com/?size=100&id=60034&format=png&color=000000"
+            alt="Tasks Icon"
+          />
+        </div>
+        <div className="stats-text">
+          <div className="stats-label">Your tasks</div>
+          <div className="stats-number">{totalTasks}</div>
+        </div>
+      </div>
+
+      <div className="stats-item">
+        <div className="stats-icon-circle">
+          <img
+            src="https://img.icons8.com/?size=100&id=108535&format=png&color=000000"
+            alt="Progress Icon"
+          />
+        </div>
+        <div className="stats-text">
+          <div className="stats-label">Progress</div>
+          <div className="stats-number">{progressPercent}%</div>
+        </div>
+      </div>
+
+      <div className="stats-item">
+        <div className="stats-icon-circle">
+          <img
+            src="https://img.icons8.com/?size=100&id=61852&format=png&color=000000"
+            alt="Remaining Icon"
+          />
+        </div>
+        <div className="stats-text">
+          <div className="stats-label">Tasks remaining</div>
+          <div className="stats-number">{remainingTasks}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function HomePage() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [projects, setProjects] = useState({}); // Store project names by ID
+  const [projects, setProjects] = useState({});
   const [activeTaskId, setActiveTaskId] = useState(null);
 
   useEffect(() => {
@@ -20,18 +69,12 @@ export default function HomePage() {
           return;
         }
 
-        console.log(`Fetching tasks assigned to: ${user.email}`);
-
-        // Fetch all tasks assigned to the logged-in user
         const response = await axios.get(`/tasks/`, {
           headers: { Authorization: `Bearer ${user.token}` },
           params: { assigned_to: user.email },
         });
 
-        console.log("Tasks API Response:", response.data);
-
         if (response.data) {
-          // Sort tasks by due date (earliest first)
           const sortedTasks = response.data.sort(
             (a, b) => new Date(a.due_date) - new Date(b.due_date)
           );
@@ -39,8 +82,8 @@ export default function HomePage() {
         } else {
           setError("No tasks found.");
         }
-      } catch (error) {
-        console.error("Error fetching tasks:", error);
+      } catch (err) {
+        console.error("Error fetching tasks:", err);
         setError("Failed to load tasks.");
       } finally {
         setLoading(false);
@@ -56,16 +99,11 @@ export default function HomePage() {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user || !user.token) return;
 
-        console.log("Fetching project details...");
-
         const response = await axios.get(`/api/group/`, {
           headers: { Authorization: `Bearer ${user.token}` },
         });
 
-        console.log("Projects API Response:", response.data);
-
         if (response.data?.data) {
-          // Store project names using their ID as the key
           const projectMap = {};
           response.data.data.forEach((project) => {
             projectMap[project._id] = project.name;
@@ -81,101 +119,122 @@ export default function HomePage() {
   }, []);
 
   const toggleTaskDescription = (taskId) => {
-    if (activeTaskId === taskId) {
-      setActiveTaskId(null);  // If the task is already active, clicking again hides it
-    } else {
-      setActiveTaskId(taskId);  // Else, set it as the active task
-    }
+    setActiveTaskId((prev) => (prev === taskId ? null : taskId));
   };
 
   if (loading) return <p>Loading tasks...</p>;
   if (error) return <p className="error-message">{error}</p>;
 
-  const todoTasks = tasks.filter(task => task.status === "To Do");
-  const inProgressTasks = tasks.filter(task => task.status === "In Progress");
-  const completedTasks = tasks.filter(task => task.status === "Completed");
+  const todoTasks = tasks.filter((task) => task.status === "To Do");
+  const inProgressTasks = tasks.filter((task) => task.status === "In Progress");
+  const completedTasks = tasks.filter((task) => task.status === "Completed");
+
+  const totalTasks = tasks.length;
+  const completedCount = completedTasks.length;
 
   return (
     <div className="page-container">
       <PageHeader title="Home" />
-      <h3>Your tasks</h3>
-      <div className="task-columns">
-        <div className="task-column">
-          <h3>To Do</h3>
-          <div className="task-items">
-            {todoTasks.length > 0 ? (
-              todoTasks.map((task) => (
-                <div key={task._id} className="task-card" onClick={() => toggleTaskDescription(task._id)}>
-                  <h4 className="task-title">{task.name}</h4>
-                  <p className="task-meta">
-                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
-                  </p>
-                  <p className="task-meta">
-                    <strong>Due:</strong> {task.due_date}
-                  </p>
-                  <p className="task-meta">
-                    <strong>Status:</strong> {task.status} | <strong>Priority:</strong> {task.priority}
-                  </p>
-                  {activeTaskId === task._id && (
-                    <p className="task-description">{task.description || "No description provided."}</p>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p>No tasks in this category.</p>
-            )}
+
+      {/* Display the stats bar */}
+      <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
+
+      <div className="task-columns-wrapper">
+        <div className="task-columns">
+          {/* TO DO */}
+          <div className="task-column to-do">
+            <h3 className="column-title">To Do</h3>
+            <div className="task-items">
+              {todoTasks.length > 0 ? (
+                todoTasks.map((task) => (
+                  <div
+                    key={task._id}
+                    className="task-card"
+                    onClick={() => toggleTaskDescription(task._id)}
+                  >
+                    <h4 className="task-title">{task.name}</h4>
+                    <p className="task-meta">
+                      <strong>Project:</strong>{" "}
+                      {projects[task.group] || "Unknown Project"}
+                    </p>
+                    {activeTaskId === task._id && (
+                      <p className="task-description">
+                        {task.description || "No description provided."}
+                      </p>
+                    )}
+                    <div className="task-card-footer">
+                      <span className="task-date">{task.due_date}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>No tasks in this category.</p>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="task-column">
-          <h3>In Progress</h3>
-          <div className="task-items">
-            {inProgressTasks.length > 0 ? (
-              inProgressTasks.map((task) => (
-                <div key={task._id} className="task-card" onClick={() => toggleTaskDescription(task._id)}>
-                  <h4 className="task-title">{task.name}</h4>
-                  <p className="task-meta">
-                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
-                  </p>
-                  <p className="task-meta">
-                    <strong>Due:</strong> {task.due_date}
-                  </p>
-                  <p className="task-meta">
-                    <strong>Status:</strong> {task.status} | <strong>Priority:</strong> {task.priority}
-                  </p>
-                  {activeTaskId === task._id && (
-                    <p className="task-description">{task.description || "No description provided."}</p>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p>No tasks in this category.</p>
-            )}
+
+          {/* IN PROGRESS */}
+          <div className="task-column in-progress">
+            <h3 className="column-title">In Progress</h3>
+            <div className="task-items">
+              {inProgressTasks.length > 0 ? (
+                inProgressTasks.map((task) => (
+                  <div
+                    key={task._id}
+                    className="task-card"
+                    onClick={() => toggleTaskDescription(task._id)}
+                  >
+                    <h4 className="task-title">{task.name}</h4>
+                    <p className="task-meta">
+                      <strong>Project:</strong>{" "}
+                      {projects[task.group] || "Unknown Project"}
+                    </p>
+                    {activeTaskId === task._id && (
+                      <p className="task-description">
+                        {task.description || "No description provided."}
+                      </p>
+                    )}
+                    <div className="task-card-footer">
+                      <span className="task-date">{task.due_date}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>No tasks in this category.</p>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="task-column">
-          <h3>Completed</h3>
-          <div className="task-items">
-            {completedTasks.length > 0 ? (
-              completedTasks.map((task) => (
-                <div key={task._id} className="task-card" onClick={() => toggleTaskDescription(task._id)}>
-                  <h4 className="task-title">{task.name}</h4>
-                  <p className="task-meta">
-                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
-                  </p>
-                  <p className="task-meta">
-                    <strong>Due:</strong> {task.due_date}
-                  </p>
-                  <p className="task-meta">
-                    <strong>Status:</strong> {task.status} | <strong>Priority:</strong> {task.priority}
-                  </p>
-                  {activeTaskId === task._id && (
-                    <p className="task-description">{task.description || "No description provided."}</p>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p>No tasks in this category.</p>
-            )}
+
+          {/* COMPLETED */}
+          <div className="task-column completed">
+            <h3 className="column-title">Completed</h3>
+            <div className="task-items">
+              {completedTasks.length > 0 ? (
+                completedTasks.map((task) => (
+                  <div
+                    key={task._id}
+                    className="task-card"
+                    onClick={() => toggleTaskDescription(task._id)}
+                  >
+                    <h4 className="task-title">{task.name}</h4>
+                    <p className="task-meta">
+                      <strong>Project:</strong>{" "}
+                      {projects[task.group] || "Unknown Project"}
+                    </p>
+                    {activeTaskId === task._id && (
+                      <p className="task-description">
+                        {task.description || "No description provided."}
+                      </p>
+                    )}
+                    <div className="task-card-footer">
+                      <span className="task-date">{task.due_date}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>No tasks in this category.</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
