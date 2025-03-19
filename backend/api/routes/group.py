@@ -278,20 +278,14 @@ async def update_group_handler(request: UpdateGroupRequest):
     # change name
     if request.new_name:
         update_fields["name"] = request.new_name
-    else:
-        update_fields["name"] = group["name"]
 
     # add members
     existing_members = set(group["members"])
     pending_members = set(group.get("pending_members", []))
     
-    for email in request.new_members:
-        user = users_collection.find_one({"email": email})
-        if user:
-            existing_members.add(email)  # if user already registered, we add him to the group
-        else:
-            pending_members.add(email)  # if user not registered, we add him to pending members 
-            send_project_invitation_email(email, request.modification_email, str(request.group_id), group["name"]) # and we send him the invitation email
+    for email in request.new_members: 
+        pending_members.add(email) # we add new members to the pending list until they accept the invitation
+        send_project_invitation_email(email, request.modification_email, str(request.group_id), group["name"]) # and we send him the invitation email
 
     # remove members
     for email in request.remove_members:
@@ -305,7 +299,7 @@ async def update_group_handler(request: UpdateGroupRequest):
     updated_group = groups_collection.find_one_and_update(
         {"_id": ObjectId(request.group_id)}, 
         {"$set": update_fields},
-        return_document=ReturnDocument.AFTER
+        return_document=True
         )
     
     if not updated_group:
