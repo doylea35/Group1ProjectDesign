@@ -218,7 +218,7 @@ async def update_user(request : UpdateUserRequest):
     
     # Check if user wants to remove skills
     if request.remove_skills:
-        updated_fields["skills"] = list(set(user_skills) - set(request.remove_skills))
+        updated_fields["skills"] = list(set(updated_fields["skills"]) - set(request.remove_skills))
 
     # Update user
     updated_user = users_collection.find_one_and_update(
