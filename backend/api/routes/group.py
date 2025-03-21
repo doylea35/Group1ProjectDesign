@@ -277,7 +277,7 @@ async def update_group_handler(request: UpdateGroupRequest):
 
     # change name
     if request.new_name:
-        update_fields["name"] = request.new_name
+        update_fields["name"] = str(request.new_name)
 
     # add members
     existing_members = set(group["members"])
@@ -285,7 +285,7 @@ async def update_group_handler(request: UpdateGroupRequest):
     
     for email in request.new_members: 
         pending_members.add(email) # we add new members to the pending list until they accept the invitation
-        send_project_invitation_email(email, request.modification_email, str(request.group_id), group["name"]) # and we send him the invitation email
+    send_project_invitation_email(pending_members, request.modification_email, str(request.group_id), group["name"]) # and we send him the invitation email
 
     # remove members
     for email in request.remove_members:
