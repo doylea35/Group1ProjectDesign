@@ -233,6 +233,138 @@ async def update_user(request : UpdateUserRequest):
     return {"message":"User updated successfully", "data":updated_user}
 
 
+# from fastapi import FastAPI, UploadFile, File, HTTPException
+# from PyPDF2 import PdfReader
+# import re
+# from api.request_model.user_request_schema import UploadCVRequest, GetSkillsCVRequest
+
+# def extract_text_from_pdf(pdf_file):
+#     """Extract text from a PDF file."""
+#     reader = PdfReader(pdf_file)
+#     text = "".join([page.extract_text() for page in reader.pages if page.extract_text()])
+#     return text
+
+# def extract_skills(text):
+#     """Extract skills from the text using regex-based matching."""
+#     skill_keywords = ["Python", "Java", "SQL", "Machine Learning", "Project Management", "Django", "React", "Data Analysis"]
+#     found_skills = [skill for skill in skill_keywords if re.search(rf"\b{skill}\b", text, re.IGNORECASE)]
+#     return found_skills
+
+# @user_router.put("/uploadCV", status_code=status.HTTP_201_CREATED)
+# async def upload_cv(email: str, file: UploadFile = File(...)):
+#     """Endpoint to extract skills from a CV and update the user's profile."""
+#     if file.content_type == "application/pdf":
+#         text = extract_text_from_pdf(file.file)
+#     else:
+#         raise HTTPException(status_code=400, detail="Unsupported file type. Please upload a PDF or DOCX.")
+    
+#     skills = extract_skills(text)
+    
+#     # Update the user with extracted skills
+#     request = UpdateUserRequest(email=email, add_skills=skills)
+#     return update_user(request)
+
+import boto3
+from botocore.exceptions import NoCredentialsError
+from db.database import files_collection
+import datetime
+from dotenv import load_dotenv
+from fastapi import File, UploadFile
+
+
+load_dotenv()
+
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
+AWS_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
+AWS_REGION = os.getenv("AWS_REGION")
+
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id=AWS_ACCESS_KEY,
+    aws_secret_access_key=AWS_SECRET_KEY,
+    region_name=AWS_REGION
+)
+
+@user_router.post("/uploadCV", summary="Upload a CV for a user")
+async def upload_cv(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    # upload the file to S3
+    try:
+        s3_client.upload_fileobj(file.file, AWS_BUCKET_NAME, file.filename)
+    except NoCredentialsError:
+        raise HTTPException(status_code=500, detail="AWS credentials not found")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
+    
+    # construct public url of the uploaded file
+    file_url = f"https://{AWS_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{file.filename}"
+    
+    # store file metadata in MongoDB (using "files" collection)
+    file_metadata = {
+        "filename": file.filename,
+        "file_url": file_url,
+        "user_email": current_user["email"],
+        "upload_date": datetime.datetime.utcnow()
+    }
+    files_collection.insert_one(file_metadata)
+    
+    return {"message": "CV uploaded successfully", "file_url": file_url}
+
+# Load API Key from environment variables
+import openai
+from api.request_model.user_request_schema import GetSkillsCVRequest
+from dotenv import load_dotenv
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+async def ask_chatgpt_for_cv_skills(request: GetSkillsCVRequest, current_user: dict = Depends(get_current_user)):
+    """Ask ChatGPT to extract skills from a CV."""
+    # verify user exists
+    user = users_collection.find_one
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
+    
+    # get user cv file
+    user_cv_file = files_collection.find_one({"user_email": user["email"]})
+    if not user_cv_file:
+        raise HTTPException(status_code=400, detail="CV file not found")
+    
+    # Prepare the final prompt
+    formatted_prompt = CV_SKILLS_PROMPT_TEMPLATE.format(cv_file=str(user_cv_file))
+    
+    print(f"\n\nformatted_prompt: {formatted_prompt}\n\n")
+
+    # Call OpenAI API
+    response = openai.ChatCompletion.create(
+        model="gpt-4o",  # Use "gpt-4o" for best performance
+        messages=[{"role": "user", "content": formatted_prompt}],
+        max_tokens=1000,  # Limit response length
+    )
+
+    # Extract the skills from the response
+    gpt_response = response["choices"][0]["message"]["content"]
+
+    # Parse the skills from the response
+    skills = {}
+    for line in gpt_response.split("\n"):
+        if line.startswith("-"):
+            category, skill_list = line[1:].split(":")
+            skills[category.strip()] = [skill.strip() for skill in skill_list.split(",")]
+
+    return skills
+
+@user_router.post("/updateSkillsFromCV", summary="Update skills from CV")
+async def update_skills_from_cv(request: GetSkillsCVRequest):
+    """Update user skills from a CV."""
+    # Ask ChatGPT to extract skills from the CV
+    extracted_skills = await ask_chatgpt_for_cv_skills(request)
+    
+    # Update the user with the extracted skills
+    update_request = UpdateUserRequest(email=request.email, add_skills=extracted_skills)
+    return update_user(update_request)
 
 REGISTRATION_CONFIRMATION_EMAIL_TEMPLATE = """<!DOCTYPE html>
 <html>
@@ -308,3 +440,43 @@ REGISTRATION_CONFIRMATION_EMAIL_TEMPLATE = """<!DOCTYPE html>
     </div>
 </body>
 </html>"""
+
+
+CV_SKILLS_PROMPT_TEMPLATE = """
+You are given a PDF file containing a CV. Your task is to extract the skills from the CV.
+Now, given the following pdf file: {cv_file}, extract the skills from the CV (if any).
+
+The skills to extract are:
+- Different programming languages (e.g., Python, Java, C++)
+- Web development frameworks (e.g., Django, Flask, React)
+- Database management systems (e.g., MySQL, PostgreSQL)
+- Machine learning libraries (e.g., TensorFlow, PyTorch)
+- Project management tools (e.g., Jira, Trello)
+- Data analysis tools (e.g., Pandas, NumPy)
+
+The output expected is a dictionary containing the extracted skills.
+### **Example Output 1:**
+{{
+    "languages": ["Python", "Java", "SQL", "Django"],
+    "frameworks": ["React"],
+    "databases": ["MySQL"],
+    "machine_learning": ["TensorFlow"],
+    "project_management": ["Jira"],
+    "data_analysis": ["Pandas", "NumPy"]
+}}
+
+### **Example Output 2:**
+{{
+    "languages": ["Python"],
+    "frameworks": None,
+    "databases": ["MySQL"],
+    "machine_learning": ["TensorFlow"],
+    "project_management": None,
+    "data_analysis": None
+}}
+
+### **Example Output 3:**
+{{}}
+
+Return the response strictly in JSON format like the example above and containing only these categories of skills, with no additional text, explanations or new sets of skills. If no skills exist, return an empty JSON object {{}} with out ```json ```. so pure text only. Please follow the output format strictly. I don't want you to output any extra text in the response other than either a dictionary containing the skillsets explained or an empty dictionary {{}} when there are no skills. 
+"""
