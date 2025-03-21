@@ -276,8 +276,8 @@ async def update_group_handler(request: UpdateGroupRequest):
     update_fields = {}
 
     # change name
-    if request.new_name:
-        update_fields["name"] = str(request.new_name)
+    if request.new_group_name:
+        update_fields["name"] = str(request.new_group_name)
 
     # add members
     existing_members = set(group["members"])
