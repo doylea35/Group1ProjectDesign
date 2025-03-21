@@ -134,11 +134,10 @@ function ProjectPage() {
 
   return (
     <div className="project-page-container">
-      <div className="project-header-container">
-        <PageHeader title={projectName} />
-        <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
-        <ProjectNavigation projectId={projectId} />
-      </div>
+      <PageHeader title={projectName} />
+      <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
+      <ProjectNavigation projectId={projectId} />
+
 
       <div className="button-container">
         <CreateSubteam projectName={projectName} onCreate={handleCreateSubteam} />
