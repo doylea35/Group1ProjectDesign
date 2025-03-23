@@ -1518,47 +1518,48 @@ to {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.files-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
+.files-list {
+  display: flex;
+  flex-direction: column; 
+  gap: 12px; 
 }
 
 .file-item {
-  background-color: #f0f0f0;
-  padding: 16px;
-  border-radius: 6px;
   display: flex;
-  flex-direction: column;
   align-items: center;
+  background-color: #f0f0f0; 
+  padding: 8px 12px;
+  border-radius: 6px;
 }
 
 .file-icon-wrapper {
-  margin-bottom: 8px;
-}
-
-.file-icon {
-  width: 48px;
-  height: 48px;
+  margin-right: 12px;
 }
 
 .file-info {
-  text-align: center;
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 
 .file-name {
   font-weight: bold;
-  margin-bottom: 8px;
+  margin-right: 12px;
 }
 
-.file-actions a {
-  margin: 0 4px;
-  text-decoration: none;
-  color: #007bff;
-  font-size: 14px;
+.file-actions {
+  display: flex;
+  gap: 8px;
 }
 
-.file-actions a:hover {
-  text-decoration: underline;
+.action-icon img {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.action-icon img:hover {
+  opacity: 0.7;
 }
