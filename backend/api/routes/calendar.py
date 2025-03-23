@@ -66,7 +66,8 @@ async def get_all_freetime_for_user(request : GetAllFreeTimeRequest, current_use
 @calendar_router.put("/updateFreeTime")
 async def update_free_time(request : UpdateUserFreeTimeRequest, current_user: dict = Depends(get_current_user)):
     user_email = current_user["email"]
-    updated_free_time = request.free_time
+    free_time_added = request.added
+    free_time_removed = request.removed
 
     if not is_valid_email(user_email):
         return HTTPException(
@@ -75,33 +76,40 @@ async def update_free_time(request : UpdateUserFreeTimeRequest, current_user: di
             )
 
     # Validate input
-    if not isinstance(updated_free_time, dict):
+    if not isinstance(free_time_added, dict) or not isinstance(free_time_removed, dict):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid free time format. Expected a dictionary."
+          )
+    
+    
+    for day, slots in free_time_added.items():
+      if len(slots) > 0:
+        slots_to_be_added = [slot.model_dump() for slot in slots]
+        users_collection.update_one(
+          {"email": user_email},
+          
+          {"$addToSet": {f"free_time.free_time.{day}": {"$each": slots_to_be_added}}}
         )
-    
-    update_data = {
-        "free_time": {
-            day: [{"start": slot.start, "end": slot.end} for slot in slots]
-            for day, slots in updated_free_time.items()
-        }
-    }
-    
-    update_query = {"$set": {"free_time": update_data}}
-    
-    updated_user = users_collection.find_one_and_update(
-        {"email": user_email}, 
-        update_query, 
-        return_document=True)
-
-    if not updated_user:
-        return HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Free time slots update failed. Please try again."
+        
+    for day, slots in free_time_removed.items():
+      # print(day)
+      for slot in slots:
+            users_collection.update_one(
+                {"email": user_email},
+                {"$pull": {f"free_time.free_time.{day}": slot.model_dump()}}
             )
-    updated_user["_id"] = str(updated_user["_id"])
-    return {"message": "Free time updated successfully", "data": updated_user["free_time"]}
+    
+    # Retrieve the updated user document to send back as response
+    updated_user = users_collection.find_one({"email": user_email})
+    if updated_user:
+        updated_user["_id"] = str(updated_user["_id"])
+        return {"message": "Free time updated successfully", "data": updated_user["free_time"]}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Free time slots update failed. Please try again."
+        )
 
 PROMPT_TEMPLATE = """
 You are given a list of free time slots for multiple people. Your task is to find the overlapping time slots across all users.
