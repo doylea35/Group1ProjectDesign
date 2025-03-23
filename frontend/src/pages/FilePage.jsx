@@ -92,6 +92,17 @@ function ProjectFilesPage() {
     }
   };
 
+  // Helper function to choose an icon based on file extension
+  const getFileIcon = (filename) => {
+    const ext = filename.split('.').pop().toLowerCase();
+    const imageExtensions = ["png", "jpg", "jpeg", "gif", "bmp", "svg"];
+    if (imageExtensions.includes(ext)) {
+      return <img src="https://img.icons8.com/material-outlined/48/000000/image.png" alt="Image file" className="file-icon" />;
+    } else {
+      return <img src="https://img.icons8.com/material-outlined/48/000000/document.png" alt="Document file" className="file-icon" />;
+    }
+  };
+
   if (loading) {
     return <div>Loading project...</div>;
   }
@@ -100,10 +111,7 @@ function ProjectFilesPage() {
     <div className="files-page-container">
       <PageHeader title={projectName} />
       <div className="top-row">
-        <button
-          onClick={() => navigate(`/projects/${projectId}`)}
-          className="back-project-btn"
-        >
+        <button onClick={() => navigate(`/projects/${projectId}`)} className="back-project-btn">
           Back to Project Page
         </button>
       </div>
@@ -127,15 +135,26 @@ function ProjectFilesPage() {
         {filesLoading ? (
           <div>Loading files...</div>
         ) : files.length > 0 ? (
-          <ul className="files-list">
+          <div className="files-grid">
             {files.map((file) => (
-              <li key={file.id || file._id} className="file-item">
-                <a href={file.url} target="_blank" rel="noopener noreferrer">
-                  {file.filename || file.name}
-                </a>
-              </li>
+              <div key={file.id || file._id} className="file-item">
+                <div className="file-icon-wrapper">
+                  {getFileIcon(file.filename || file.name)}
+                </div>
+                <div className="file-info">
+                  <p className="file-name">{file.filename || file.name}</p>
+                  <div className="file-actions">
+                    <a href={file.url} target="_blank" rel="noopener noreferrer" className="view-button">
+                      View
+                    </a>
+                    <a href={file.url} download className="download-button">
+                      Download
+                    </a>
+                  </div>
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
         ) : (
           <div>No files available.</div>
         )}
