@@ -1,10 +1,13 @@
-from fastapi import APIRouter, HTTPException, Query, Query
+from fastapi import APIRouter, HTTPException, Query, Query, Depends
 from typing import Dict, Optional
 from db.database import groups_collection, users_collection, tasks_collection
 from db.models import User, Group, Task
 from db.schemas import users_serial, groups_serial, tasks_serial
 from bson import ObjectId # mongodb uses ObjectId to store _id
 from typing import List
+from datetime import datetime
+from api.request_model.comment_request_schema import AddCommentRequest
+from api.utils import get_current_user  
 
 
 profiles_router = APIRouter()
@@ -132,3 +135,22 @@ def update_task(task_id: str, request_body: dict):
     return {"message": "Task updated successfully", "task_id": task_id, "updated_fields": update_data}
 
 
+@profiles_router.post("/tasks/{task_id}/comments", summary="Add a comment to a task")
+async def add_comment(task_id: str, comment_request: AddCommentRequest, current_user: dict = Depends(get_current_user)):
+    # create the comment object 
+    new_comment = {
+        "commenter": current_user["email"],
+        "content": comment_request.content,
+        "timestamp": datetime.utcnow()
+    }
+    
+    # append tasks to current list of tasks
+    result = tasks_collection.update_one(
+        {"_id": ObjectId(task_id)},
+        {"$push": {"comments": new_comment}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Task not found or comment not added")
+    
+    return {"message": "Comment added successfully", "comment": new_comment}

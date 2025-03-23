@@ -3,6 +3,11 @@ from typing import Optional, List, Dict
 from bson import ObjectId
 from datetime import datetime
 
+class Comment(BaseModel):
+    commenter: str         # email or identifier of the user
+    content: str           # comment text
+    timestamp: datetime    # date/time of comment
+
 class FreeTimeSlot(BaseModel):
     start: str
     end: str
@@ -33,6 +38,7 @@ class Task(BaseModel): #_id as Primary key, automatically created, can be found 
     status: str # ["To Do", "In Progress", "Completed"]
     group: str # Foreign Key referencing Group.id
     priority: str # ["Low", "Medium", "High"]
+    comments: Optional[List[Comment]] = []  # field for comments
 
 class SubTeam(BaseModel): #_id as Primary key, automatically created, can be found using ObjectID
     id: Optional[str] = Field(alias="_id", default=None)
