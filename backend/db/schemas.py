@@ -35,7 +35,8 @@ def _task_serial(task: dict) -> Task:
         "due_date": task["due_date"],
         "status": task["status"],
         "group": str(task["group"]),
-        "priority": task["priority"]
+        "priority": task["priority"],
+        "comments": task.get("comments", [])  # empty list if not comments
     }
 
 def _subteam_serial(subteam: dict) -> SubTeam:
