@@ -144,7 +144,7 @@ async def websocket_chat(chat_id: str, sender_email : str, websocket: WebSocket)
                 # print("message", message)
                 if "close_connection" in message:
                     if message["close_connection"] == True or message["close_connection"] == "True":
-                        print(f"Received close request from {message["sender_email"]} in chat {chat_id}")
+                        print(f"Received close request from {message['sender_email']} in chat {chat_id}")
                         await websocket.send_json({"message":"Close Connection request is successful"})
                         break
                     
