@@ -60,6 +60,37 @@ async def get_presigned_url(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@files_router.get("/", summary="get all files for a group")
+async def get_files_for_group(
+    group_id: str = Query(..., description="ID of the group"),
+    current_user: dict = Depends(get_current_user)
+):
+    
+    # see if the group exists
+    group = groups_collection.find_one({"_id": ObjectId(group_id)})
+    if not group:
+        
+        raise HTTPException(status_code=404, detail="group not found")
+    
+    # current user must be a member of the group
+    if current_user["email"] not in group["members"]:
+        
+        raise HTTPException(status_code=403, detail="You are not a member of this group")
+    
+    # query every file associated with the group
+    files_collection = db["files"]
+    file_records = list(files_collection.find({"group_id": group_id}))
+    
+    #convert ObjectID and date objects for serialisation
+    for file_record in file_records:
+         file_record["_id"] = str(file_record["_id"])
+
+         if "upload_date" in file_record and file_record["upload_date"]:
+             file_record["upload_date"] = file_record["upload_date"].isoformat()
+    
+    return {"files": file_records}
+
+
 #Upload a file to AWS S3 and store its metadata in MongoDB.
 #Only allow uploads if the current user is a member of the group.
 @files_router.post("/upload", summary="Upload a file for a group")
