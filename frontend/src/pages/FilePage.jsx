@@ -9,7 +9,9 @@ function ProjectFilesPage() {
   const navigate = useNavigate();
   const [projectName, setProjectName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [filesLoading, setFilesLoading] = useState(true);
   const [error, setError] = useState("");
+  const [files, setFiles] = useState([]);
 
   useEffect(() => {
     const projectFromStorage = JSON.parse(localStorage.getItem("selectedProject"));
@@ -27,6 +29,36 @@ function ProjectFilesPage() {
     fileInputRef.current.click();
   };
 
+  const fetchFiles = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || !user.token) {
+      setError("User not authenticated. Please log in first.");
+      setFilesLoading(false);
+      return;
+    }
+    try {
+      setFilesLoading(true);
+      const response = await axios.get(
+        `https://group-grade-backend-5f919d63857a.herokuapp.com/api/files/?group_id=${projectId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        }
+      );
+      setFiles(response.data);
+      setFilesLoading(false);
+    } catch (err) {
+      console.error("Error fetching files:", err.response ? err.response.data : err.message);
+      setError(err.response ? err.response.data.detail : err.message);
+      setFilesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFiles();
+  }, [projectId]);
+
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -43,7 +75,7 @@ function ProjectFilesPage() {
 
     try {
       const response = await axios.post(
-        `http://localhost:8000/api/files/upload?group_id=${projectId}`,
+        `https://group-grade-backend-5f919d63857a.herokuapp.com/api/files/upload?group_id=${projectId}`,
         formData,
         {
           headers: {
@@ -52,7 +84,8 @@ function ProjectFilesPage() {
         }
       );
       console.log("File uploaded successfully:", response.data);
-      setError(""); 
+      setError("");
+      fetchFiles(); 
     } catch (err) {
       console.error("Error uploading file:", err.response ? err.response.data : err.message);
       setError(err.response ? err.response.data.detail : err.message);
@@ -77,7 +110,9 @@ function ProjectFilesPage() {
 
       {error && <div style={{ color: "red", marginBottom: "1rem" }}>{error}</div>}
 
-      <div className="upload-container" onClick={handleClick}>Click to upload a file</div>
+      <div className="upload-container" onClick={handleClick}>
+        Click to upload a file
+      </div>
 
       <input
         ref={fileInputRef}
@@ -86,6 +121,25 @@ function ProjectFilesPage() {
         style={{ display: "none" }}
         onChange={handleFileChange}
       />
+
+      <div className="files-list-container">
+        <h2>Group Files</h2>
+        {filesLoading ? (
+          <div>Loading files...</div>
+        ) : files.length > 0 ? (
+          <ul className="files-list">
+            {files.map((file) => (
+              <li key={file.id || file._id} className="file-item">
+                <a href={file.url} target="_blank" rel="noopener noreferrer">
+                  {file.filename || file.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div>No files available.</div>
+        )}
+      </div>
     </div>
   );
 }
