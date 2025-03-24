@@ -63,7 +63,7 @@ function ProjectPage() {
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState([]);
   const [error, setError] = useState("");
-  const [activeTaskId, setActiveTaskId] = useState(null); // Added state for active task
+  const [activeTaskId, setActiveTaskId] = useState(null); 
 
   useEffect(() => {
     const projectFromStorage = JSON.parse(localStorage.getItem("selectedProject"));
@@ -144,6 +144,7 @@ function ProjectPage() {
       </div>
 
       <div className="task-columns-wrapper">
+      <h4 className="taskboard-title">Group Taskboard</h4>
         <div className="task-columns">
           {/* TO DO */}
           <div className="task-column to-do">

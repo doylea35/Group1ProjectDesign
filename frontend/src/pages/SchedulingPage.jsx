@@ -6,6 +6,11 @@ import FindTime from "../components/FindTime";
 import { TrashIcon } from "@radix-ui/react-icons";
 import "../App.css";
 
+function parseTime(str) {
+  const [hh, mm] = str.split(":").map(Number);
+  return hh * 60 + mm;
+}
+
 const API_URI = "/api/calendar/getGroupFreeTime"; 
 
 const SchedulingPage = () => {
@@ -73,7 +78,7 @@ const SchedulingPage = () => {
     }
   };
 
-  // Update formatFreeTimes to include the owner's email for comparison
+  // Format free times and include owner's email for comparison
   const formatFreeTimes = (data) => {
     const daysOfWeek = [
       "Monday",
@@ -158,11 +163,12 @@ const SchedulingPage = () => {
         <div className="schedule-grid">
           {daysOfWeek.map((day) => {
             const times = freeTimes[day] || [];
+            const sortedTimes = times.slice().sort((a, b) => parseTime(a.start) - parseTime(b.start));
             return (
               <div className="day-column" key={day}>
                 <div className="day-box">{day}</div>
-                {times.length > 0 ? (
-                  times.map((slot, index) => (
+                {sortedTimes.length > 0 ? (
+                  sortedTimes.map((slot, index) => (
                     <div 
                       key={index} 
                       className="free-time-box" 
@@ -221,12 +227,11 @@ const SchedulingPage = () => {
           zIndex: "10", 
         }}
       >
-        <button
-          onClick={() => navigate(`/projects/${projectId}`)}
-          className="Button violet"
-        >
-          Back to Project
+      <div className="top-row">
+        <button onClick={() => navigate(`/projects/${projectId}`)} className="back-project-btn">
+          Back to Project Page
         </button>
+      </div>
       </div>
       <div
         className="button-section"
