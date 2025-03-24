@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Select from "@radix-ui/react-select";
 import { Cross2Icon, CheckIcon, ChevronDownIcon } from "@radix-ui/react-icons";
-import axios from "axios"; // If you eventually want to call an API
 import "../App.css";
 
 function parseTime(str) {
@@ -56,7 +55,7 @@ function intersectAllUsers(dayDataArray) {
   for (let i = 1; i < dayDataArray.length; i++) {
     intersection = intersectIntervals(intersection, dayDataArray[i]);
     if (intersection.length === 0) {
-      break; 
+      break;
     }
   }
   return intersection;
@@ -70,10 +69,9 @@ function filterByDuration(intervals, duration) {
   });
 }
 
-const API_URI = "/api/calendar/getOverlappingTime";
 const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
   const [selectedDay, setSelectedDay] = useState("");
-  const [duration, setDuration] = useState(30); 
+  const [duration, setDuration] = useState(30);
   const [overlappingTimes, setOverlappingTimes] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [hasClickedFindTime, setHasClickedFindTime] = useState(false);
@@ -84,8 +82,16 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
     setErrorMessage("User not logged in. Please log in to find overlapping time.");
   }
 
+  const resetDialog = () => {
+    setSelectedDay("");
+    setDuration(30);
+    setOverlappingTimes([]);
+    setErrorMessage("");
+    setHasClickedFindTime(false);
+  };
+
   const findOverlappingTimes = async () => {
-    setOverlappingTimes([]); 
+    setOverlappingTimes([]);
     setErrorMessage("");
     setHasClickedFindTime(true);
 
@@ -96,14 +102,17 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
 
     try {
       const dayDataArray = raw_free_time_data.map((userObj) => {
-        return userObj[selectedDay] || []; 
+        return userObj[selectedDay] || [];
       });
 
       let intersection = intersectAllUsers(dayDataArray);
       intersection = filterByDuration(intersection, duration);
 
-      if (intersection.length > 0) {
-        setOverlappingTimes(intersection);
+      // Sort overlapping slots by start time
+      const sortedIntersection = intersection.slice().sort((a, b) => parseTime(a.start) - parseTime(b.start));
+
+      if (sortedIntersection.length > 0) {
+        setOverlappingTimes(sortedIntersection);
         setErrorMessage("");
       } else {
         setOverlappingTimes([]);
@@ -121,7 +130,7 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
   };
 
   return (
-    <Dialog.Root>
+    <Dialog.Root onOpenChange={(open) => { if (!open) resetDialog(); }}>
       <Dialog.Trigger asChild>
         <button className="Button violet">Find Overlapping Time</button>
       </Dialog.Trigger>
@@ -155,11 +164,7 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
                       "Saturday",
                       "Sunday",
                     ].map((day) => (
-                      <Select.Item
-                        key={day}
-                        value={day}
-                        className="CustomDropdownItem"
-                      >
+                      <Select.Item key={day} value={day} className="CustomDropdownItem">
                         <Select.ItemText>{day}</Select.ItemText>
                         <Select.ItemIndicator>
                           <CheckIcon className="CheckIcon" />
@@ -175,10 +180,7 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
           {/* Duration Selection */}
           <fieldset className="Fieldset">
             <label className="Label">Select Duration (minutes)</label>
-            <Select.Root
-              value={duration.toString()}
-              onValueChange={(value) => setDuration(Number(value))}
-            >
+            <Select.Root value={duration.toString()} onValueChange={(value) => setDuration(Number(value))}>
               <Select.Trigger className="CustomSelectTrigger">
                 <Select.Value placeholder="-" />
                 <ChevronDownIcon className="DropdownIcon" />
@@ -187,14 +189,8 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
                 <Select.Content className="CustomDropdownContent">
                   <Select.Viewport>
                     {[15, 30, 45, 60, 90].map((durationOption) => (
-                      <Select.Item
-                        key={durationOption}
-                        value={durationOption.toString()}
-                        className="CustomDropdownItem"
-                      >
-                        <Select.ItemText>
-                          {durationOption} minutes
-                        </Select.ItemText>
+                      <Select.Item key={durationOption} value={durationOption.toString()} className="CustomDropdownItem">
+                        <Select.ItemText>{durationOption} minutes</Select.ItemText>
                         <Select.ItemIndicator>
                           <CheckIcon className="CheckIcon" />
                         </Select.ItemIndicator>
@@ -219,12 +215,9 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
           {/* Display Overlapping Times */}
           {overlappingTimes.length > 0 && (
             <div className="overlap-results">
-              <h3>Overlapping Free Times</h3>
               {overlappingTimes.map((overlap, index) => (
                 <div key={index} className="overlap-box">
-                  <strong>
-                    {overlap.start} - {overlap.end}
-                  </strong>
+                  <strong>{overlap.start} - {overlap.end}</strong>
                 </div>
               ))}
             </div>

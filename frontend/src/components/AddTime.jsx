@@ -5,17 +5,17 @@ import * as Select from "@radix-ui/react-select";
 import { Cross2Icon, CheckIcon, ChevronDownIcon, PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import "../App.css";
 
-const API_URI = "/api/calendar/updateProjectFreeTime"; // ✅ Update endpoint
+const API_URI = "/api/calendar/updateFreeTime"; // Updated endpoint
 
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-const AddTime = ({ freeTimes, setFreeTimes, projectId }) => { // ✅ Accept projectId
+const AddTime = ({ freeTimes, setFreeTimes, projectId }) => { // Accept projectId
   const [timeSlots, setTimeSlots] = useState([{ id: 1, day: "", startTime: "", endTime: "" }]);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [isOpen, setIsOpen] = useState(false); // ✅ Track modal state
+  const [isOpen, setIsOpen] = useState(false); // Track modal state
 
-  const user = JSON.parse(localStorage.getItem("user")); // ✅ Get user from storage
+  const user = JSON.parse(localStorage.getItem("user")); // Get user from storage
 
   const resetForm = () => {
     setTimeSlots([{ id: 1, day: "", startTime: "", endTime: "" }]);
@@ -50,8 +50,11 @@ const AddTime = ({ freeTimes, setFreeTimes, projectId }) => { // ✅ Accept proj
   
     try {
       const response = await axios.put(
-        "/api/calendar/updateFreeTime",
-        { free_time: formattedFreeTime },
+        API_URI,
+        { 
+          added: formattedFreeTime,
+          removed: {} 
+        },
         {
           headers: {
             Authorization: `Bearer ${user.token}`,
@@ -69,14 +72,12 @@ const AddTime = ({ freeTimes, setFreeTimes, projectId }) => { // ✅ Accept proj
         window.location.reload();
       }, 500);
     } catch (error) {
-      // ... (error handling)
       setErrorMessage(
         error.response?.data?.detail || "Failed to save free time."
       );
     }
   };
   
-
   return (
     <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
       <Dialog.Trigger asChild>
@@ -95,7 +96,7 @@ const AddTime = ({ freeTimes, setFreeTimes, projectId }) => { // ✅ Accept proj
 
           <div className="TimeSelectionWrapper">
             {timeSlots.map((slot, index) => (
-              <div className="TimeSelectionContainer" key={slot.id}>
+              <div className="TimeSelectionContainer" key={slot.id} style={{ display: "flex", alignItems: "center" }}>
                 <fieldset className="Fieldset">
                   <label className="Label">Select a Day</label>
                   <Select.Root value={slot.day} onValueChange={(value) => {
@@ -113,7 +114,9 @@ const AddTime = ({ freeTimes, setFreeTimes, projectId }) => { // ✅ Accept proj
                           {daysOfWeek.map(day => (
                             <Select.Item key={day} value={day} className="CustomDropdownItem">
                               <Select.ItemText>{day}</Select.ItemText>
-                              <Select.ItemIndicator><CheckIcon className="CheckIcon" /></Select.ItemIndicator>
+                              <Select.ItemIndicator>
+                                <CheckIcon className="CheckIcon" />
+                              </Select.ItemIndicator>
                             </Select.Item>
                           ))}
                         </Select.Viewport>
@@ -151,8 +154,17 @@ const AddTime = ({ freeTimes, setFreeTimes, projectId }) => { // ✅ Accept proj
                 </fieldset>
 
                 {timeSlots.length > 1 && (
-                  <button className="DeleteButton" onClick={() => setTimeSlots(timeSlots.filter(s => s.id !== slot.id))}>
-                    <TrashIcon />
+                  <button 
+                    className="DeleteButton" 
+                    onClick={() => setTimeSlots(timeSlots.filter(s => s.id !== slot.id))}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      marginLeft: "auto"
+                    }}
+                  >
+                    <TrashIcon style={{ width: "28px", height: "28px" }} />
                   </button>
                 )}
               </div>

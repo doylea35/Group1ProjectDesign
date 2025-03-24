@@ -245,10 +245,7 @@ function ProjectSettingsPage() {
     <div className="settings-page-container">
       <PageHeader title={`${projectName} Settings`} />
       <div className="top-row">
-        <button
-          onClick={() => navigate(`/projects/${projectId}`)}
-          className="back-project-btn"
-        >
+        <button onClick={() => navigate(`/projects/${projectId}`)} className="back-project-btn">
           Back to Project Page
         </button>
       </div>
