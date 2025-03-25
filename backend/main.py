@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from api.routes.greeting import greeting_router
-from api.routes.profiles import profiles_router
+from api.routes.tasks import tasks_router
 from api.routes.group import group_router
 from api.routes.calendar import calendar_router
 from api.routes.user import user_router
@@ -43,13 +43,13 @@ app.add_middleware(
 # https://group-grade-backend-5f919d63857a.herokuapp.com/api/calendar/getUserFreeTime
 # routers
 app.include_router(greeting_router, prefix="", tags=["greeting"])
-app.include_router(profiles_router, prefix="", tags=["profiles"])
+app.include_router(tasks_router, prefix="", tags=["tasks"])
 app.include_router(group_router, prefix="/api/group", tags=["Group"])
 app.include_router(calendar_router, prefix="/api/calendar", tags=["Calendar"])
 app.include_router(user_router, prefix="/api/user", tags=["User"])
 app.include_router(files_router, prefix="/api/files", tags=["Files"])
 app.include_router(chat_router, tags=["Chat"])
-app.include_router(profiles_router, prefix="/api", tags=["Task Comments"])
+app.include_router(tasks_router, prefix="/api", tags=["Task Comments"])
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
