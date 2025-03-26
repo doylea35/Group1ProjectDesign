@@ -6,9 +6,11 @@ import os
 from dotenv import load_dotenv
 from api.utils import is_valid_email
 import json
-from api.request_model.calendar_request_schema import GetAllFreeTimeRequest, UpdateUserFreeTimeRequest, GetOverlappingTimeSlotRequest
+from api.request_model.calendar_request_schema import GetAllFreeTimeRequest, UpdateUserFreeTimeRequest, GetOverlappingTimeSlotRequest, SendCalendarInvitationRequest
 from api.utils import get_current_user
 from bson import ObjectId
+from calendar_service.google_calendar_service import google_calendar_client
+
 # Load API Key from environment variables
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -62,6 +64,39 @@ async def get_all_freetime_for_user(request : GetAllFreeTimeRequest, current_use
           free_time_slots.append(obj)
     
     return {"message": "Here are the free time slot", "data":free_time_slots}
+  
+  
+@calendar_router.post("/sendCalendarInvite")
+async def send_calendar_invitation(request :SendCalendarInvitationRequest, current_user: dict = Depends(get_current_user)):
+    user_email = current_user["email"]
+    
+    if not is_valid_email(user_email):
+        return HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Email: {user_email} is not a valid email"
+            )
+        
+    summary = f"{user_email}: Weekly meeting"
+    if request.summary is not None:
+        summary = request.summary
+    
+    description = f"Weekly meeting organized by {user_email} through GroupGrade"
+    if request.description is not None:
+        description = request.description
+        
+    attendee_emails = request.attendees
+    
+    if user_email not in attendee_emails:
+        attendee_emails.append(user_email)
+        
+    start_datetime, end_datetime = google_calendar_client.get_next_weekday_datetime(request.day, request.start, request.end)
+    
+    google_calendar_client.create_event(summary, description, start_datetime, end_datetime, attendee_emails)
+    
+    return {"message": "Google Calendar Inivitation Sent!"}
+
+    
+  
     
 @calendar_router.put("/updateFreeTime")
 async def update_free_time(request : UpdateUserFreeTimeRequest, current_user: dict = Depends(get_current_user)):
