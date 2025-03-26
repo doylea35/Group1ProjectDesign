@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import CreateSubteam from "../components/CreateSubteam";
@@ -6,6 +6,8 @@ import CreateTask from "../components/CreateTask";
 import axios from "axios";
 import "../App.css";
 import ProjectNavigation from "../components/ProjectNavigator";
+
+
 
 // Subcomponent to show stats at top
 function StatsBar({ totalTasks, completedTasks }) {
@@ -121,7 +123,9 @@ function ProjectPage() {
 
     if (projectId) {
       fetchTasks();
-    }
+    };
+
+    console.log("Tasks:", tasks);
   }, [projectId]);
 
   if (loading) return <p>Loading project...</p>;

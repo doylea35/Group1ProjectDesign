@@ -13,8 +13,10 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
   const [errors, setErrors] = useState({});
   const [members, setMembers] = useState([]); 
   const [taskPriority, setTaskPriority] = useState("Medium");
-
   const [subteams, setSubteams] = useState([]);
+
+  // NEW: Text input for comma-separated labels
+  const [labelString, setLabelString] = useState("");
 
   useEffect(() => {
     console.log("CreateTask component mounted. Checking projectId:", projectId);
@@ -28,7 +30,6 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
         }
 
         console.log("Fetching all groups for the user...");
-
         const response = await axios.get("/api/group/", {
           headers: { Authorization: `Bearer ${user.token}` }
         });
@@ -64,7 +65,7 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
 
         const subteamRes = await axios.get("/subteam/getSubteamsByGroup", {
           headers: { Authorization: `Bearer ${user.token}` },
-          params: { group_id: projectId } 
+          params: { group_id: projectId }
         });
 
         console.log("Subteam API response:", subteamRes.data);
@@ -115,6 +116,12 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
       return;
     }
 
+    // NEW: Parse comma-separated labels into an array
+    const labelsArray = labelString
+      .split(",")
+      .map(lbl => lbl.trim())
+      .filter(lbl => lbl !== "");
+
     const taskData = {
       name: taskName,
       description: taskDescription,
@@ -123,7 +130,8 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
       group: projectId,
       subteams: selectedSubteams,
       status: "To Do",
-      priority: taskPriority
+      priority: taskPriority,
+      labels: labelsArray, // <--- includes user-typed labels
     };
 
     try {
@@ -145,10 +153,10 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
       setTaskName("");
       setTaskDescription("");
       setDueDate("");
-      setSelectedSubteams([]);  // Reset selected subteams
+      setSelectedSubteams([]);
       setSelectedMembers([]);
+      setLabelString(""); // Clear labels
       setErrors({});
-
 
       if (onCreate) {
         onCreate();
@@ -215,6 +223,7 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
               {errors.dueDate && <p className="error-message">{errors.dueDate}</p>}
             </fieldset>
 
+            {/* Task Priority */}
             <fieldset className="Fieldset">
               <label className="Label" htmlFor="task-priority">Task Priority:</label>
               <select
@@ -229,7 +238,19 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
               </select>
             </fieldset>
 
-            {/* Subteam Selection (NOW FROM BACKEND) */}
+            {/* NEW: Labels (comma-separated) */}
+            <fieldset className="Fieldset">
+              <label className="Label" htmlFor="task-labels">Labels (comma-separated):</label>
+              <input
+                className="Input"
+                id="task-labels"
+                type="text"
+                value={labelString}
+                onChange={(e) => setLabelString(e.target.value)}
+              />
+            </fieldset>
+
+            {/* Subteam Selection */}
             <div className="selection-container">
               <p className="selection-title">Assign to Subteams:</p>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
