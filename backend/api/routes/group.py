@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Query, Depends
-from db.database import groups_collection, users_collection
+from db.database import groups_collection, users_collection, chat_collection
 from db.models import Group
 from db.schemas import groups_serial
 from api.request_model.group_request_schema import CreateGroupRequest, DeleteGroupRequest, ConfirmGroupMembershipRequest, UpdateGroupRequest
@@ -9,6 +9,8 @@ from api.utils import is_valid_email
 from api.utils import get_current_user
 from dotenv import load_dotenv
 import os
+from pymongo import ReturnDocument
+
 # Load environment variables
 load_dotenv()
 
@@ -65,6 +67,16 @@ async def create_group_handler(request : CreateGroupRequest):
         {"email": request.creator_email}, # find by user email
         {"$addToSet": {"groups": str(inserted_group.inserted_id)}}
     , return_document=True)
+    
+    # create group chat
+    new_chat = {
+        "is_groupchat" : True,
+        "participants" : [request.creator_email],
+        "chat_history" : [],
+        "group_id": str(inserted_group.inserted_id)
+    }
+    
+    chat_collection.insert_one(new_chat)
 
     return {"data":newGroup, "message":"Group created successfully"}
 
@@ -90,13 +102,7 @@ async def delete_group_handler(request : DeleteGroupRequest):
 
 @group_router.get("/confirmMembership/{user_email}/{group_id}")
 async def confirm_member(user_email: str, group_id: str):
-    # assume the user exist in our database
-    # TODO ask the frontend to first check if the user exists or not, if not, ask user to register first then call this api
-    # if not is_valid_email(user_email):
-    #     return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, content={"message": f"User with emai{user_email}' is not a registered user."})
 
-    # group_id = request.group_id
-    # user_email = request.user_email
     print(f"\ngroup_id: {group_id}, user_email: {user_email}\n")
     
     group = groups_collection.find_one({"_id": ObjectId(group_id)})
@@ -154,7 +160,12 @@ async def confirm_member(user_email: str, group_id: str):
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail={"message": f"Something went wrong when adding the group to the user"}
                 )
-
+            
+    # add new user to the chat   
+    chat_collection.find_one_and_update({"group_id": ObjectId(group_id)},
+                                        {"$addToSet": {"participants": user_email}})
+    
+    
     if updated_user:
         updated_user["_id"] = str(updated_user["_id"])
     if updated_group:
@@ -254,6 +265,7 @@ def send_project_invitation_email(user_emails:list[str], creator_email:str, new_
 
 @group_router.put("/updateGroup", status_code=status.HTTP_200_OK)
 async def update_group_handler(request: UpdateGroupRequest):
+    # find group
     group = groups_collection.find_one({"_id": ObjectId(request.group_id)})
     if not group:
         return HTTPException(
@@ -261,33 +273,41 @@ async def update_group_handler(request: UpdateGroupRequest):
                 detail={"message": f"Group with id: {request.group_id} does not exist."}
             )
     
-    new_members = []
-    new_pending_members = []
+    update_fields = {}
 
-    # check if there are new members
-    for member in request.new_members:
-        if not users_collection.find_one({"email": member}): # the member doesn't exist (yet)
-            new_pending_members.append(member)
-        else: #the member exists
-            new_members.append(member)
+    # change name
+    if request.new_group_name:
+        update_fields["name"] = str(request.new_group_name)
+
+    # add members
+    existing_members = set(group["members"])
+    pending_members = set(group.get("pending_members", []))
+    
+    for email in request.new_members: 
+        pending_members.add(email) # we add new members to the pending list until they accept the invitation
+    send_project_invitation_email(pending_members, request.modification_email, str(request.group_id), group["name"]) # and we send him the invitation email
+
+    # remove members
+    for email in request.remove_members:
+        existing_members.discard(email)
+        pending_members.discard(email)
 
     # update group
+    update_fields["members"] = list(existing_members)
+    update_fields["pending_members"] = list(pending_members)
+
     updated_group = groups_collection.find_one_and_update(
-        {"_id": ObjectId(request.group_id)},
-        {
-            "$set": {"name": request.new_group_name},
-            "$set": {"members": new_members},
-            "$addToSet": {"pending_members": {"$each": new_pending_members}}
-        }
-        , return_document=True)
-    
-    # send invitation email to the user
-    send_project_invitation_email(new_pending_members, request.modification_email, str(request.group_id), request.new_group_name)
+        {"_id": ObjectId(request.group_id)}, 
+        {"$set": update_fields},
+        return_document=True
+        )
     
     if not updated_group:
         return HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={"message": f"Something went wrong when updating the group"}
             )
+    
+    updated_group["_id"] = str(updated_group["_id"])
 
     return {"message": "Group updated successfully", "data": updated_group}

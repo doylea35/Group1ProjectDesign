@@ -201,17 +201,34 @@ async def update_user(request : UpdateUserRequest):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"User with email {request.email} does not exist."
             )
+    
+    updated_fields = {}
+    user_skills = users_collection.find_one({"email": request.email})["skills"]
+    
+    # Check if user wants to update their name
+    if request.new_name:
+        updated_fields["name"] = request.new_name
 
-    # Validate group IDs
-    if not groups_collection.find_one({"_id": ObjectId(request.new_group_id)}):
-        raise HTTPException(status_code=400, detail=f"Group {request.new_group_id} does not exist")
+    # Check if user wants to add skills
+    if request.add_skills:
+        updated_fields["skills"] = list(set(user_skills + request.add_skills))
+    
+    # Check if user wants to remove skills
+    if request.remove_skills:
+        updated_fields["skills"] = list(set(user_skills) - set(request.remove_skills))
 
     # Update user
-    users_collection.update_one(
+    updated_user = users_collection.update_one(
         {"email": request.email},
-        {"$set": {"name": request.new_name, "groups": [ObjectId(request.new_group_id)]}}
+        {"$set": updated_fields},
+        return_document=True
     )
-    updated_user = users_collection.find_one({"email": request.email})
+
+    if not updated_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to update user with email {request.email}"
+            )
 
     return {"message":"User updated successfully", "data":updated_user}
 

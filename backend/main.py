@@ -5,6 +5,7 @@ from api.routes.group import group_router
 from api.routes.calendar import calendar_router
 from api.routes.user import user_router
 from api.routes.files import files_router
+from api.routes.chat import chat_router
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import os
@@ -47,6 +48,8 @@ app.include_router(group_router, prefix="/api/group", tags=["Group"])
 app.include_router(calendar_router, prefix="/api/calendar", tags=["Calendar"])
 app.include_router(user_router, prefix="/api/user", tags=["User"])
 app.include_router(files_router, prefix="/api/files", tags=["Files"])
+app.include_router(chat_router, tags=["Chat"])
+app.include_router(profiles_router, prefix="/api", tags=["Task Comments"])
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))

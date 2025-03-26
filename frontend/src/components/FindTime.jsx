@@ -2,45 +2,98 @@ import React, { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Select from "@radix-ui/react-select";
 import { Cross2Icon, CheckIcon, ChevronDownIcon } from "@radix-ui/react-icons";
-import axios from "axios"; // For sending HTTP requests
 import "../App.css";
 
-const API_URI = "/api/calendar/getOverlappingTime"; // Correct API endpoint
+function parseTime(str) {
+  const [hh, mm] = str.split(":").map(Number);
+  return hh * 60 + mm;
+}
+
+function formatTime(totalMinutes) {
+  const hh = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
+  const mm = String(totalMinutes % 60).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function intersectIntervals(A, B) {
+  const sortedA = [...A].sort((a, b) => parseTime(a.start) - parseTime(b.start));
+  const sortedB = [...B].sort((a, b) => parseTime(a.start) - parseTime(b.start));
+
+  let i = 0;
+  let j = 0;
+  const result = [];
+
+  while (i < sortedA.length && j < sortedB.length) {
+    const startA = parseTime(sortedA[i].start);
+    const endA = parseTime(sortedA[i].end);
+    const startB = parseTime(sortedB[j].start);
+    const endB = parseTime(sortedB[j].end);
+
+    const overlapStart = Math.max(startA, startB);
+    const overlapEnd = Math.min(endA, endB);
+
+    if (overlapStart < overlapEnd) {
+      result.push({
+        start: formatTime(overlapStart),
+        end: formatTime(overlapEnd),
+      });
+    }
+    if (endA < endB) {
+      i++;
+    } else {
+      j++;
+    }
+  }
+  return result;
+}
+
+function intersectAllUsers(dayDataArray) {
+  if (dayDataArray.length === 0) return [];
+
+  let intersection = dayDataArray[0];
+
+  for (let i = 1; i < dayDataArray.length; i++) {
+    intersection = intersectIntervals(intersection, dayDataArray[i]);
+    if (intersection.length === 0) {
+      break;
+    }
+  }
+  return intersection;
+}
+
+function filterByDuration(intervals, duration) {
+  return intervals.filter((slot) => {
+    const start = parseTime(slot.start);
+    const end = parseTime(slot.end);
+    return end - start >= duration;
+  });
+}
 
 const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
   const [selectedDay, setSelectedDay] = useState("");
-  const [duration, setDuration] = useState(30); // Default duration is 30 minutes
+  const [duration, setDuration] = useState(30);
   const [overlappingTimes, setOverlappingTimes] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
-  const [hasClickedFindTime, setHasClickedFindTime] = useState(false); // Track if the user clicked the "Find Overlapping Time" button inside the dialog
+  const [hasClickedFindTime, setHasClickedFindTime] = useState(false);
 
-  // 🔹 Fetch User & Token from localStorage
   const user = JSON.parse(localStorage.getItem("user"));
-
   if (!user || !user.token) {
     console.error("❌ User not logged in.");
-    setErrorMessage(
-      "User not logged in. Please log in to find overlapping time."
-    );
+    setErrorMessage("User not logged in. Please log in to find overlapping time.");
   }
 
-  // Helper function to check if two time slots overlap
-  const checkOverlap = (slot1, slot2) => {
-    const [start1, end1] = [
-      new Date(`1970-01-01T${slot1.start}`),
-      new Date(`1970-01-01T${slot1.end}`),
-    ];
-    const [start2, end2] = [
-      new Date(`1970-01-01T${slot2.start}`),
-      new Date(`1970-01-01T${slot2.end}`),
-    ];
-    return start1 < end2 && start2 < end1; // If times overlap
+  const resetDialog = () => {
+    setSelectedDay("");
+    setDuration(30);
+    setOverlappingTimes([]);
+    setErrorMessage("");
+    setHasClickedFindTime(false);
   };
 
   const findOverlappingTimes = async () => {
-    setOverlappingTimes([]); // Clear previous results
-    setErrorMessage(""); // Clear error message
-    setHasClickedFindTime(true); // Mark that the button was clicked inside the dialog
+    setOverlappingTimes([]);
+    setErrorMessage("");
+    setHasClickedFindTime(true);
 
     if (!selectedDay) {
       setErrorMessage("Please select a day.");
@@ -48,85 +101,36 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
     }
 
     try {
-      console.log("📡 Fetching Overlapping Free Times...");
+      const dayDataArray = raw_free_time_data.map((userObj) => {
+        return userObj[selectedDay] || [];
+      });
 
-      // For now, we're using hardcoded times instead of sending a request to the API
-      // Hardcoded overlapping slots
-      const hardcodedOverlappingSlots = {
-        Tuesday: [{ start: "13:00", end: "17:00" }],
-        Thursday: [{ start: "11:00", end: "16:00" }],
-      };
+      let intersection = intersectAllUsers(dayDataArray);
+      intersection = filterByDuration(intersection, duration);
 
-      // Simulate the overlapping times for the selected day
-      if (hardcodedOverlappingSlots[selectedDay]) {
-        setOverlappingTimes(hardcodedOverlappingSlots[selectedDay]);
+      // Sort overlapping slots by start time
+      const sortedIntersection = intersection.slice().sort((a, b) => parseTime(a.start) - parseTime(b.start));
+
+      if (sortedIntersection.length > 0) {
+        setOverlappingTimes(sortedIntersection);
         setErrorMessage("");
       } else {
-        setOverlappingTimes([]); // Clear previous results
+        setOverlappingTimes([]);
         setErrorMessage("No overlapping slots found.");
       }
-      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-      // Uncomment the following code when API call is enabled
-      // Get free times for the selected day
-      // console.log(
-      //   `\n\ raw_free_time in findTime.jxs: ${JSON.stringify(
-      //     raw_free_time_data
-      //   )}\n\n`
-      // );
-
-      // const dayFreeTimes = freeTimes[selectedDay] || [];
-
-      // if (dayFreeTimes.length === 0) {
-      //   setOverlappingTimes([]); // Clear previous results
-      //   setErrorMessage("No available slots for the selected day.");
-      //   return;
-      // }
-
-      // Build the request body to send all free times for the selected day
-      // const freeTimeRequest = {
-      //   free_time_slots: raw_free_time_data,
-      //   group_id: projectId,
-      // };
-
-      // // Send the accumulated free times for the selected day
-      // const response = await axios.post(API_URI, freeTimeRequest, {
-      //   headers: {
-      //     Authorization: `Bearer ${user.token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-
-      // console.log("API Response:", response);
-
-      // // Process the response as necessary
-      // if (response.data && response.data.overlapping_times) {
-      //   const overlapping = response.data.overlapping_times;
-      //   if (overlapping.length > 0) {
-      //     setOverlappingTimes(overlapping);
-      //     setErrorMessage("");
-      //   } else {
-      //     setOverlappingTimes([]); // Clear previous results
-      //     setErrorMessage("No overlapping slots found.");
-      //   }
-      // } else {
-      //   setErrorMessage("No overlapping slots found.");
-      // }
     } catch (error) {
-      console.error(
-        "❌ Error fetching overlapping times:",
-        error.response?.data || error
-      );
+      console.error("❌ Error finding overlapping times:", error);
       if (error.response && error.response.status === 401) {
         setErrorMessage("Unauthorized. Please log in again.");
       } else {
         setErrorMessage("Failed to find overlapping times.");
       }
-      setOverlappingTimes([]); // Clear previous results
+      setOverlappingTimes([]);
     }
   };
 
   return (
-    <Dialog.Root>
+    <Dialog.Root onOpenChange={(open) => { if (!open) resetDialog(); }}>
       <Dialog.Trigger asChild>
         <button className="Button violet">Find Overlapping Time</button>
       </Dialog.Trigger>
@@ -139,6 +143,7 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
           <Dialog.Description className="DialogDescription">
             Select a day and duration to find overlapping free times.
           </Dialog.Description>
+
           {/* Day Selection */}
           <fieldset className="Fieldset">
             <label className="Label">Select a Day</label>
@@ -159,11 +164,7 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
                       "Saturday",
                       "Sunday",
                     ].map((day) => (
-                      <Select.Item
-                        key={day}
-                        value={day}
-                        className="CustomDropdownItem"
-                      >
+                      <Select.Item key={day} value={day} className="CustomDropdownItem">
                         <Select.ItemText>{day}</Select.ItemText>
                         <Select.ItemIndicator>
                           <CheckIcon className="CheckIcon" />
@@ -175,13 +176,11 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
               </Select.Portal>
             </Select.Root>
           </fieldset>
+
           {/* Duration Selection */}
           <fieldset className="Fieldset">
             <label className="Label">Select Duration (minutes)</label>
-            <Select.Root
-              value={duration.toString()}
-              onValueChange={(value) => setDuration(Number(value))}
-            >
+            <Select.Root value={duration.toString()} onValueChange={(value) => setDuration(Number(value))}>
               <Select.Trigger className="CustomSelectTrigger">
                 <Select.Value placeholder="-" />
                 <ChevronDownIcon className="DropdownIcon" />
@@ -190,14 +189,8 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
                 <Select.Content className="CustomDropdownContent">
                   <Select.Viewport>
                     {[15, 30, 45, 60, 90].map((durationOption) => (
-                      <Select.Item
-                        key={durationOption}
-                        value={durationOption.toString()}
-                        className="CustomDropdownItem"
-                      >
-                        <Select.ItemText>
-                          {durationOption} minutes
-                        </Select.ItemText>
+                      <Select.Item key={durationOption} value={durationOption.toString()} className="CustomDropdownItem">
+                        <Select.ItemText>{durationOption} minutes</Select.ItemText>
                         <Select.ItemIndicator>
                           <CheckIcon className="CheckIcon" />
                         </Select.ItemIndicator>
@@ -208,28 +201,28 @@ const FindTime = ({ freeTimes, raw_free_time_data, projectId }) => {
               </Select.Portal>
             </Select.Root>
           </fieldset>
-          {/* Find Button */}
+
+          {/* Button to find overlaps */}
           <button className="Button violet" onClick={findOverlappingTimes}>
             Find Overlapping Time
           </button>
-          {/* Error Messages */}
+
+          {/* Error Message */}
           {hasClickedFindTime && errorMessage && (
             <p className="ErrorMessage">{errorMessage}</p>
-          )}{" "}
-          {/* Show error after button click */}
+          )}
+
           {/* Display Overlapping Times */}
           {overlappingTimes.length > 0 && (
             <div className="overlap-results">
-              <h3>Overlapping Free Times</h3>
               {overlappingTimes.map((overlap, index) => (
                 <div key={index} className="overlap-box">
-                  <strong>
-                    {overlap.start} - {overlap.end}
-                  </strong>
+                  <strong>{overlap.start} - {overlap.end}</strong>
                 </div>
               ))}
             </div>
           )}
+
           <Dialog.Close asChild>
             <button className="IconButton" aria-label="Close">
               <Cross2Icon />

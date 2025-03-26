@@ -7,7 +7,7 @@ class GetAllFreeTimeRequest(BaseModel):
 
 
 class UpdateUserFreeTimeRequest(BaseModel):
-    free_time: Dict[str, List[FreeTimeSlot]] = Field(default={}, description="""Sample: {
+    added: Dict[str, List[FreeTimeSlot]] = Field(default={}, description="""{
     "Monday": [],
     "Wednesday": [
       { "start": "09:00", "end": "10:30" },
@@ -18,6 +18,20 @@ class UpdateUserFreeTimeRequest(BaseModel):
       { "start": "15:00", "end": "16:00" }
     ]
   }""")
+    
+    
+    removed: Dict[str, List[FreeTimeSlot]] = Field(default={}, description=""" {
+    "Monday": [],
+    "Wednesday": [
+      { "start": "09:00", "end": "10:30" },
+      { "start": "15:00", "end": "16:00" }
+    ],
+    "Saturday": [
+      { "start": "09:00", "end": "10:30" },
+      { "start": "15:00", "end": "16:00" }
+    ]
+  }""")
+    
     
 
 class GetOverlappingTimeSlotRequest(BaseModel):
