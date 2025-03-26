@@ -87,6 +87,61 @@ def create_service(api_name, api_version, *scopes):
 class GoogleCalendarService:
     def __init__(self):
         self.calendar_service = create_service(API_NAME, API_VERSION, SCOPES)
+        
+
+    def get_next_weekday_datetime(self, day_name: str, start: str, end: str):
+        """
+        Given a day name (e.g., "Monday") and start/end times in "HH:MM"    format,
+        return datetime objects for the next occurrence of that day with the    given times.
+        """
+        # Map day names to their corresponding weekday numbers  (Monday=0, ..., Sunday=6)
+        weekdays = {
+            "monday": 0,
+            "tuesday": 1,
+            "wednesday": 2,
+            "thursday": 3,
+            "friday": 4,
+            "saturday": 5,
+            "sunday": 6
+        }
+
+        target_weekday = weekdays[day_name.lower()]
+        today = datetime.date.today()
+        today_weekday = today.weekday()
+        
+        # Parse the start and end times first
+        start_time = datetime.datetime.strptime(start, "%H:%M").time()
+        end_time = datetime.datetime.strptime(end, "%H:%M").time()
+    
+
+        days_ahead = target_weekday - today_weekday
+        if days_ahead == 0:
+            start_datetime_today = datetime.datetime.combine(today, start_time)
+            if datetime.datetime.now() >= start_datetime_today:
+                days_ahead = 7
+            else:
+                days_ahead = 0
+        elif days_ahead < 0:
+            # If the day has already passed this week, schedule for next week
+            days_ahead += 7
+        
+
+        next_date = today + datetime.timedelta(days=days_ahead)
+
+        next_date = today + datetime.timedelta(days=days_ahead)
+        start_datetime = datetime.datetime.combine(next_date, start_time)
+        end_datetime = datetime.datetime.combine(next_date, end_time)
+    
+        return start_datetime, end_datetime
+
+        # # Example usage:
+        # data = {"start": "11:00", "end": "12:30"}
+        # day_input = "Monday"
+
+        # start_dt, end_dt = get_next_weekday_datetime(day_input, data    ["start"], data["end"])
+        # print("Next Monday start datetime:", start_dt)
+        # print("Next Monday end datetime:", end_dt)
+
 
     def create_event(self, summary: str, description: str, start_datetime: datetime.datetime,
                      end_datetime: datetime.datetime, attendees: list = []):
@@ -95,14 +150,17 @@ class GoogleCalendarService:
             "description": description,
             "start": {
                 "dateTime": start_datetime.isoformat(),
-                "timeZone": "UTC"  # Adjust to your local timezone if needed
+                "timeZone": "IST"  
             },
             "end": {
                 "dateTime": end_datetime.isoformat(),
-                "timeZone": "UTC"
+                "timeZone": "IST"
             },
             "attendees": [{"email": email} for email in attendees],
             "reminders": {"useDefault": True},
+            "recurrence": [
+                    "RRULE:FREQ=WEEKLY;"
+            ]
         }
 
         try:
@@ -121,15 +179,24 @@ if __name__ == "__main__":
     calendar_client = GoogleCalendarService()
 
     # Create a sample event that starts 1 hour from now and lasts 1 hour
-    now = datetime.datetime.utcnow()
-    start = now + datetime.timedelta(hours=1)
-    end = start + datetime.timedelta(hours=1)
+    # now = datetime.datetime.utcnow()
+    # start = now + datetime.timedelta(hours=1)
+    # end = start + datetime.timedelta(hours=1)
     summary = "Test Meeting"
     description = "This is a test meeting created via the Google Calendar API."
     attendees = ["zhangnuoxi24@gmail.com"] 
+    
+    
+    data = {"start": "22:00", "end": "23:30"}
+    day_input = "Wednesday"
 
-    event = calendar_client.create_event(summary, description, start, end, attendees)
-    if event:
-        print("Event created successfully!")
-    else:
-        print("Failed to create event.")
+    start_dt, end_dt = calendar_client.get_next_weekday_datetime(day_input, data["start"], data["end"])
+    print("Next Monday start datetime:", start_dt)
+    print("Next Monday end datetime:", end_dt)
+
+
+    # event = calendar_client.create_event(summary, description, start, end, attendees)
+    # if event:
+    #     print("Event created successfully!")
+    # else:
+    #     print("Failed to create event.")
