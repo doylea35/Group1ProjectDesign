@@ -18,7 +18,7 @@ def save_credentials_to_env(credentials):
     """Save OAuth credentials as a base64 string in .env file."""
     creds_bytes = pickle.dumps(credentials)
     creds_base64 = base64.b64encode(creds_bytes).decode("utf-8")
-    print(f"creds_base64: {creds_base64}\n")
+    # print(f"creds_base64: {creds_base64}\n")
     set_key(".env", "GOOGLE_CALENDAR_CREDENTIALS_BASE64", creds_base64)
 
 def load_credentials_from_env():
