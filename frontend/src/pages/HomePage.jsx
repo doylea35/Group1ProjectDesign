@@ -59,32 +59,34 @@ export default function HomePage() {
   const [projects, setProjects] = useState({});
   const [activeTaskId, setActiveTaskId] = useState(null);
 
-  // Label filter
+  // Label filter from hugh/HEAD
   const [labelFilter, setLabelFilter] = useState("");
 
+  // Fetch tasks (assigned to user) once
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
-        if (!user || !user.token) {
+        if (!user?.token) {
           setError("User not authenticated.");
           setLoading(false);
           return;
         }
 
-        // Fetch tasks assigned to the user
-        const response = await axios.get(`/tasks/`, {
+        // GET /tasks?assigned_to=user.email
+        const response = await axios.get("/tasks/", {
           headers: { Authorization: `Bearer ${user.token}` },
           params: { assigned_to: user.email },
         });
 
         if (response.data) {
+          // Priority-based sorting from hugh
           const priorityOrder = { High: 0, Medium: 1, Low: 2 };
           const sortedTasks = response.data.sort((a, b) => {
             const prioA = priorityOrder[a.priority] ?? 999;
             const prioB = priorityOrder[b.priority] ?? 999;
             if (prioA !== prioB) {
-              return prioA - prioB; // "High" (0) → top
+              return prioA - prioB;
             }
             return new Date(a.due_date) - new Date(b.due_date);
           });
@@ -104,13 +106,14 @@ export default function HomePage() {
     fetchTasks();
   }, []);
 
+  // Fetch project info (for project names) once
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
-        if (!user || !user.token) return;
+        if (!user?.token) return;
 
-        const response = await axios.get(`/api/group/`, {
+        const response = await axios.get("/api/group/", {
           headers: { Authorization: `Bearer ${user.token}` },
         });
 
@@ -133,17 +136,18 @@ export default function HomePage() {
     setActiveTaskId((prev) => (prev === taskId ? null : taskId));
   };
 
+  // Parse typed labels (comma-separated)
   const desiredLabels = labelFilter
     .split(",")
     .map((lbl) => lbl.trim())
     .filter((lbl) => lbl !== "");
 
   function labelsMatch(taskLabels, wanted) {
-    if (!wanted.length) return true;
+    if (!wanted.length) return true; // no filter => all tasks
     return wanted.some((lbl) => taskLabels?.includes(lbl));
   }
 
-  // Apply label-based filtering
+  // Filter tasks by label
   const filteredTasks = tasks.filter((task) =>
     labelsMatch(task.labels || [], desiredLabels)
   );
@@ -151,11 +155,12 @@ export default function HomePage() {
   if (loading) return <p>Loading tasks...</p>;
   if (error) return <p className="error-message">{error}</p>;
 
-  // Build separate lists for columns
+  // Build separate lists for columns (based on HEAD)
   const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
   const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
   const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
 
+  // For stats bar, we use the number of *filtered* tasks or you could use tasks.length if you prefer
   const totalTasks = filteredTasks.length;
   const completedCount = completedTasks.length;
 
@@ -166,7 +171,7 @@ export default function HomePage() {
       {/* Stats bar (from main) */}
       <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
 
-      {/* Label filter (from HEAD) */}
+      {/* Label filter input (from hugh) */}
       <div style={{ margin: "1rem 0" }}>
         <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
           Filter by labels (comma-separated):
@@ -181,34 +186,37 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Kanban-style columns (from main) */}
+      {/* Kanban columns (from main, integrated with HEAD) */}
       <div className="task-columns-wrapper">
         <div className="task-columns">
           {/* TO DO */}
           <div className="task-column to-do">
             <h3 className="column-title">To Do</h3>
             <div className="task-items">
-              {todoTasks.map((task) => (
-                <div
-                  key={task._id}
-                  className="task-card"
-                  onClick={() => toggleTaskDescription(task._id)}
-                >
-                  <h4 className="task-title">{task.name}</h4>
-                  <p className="task-meta">
-                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
-                  </p>
-                  {/* show the description if active */}
-                  {activeTaskId === task._id && (
-                    <p className="task-description">
-                      {task.description || "No description provided."}
+              {todoTasks.length > 0 ? (
+                todoTasks.map((task) => (
+                  <div
+                    key={task._id}
+                    className="task-card"
+                    onClick={() => toggleTaskDescription(task._id)}
+                  >
+                    <h4 className="task-title">{task.name}</h4>
+                    <p className="task-meta">
+                      <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
                     </p>
-                  )}
-                  <div className="task-card-footer">
-                    <span className="task-date">{task.due_date}</span>
+                    {activeTaskId === task._id && (
+                      <p className="task-description">
+                        {task.description || "No description provided."}
+                      </p>
+                    )}
+                    <div className="task-card-footer">
+                      <span className="task-date">{task.due_date}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p></p>
+              )}
             </div>
           </div>
 
@@ -216,26 +224,30 @@ export default function HomePage() {
           <div className="task-column in-progress">
             <h3 className="column-title">In Progress</h3>
             <div className="task-items">
-              {inProgressTasks.map((task) => (
-                <div
-                  key={task._id}
-                  className="task-card"
-                  onClick={() => toggleTaskDescription(task._id)}
-                >
-                  <h4 className="task-title">{task.name}</h4>
-                  <p className="task-meta">
-                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
-                  </p>
-                  {activeTaskId === task._id && (
-                    <p className="task-description">
-                      {task.description || "No description provided."}
+              {inProgressTasks.length > 0 ? (
+                inProgressTasks.map((task) => (
+                  <div
+                    key={task._id}
+                    className="task-card"
+                    onClick={() => toggleTaskDescription(task._id)}
+                  >
+                    <h4 className="task-title">{task.name}</h4>
+                    <p className="task-meta">
+                      <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
                     </p>
-                  )}
-                  <div className="task-card-footer">
-                    <span className="task-date">{task.due_date}</span>
+                    {activeTaskId === task._id && (
+                      <p className="task-description">
+                        {task.description || "No description provided."}
+                      </p>
+                    )}
+                    <div className="task-card-footer">
+                      <span className="task-date">{task.due_date}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p></p>
+              )}
             </div>
           </div>
 
@@ -243,26 +255,30 @@ export default function HomePage() {
           <div className="task-column completed">
             <h3 className="column-title">Completed</h3>
             <div className="task-items">
-              {completedTasks.map((task) => (
-                <div
-                  key={task._id}
-                  className="task-card"
-                  onClick={() => toggleTaskDescription(task._id)}
-                >
-                  <h4 className="task-title">{task.name}</h4>
-                  <p className="task-meta">
-                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
-                  </p>
-                  {activeTaskId === task._id && (
-                    <p className="task-description">
-                      {task.description || "No description provided."}
+              {completedTasks.length > 0 ? (
+                completedTasks.map((task) => (
+                  <div
+                    key={task._id}
+                    className="task-card"
+                    onClick={() => toggleTaskDescription(task._id)}
+                  >
+                    <h4 className="task-title">{task.name}</h4>
+                    <p className="task-meta">
+                      <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
                     </p>
-                  )}
-                  <div className="task-card-footer">
-                    <span className="task-date">{task.due_date}</span>
+                    {activeTaskId === task._id && (
+                      <p className="task-description">
+                        {task.description || "No description provided."}
+                      </p>
+                    )}
+                    <div className="task-card-footer">
+                      <span className="task-date">{task.due_date}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p></p>
+              )}
             </div>
           </div>
         </div>

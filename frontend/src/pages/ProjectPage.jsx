@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import CreateSubteam from "../components/CreateSubteam";
@@ -6,8 +6,6 @@ import CreateTask from "../components/CreateTask";
 import axios from "axios";
 import "../App.css";
 import ProjectNavigation from "../components/ProjectNavigator";
-
-
 
 // Subcomponent to show stats at top
 function StatsBar({ totalTasks, completedTasks }) {
@@ -62,16 +60,18 @@ function StatsBar({ totalTasks, completedTasks }) {
 function ProjectPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
+
+  // Project name, tasks, and error states
   const [projectName, setProjectName] = useState("");
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState([]);
   const [error, setError] = useState("");
   const [activeTaskId, setActiveTaskId] = useState(null);
 
-  // NEW: label filter from HEAD
+  // NEW (from hugh): label filter
   const [labelFilter, setLabelFilter] = useState("");
 
-  // Fetch the project name from localStorage
+  // Fetch project name from localStorage
   useEffect(() => {
     const projectFromStorage = JSON.parse(localStorage.getItem("selectedProject"));
     if (projectFromStorage && projectFromStorage._id === projectId) {
@@ -93,19 +93,21 @@ function ProjectPage() {
           return;
         }
 
-        const response = await axios.get(`/tasks/`, {
+        const response = await axios.get("/tasks/", {
           headers: { Authorization: `Bearer ${user.token}` },
         });
 
         if (response.data) {
-          // Priority-based sorting from HEAD
+          // Priority-based sorting from hugh
           const priorityOrder = { High: 0, Medium: 1, Low: 2 };
           const projectTasks = response.data
             .filter((task) => task.group === projectId)
             .sort((a, b) => {
               const prioA = priorityOrder[a.priority] ?? 999;
               const prioB = priorityOrder[b.priority] ?? 999;
-              if (prioA !== prioB) return prioA - prioB; // higher priority first
+              if (prioA !== prioB) {
+                return prioA - prioB; // Higher priority first
+              }
               return new Date(a.due_date) - new Date(b.due_date);
             });
 
@@ -123,9 +125,7 @@ function ProjectPage() {
 
     if (projectId) {
       fetchTasks();
-    };
-
-    console.log("Tasks:", tasks);
+    }
   }, [projectId]);
 
   if (loading) return <p>Loading project...</p>;
@@ -139,8 +139,8 @@ function ProjectPage() {
   // Label filter logic
   const desiredLabels = labelFilter
     .split(",")
-    .map((l) => l.trim())
-    .filter((l) => l !== "");
+    .map((lbl) => lbl.trim())
+    .filter((lbl) => lbl !== "");
 
   function labelsMatch(taskLabels, wanted) {
     if (!wanted.length) return true; // no filter => match all
@@ -157,6 +157,7 @@ function ProjectPage() {
   const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
   const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
 
+  // For stats bar
   const totalTasks = filteredTasks.length;
   const completedCount = completedTasks.length;
 
@@ -184,7 +185,7 @@ function ProjectPage() {
         <CreateTask projectName={projectName} projectId={projectId} onCreate={handleCreateTask} />
       </div>
 
-      {/* Label Filter input (from HEAD) */}
+      {/* Label Filter input (from hugh) */}
       <div style={{ margin: "1rem 0" }}>
         <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
           Filter by labels (comma-separated):

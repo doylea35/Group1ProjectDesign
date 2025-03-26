@@ -41,6 +41,7 @@ class Task(BaseModel):
     labels: Optional[List[str]] = []   # array of labels, optional 
     comments: Optional[List[Comment]] = []  # field for comments 
 
+
 class SubTeam(BaseModel): #_id as Primary key, automatically created, can be found using ObjectID
     id: Optional[str] = Field(alias="_id", default=None)
     team_name: str 
