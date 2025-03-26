@@ -116,3 +116,20 @@ class GoogleCalendarService:
         except Exception as e:
             print("Error creating event:", e)
             return None
+
+if __name__ == "__main__":
+    calendar_client = GoogleCalendarService()
+
+    # Create a sample event that starts 1 hour from now and lasts 1 hour
+    now = datetime.datetime.utcnow()
+    start = now + datetime.timedelta(hours=1)
+    end = start + datetime.timedelta(hours=1)
+    summary = "Test Meeting"
+    description = "This is a test meeting created via the Google Calendar API."
+    attendees = ["zhangnuoxi24@gmail.com"] 
+
+    event = calendar_client.create_event(summary, description, start, end, attendees)
+    if event:
+        print("Event created successfully!")
+    else:
+        print("Failed to create event.")
