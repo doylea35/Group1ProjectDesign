@@ -168,7 +168,7 @@ class GoogleCalendarService:
                 body=event,
                 sendUpdates="all"  # Sends invitations to attendees
             ).execute()
-            print("Event created successfully:", event_result.get("htmlLink"))
+            print("Event created successfully")
             return event_result
         except Exception as e:
             print("Error creating event:", e)
