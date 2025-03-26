@@ -38,6 +38,7 @@ def _task_serial(task: dict) -> Task:
         "priority": task["priority"],    
         "labels": task.get("labels", []), 
         "comments": task.get("comments", [])  
+    }
 
 def _subteam_serial(subteam: dict) -> SubTeam:
     return {
