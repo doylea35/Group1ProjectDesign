@@ -15,10 +15,11 @@ import ProjectSettingsPage from "./pages/ProjectSettingsPage";
 import ProjectFilesPage from "./pages/FilePage";
 import axios from "axios";
 
-// axios.defaults.baseURL = "https://group-grade-backend-5f919d63857a.herokuapp.com";
-// axios.defaults.baseURL = "http://127.0.0.1:8000";
+
+//axios.defaults.baseURL = "http://127.0.0.1:8000";
 // uncomment the following if you want to the frontend to point to the local frontend
 axios.defaults.baseURL = "https://group-grade-backend-5f919d63857a.herokuapp.com";
+
 function App() {
   return (
     <Routes>

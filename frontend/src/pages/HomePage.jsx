@@ -59,25 +59,38 @@ export default function HomePage() {
   const [projects, setProjects] = useState({});
   const [activeTaskId, setActiveTaskId] = useState(null);
 
+  // Label filter from hugh/HEAD
+  const [labelFilter, setLabelFilter] = useState("");
+
+  // Fetch tasks (assigned to user) once
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
-        if (!user || !user.token) {
+        if (!user?.token) {
           setError("User not authenticated.");
           setLoading(false);
           return;
         }
 
-        const response = await axios.get(`/tasks/`, {
+        // GET /tasks?assigned_to=user.email
+        const response = await axios.get("/tasks/", {
           headers: { Authorization: `Bearer ${user.token}` },
           params: { assigned_to: user.email },
         });
 
         if (response.data) {
-          const sortedTasks = response.data.sort(
-            (a, b) => new Date(a.due_date) - new Date(b.due_date)
-          );
+          // Priority-based sorting from hugh
+          const priorityOrder = { High: 0, Medium: 1, Low: 2 };
+          const sortedTasks = response.data.sort((a, b) => {
+            const prioA = priorityOrder[a.priority] ?? 999;
+            const prioB = priorityOrder[b.priority] ?? 999;
+            if (prioA !== prioB) {
+              return prioA - prioB;
+            }
+            return new Date(a.due_date) - new Date(b.due_date);
+          });
+
           setTasks(sortedTasks);
         } else {
           setError("No tasks found.");
@@ -93,13 +106,14 @@ export default function HomePage() {
     fetchTasks();
   }, []);
 
+  // Fetch project info (for project names) once
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
-        if (!user || !user.token) return;
+        if (!user?.token) return;
 
-        const response = await axios.get(`/api/group/`, {
+        const response = await axios.get("/api/group/", {
           headers: { Authorization: `Bearer ${user.token}` },
         });
 
@@ -122,22 +136,57 @@ export default function HomePage() {
     setActiveTaskId((prev) => (prev === taskId ? null : taskId));
   };
 
+  // Parse typed labels (comma-separated)
+  const desiredLabels = labelFilter
+    .split(",")
+    .map((lbl) => lbl.trim())
+    .filter((lbl) => lbl !== "");
+
+  function labelsMatch(taskLabels, wanted) {
+    if (!wanted.length) return true; // no filter => all tasks
+    return wanted.some((lbl) => taskLabels?.includes(lbl));
+  }
+
+  // Filter tasks by label
+  const filteredTasks = tasks.filter((task) =>
+    labelsMatch(task.labels || [], desiredLabels)
+  );
+
   if (loading) return <p>Loading tasks...</p>;
   if (error) return <p className="error-message">{error}</p>;
 
-  const todoTasks = tasks.filter((task) => task.status === "To Do");
-  const inProgressTasks = tasks.filter((task) => task.status === "In Progress");
-  const completedTasks = tasks.filter((task) => task.status === "Completed");
+  // Build separate lists for columns (based on HEAD)
+  const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
+  const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
+  const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
 
-  const totalTasks = tasks.length;
+  // For stats bar, we use the number of *filtered* tasks or you could use tasks.length if you prefer
+  const totalTasks = filteredTasks.length;
   const completedCount = completedTasks.length;
 
   return (
     <div className="page-container">
       <PageHeader title="Home" />
 
+      {/* Stats bar (from main) */}
       <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
 
+      {/* Label filter input (from hugh) */}
+      <div style={{ margin: "1rem 0" }}>
+        <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
+          Filter by labels (comma-separated):
+        </label>
+        <input
+          id="labelFilter"
+          type="text"
+          value={labelFilter}
+          onChange={(e) => setLabelFilter(e.target.value)}
+          placeholder="e.g. urgent, midterm, meeting"
+          style={{ width: "300px" }}
+        />
+      </div>
+
+      {/* Kanban columns (from main, integrated with HEAD) */}
       <div className="task-columns-wrapper">
         <div className="task-columns">
           {/* TO DO */}
@@ -153,8 +202,7 @@ export default function HomePage() {
                   >
                     <h4 className="task-title">{task.name}</h4>
                     <p className="task-meta">
-                      <strong>Project:</strong>{" "}
-                      {projects[task.group] || "Unknown Project"}
+                      <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
                     </p>
                     {activeTaskId === task._id && (
                       <p className="task-description">
@@ -185,8 +233,7 @@ export default function HomePage() {
                   >
                     <h4 className="task-title">{task.name}</h4>
                     <p className="task-meta">
-                      <strong>Project:</strong>{" "}
-                      {projects[task.group] || "Unknown Project"}
+                      <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
                     </p>
                     {activeTaskId === task._id && (
                       <p className="task-description">
@@ -217,8 +264,7 @@ export default function HomePage() {
                   >
                     <h4 className="task-title">{task.name}</h4>
                     <p className="task-meta">
-                      <strong>Project:</strong>{" "}
-                      {projects[task.group] || "Unknown Project"}
+                      <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
                     </p>
                     {activeTaskId === task._id && (
                       <p className="task-description">

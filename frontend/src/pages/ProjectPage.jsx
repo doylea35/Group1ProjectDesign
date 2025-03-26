@@ -5,8 +5,9 @@ import CreateSubteam from "../components/CreateSubteam";
 import CreateTask from "../components/CreateTask";
 import axios from "axios";
 import "../App.css";
-import ProjectNavigation from "../components/ProjectNavigator"; 
+import ProjectNavigation from "../components/ProjectNavigator";
 
+// Subcomponent to show stats at top
 function StatsBar({ totalTasks, completedTasks }) {
   const progressPercent =
     totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -59,12 +60,18 @@ function StatsBar({ totalTasks, completedTasks }) {
 function ProjectPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
+
+  // Project name, tasks, and error states
   const [projectName, setProjectName] = useState("");
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState([]);
   const [error, setError] = useState("");
-  const [activeTaskId, setActiveTaskId] = useState(null); 
+  const [activeTaskId, setActiveTaskId] = useState(null);
 
+  // NEW (from hugh): label filter
+  const [labelFilter, setLabelFilter] = useState("");
+
+  // Fetch project name from localStorage
   useEffect(() => {
     const projectFromStorage = JSON.parse(localStorage.getItem("selectedProject"));
     if (projectFromStorage && projectFromStorage._id === projectId) {
@@ -75,23 +82,35 @@ function ProjectPage() {
     }
   }, [projectId]);
 
+  // Fetch tasks for this project
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
-        if (!user || !user.token) {
+        if (!user?.token) {
           setError("User not authenticated.");
           setLoading(false);
           return;
         }
-        const response = await axios.get(`/tasks/`, {
+
+        const response = await axios.get("/tasks/", {
           headers: { Authorization: `Bearer ${user.token}` },
         });
 
         if (response.data) {
+          // Priority-based sorting from hugh
+          const priorityOrder = { High: 0, Medium: 1, Low: 2 };
           const projectTasks = response.data
             .filter((task) => task.group === projectId)
-            .sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+            .sort((a, b) => {
+              const prioA = priorityOrder[a.priority] ?? 999;
+              const prioB = priorityOrder[b.priority] ?? 999;
+              if (prioA !== prioB) {
+                return prioA - prioB; // Higher priority first
+              }
+              return new Date(a.due_date) - new Date(b.due_date);
+            });
+
           setTasks(projectTasks);
         } else {
           setError("No tasks found.");
@@ -104,23 +123,45 @@ function ProjectPage() {
       }
     };
 
-    fetchTasks();
+    if (projectId) {
+      fetchTasks();
+    }
   }, [projectId]);
 
   if (loading) return <p>Loading project...</p>;
   if (error) return <p className="error-message">{error}</p>;
 
+  // Toggle expand/collapse of a single task's description
   const toggleTaskDescription = (taskId) => {
     setActiveTaskId((prev) => (prev === taskId ? null : taskId));
   };
 
-  const todoTasks = tasks.filter((task) => task.status === "To Do");
-  const inProgressTasks = tasks.filter((task) => task.status === "In Progress");
-  const completedTasks = tasks.filter((task) => task.status === "Completed");
+  // Label filter logic
+  const desiredLabels = labelFilter
+    .split(",")
+    .map((lbl) => lbl.trim())
+    .filter((lbl) => lbl !== "");
 
-  const totalTasks = tasks.length;
+  function labelsMatch(taskLabels, wanted) {
+    if (!wanted.length) return true; // no filter => match all
+    return wanted.some((label) => taskLabels?.includes(label));
+  }
+
+  // Apply label-based filtering
+  const filteredTasks = tasks.filter((task) =>
+    labelsMatch(task.labels || [], desiredLabels)
+  );
+
+  // Separate tasks by status for columns
+  const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
+  const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
+  const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
+
+  // For stats bar
+  const totalTasks = filteredTasks.length;
   const completedCount = completedTasks.length;
 
+  // For subteam creation & task creation
   const handleCreateSubteam = (subteamName, members) => {
     alert(
       `Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(", ")}`
@@ -128,25 +169,42 @@ function ProjectPage() {
   };
 
   const handleCreateTask = () => {
-    // Additional logic if needed.
+    // Additional logic if needed
   };
 
   return (
     <div className="project-page-container">
+      {/* Page Header & Stats */}
       <PageHeader title={projectName} />
       <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
       <ProjectNavigation projectId={projectId} />
 
-
+      {/* Buttons for subteam & task creation */}
       <div className="button-container">
         <CreateSubteam projectName={projectName} onCreate={handleCreateSubteam} />
         <CreateTask projectName={projectName} projectId={projectId} onCreate={handleCreateTask} />
       </div>
 
+      {/* Label Filter input (from hugh) */}
+      <div style={{ margin: "1rem 0" }}>
+        <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
+          Filter by labels (comma-separated):
+        </label>
+        <input
+          id="labelFilter"
+          type="text"
+          value={labelFilter}
+          onChange={(e) => setLabelFilter(e.target.value)}
+          placeholder="e.g. urgent, design, homework"
+          style={{ width: "300px" }}
+        />
+      </div>
+
+      {/* Task Columns */}
       <div className="task-columns-wrapper">
-      <h4 className="taskboard-title">Group Taskboard</h4>
+        <h4 className="taskboard-title">Group Taskboard</h4>
         <div className="task-columns">
-          {/* TO DO */}
+          {/* TO DO Column */}
           <div className="task-column to-do">
             <h3 className="column-title">To Do</h3>
             <div className="task-items">
@@ -174,7 +232,7 @@ function ProjectPage() {
             </div>
           </div>
 
-          {/* IN PROGRESS */}
+          {/* IN PROGRESS Column */}
           <div className="task-column in-progress">
             <h3 className="column-title">In Progress</h3>
             <div className="task-items">
@@ -202,7 +260,7 @@ function ProjectPage() {
             </div>
           </div>
 
-          {/* COMPLETED */}
+          {/* COMPLETED Column */}
           <div className="task-column completed">
             <h3 className="column-title">Completed</h3>
             <div className="task-items">

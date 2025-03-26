@@ -30,15 +30,17 @@ class Group(BaseModel): #_id as Primary key, automatically created, can be found
     tasks: Optional[List[str]] = None # List of Foreign Keys referencing Task.id
     pending_members:Optional[List[str]] =[]
 
-class Task(BaseModel): #_id as Primary key, automatically created, can be found using ObjectID
-    assigned_to: List[str]  # List of foreign keys referencing User.email
+class Task(BaseModel):
+    assigned_to: List[str]         # List of foreign keys referencing User.email
     name: str
     description: str
     due_date: str
-    status: str # ["To Do", "In Progress", "Completed"]
-    group: str # Foreign Key referencing Group.id
-    priority: str # ["Low", "Medium", "High"]
-    comments: Optional[List[Comment]] = []  # field for comments
+    status: str                    # ["To Do", "In Progress", "Completed"]
+    group: str                     # Foreign Key referencing Group.id
+    priority: str                  # ["Low", "Medium", "High"]
+    labels: Optional[List[str]] = []   # array of labels, optional 
+    comments: Optional[List[Comment]] = []  # field for comments 
+
 
 class SubTeam(BaseModel): #_id as Primary key, automatically created, can be found using ObjectID
     id: Optional[str] = Field(alias="_id", default=None)

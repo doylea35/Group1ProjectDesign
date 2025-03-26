@@ -11,9 +11,12 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
   const [selectedSubteams, setSelectedSubteams] = useState([]);
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [errors, setErrors] = useState({});
-  const [members, setMembers] = useState([]); // Members will be fetched from backend
+  const [members, setMembers] = useState([]); 
+  const [taskPriority, setTaskPriority] = useState("Medium");
+  const [subteams, setSubteams] = useState([]);
 
-  const subteams = ["Research", "Design"];
+  // NEW: Text input for comma-separated labels
+  const [labelString, setLabelString] = useState("");
 
   useEffect(() => {
     console.log("CreateTask component mounted. Checking projectId:", projectId);
@@ -27,8 +30,6 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
         }
 
         console.log("Fetching all groups for the user...");
-
-        // Fetch all groups
         const response = await axios.get("/api/group/", {
           headers: { Authorization: `Bearer ${user.token}` }
         });
@@ -36,7 +37,6 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
         console.log("API Response:", response.data);
 
         if (response.data?.data) {
-          // Find the project with matching projectId
           const project = response.data.data.find(p => p._id === projectId);
 
           if (project) {
@@ -53,10 +53,41 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
       }
     };
 
+    const fetchSubteams = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || !user.token) {
+          console.error("User not authenticated.");
+          return;
+        }
+
+        console.log("Fetching subteams for project:", projectId);
+
+        const subteamRes = await axios.get("/subteam/getSubteamsByGroup", {
+          headers: { Authorization: `Bearer ${user.token}` },
+          params: { group_id: projectId }
+        });
+
+        console.log("Subteam API response:", subteamRes.data);
+
+        const returnedData = subteamRes.data?.data?.subteams;
+        if (Array.isArray(returnedData)) {
+          const subteamNames = returnedData.map((st) => st.team_name);
+          setSubteams(subteamNames);
+          console.log("Subteams set:", subteamNames);
+        } else {
+          console.error("No subteams field found in response:", subteamRes.data);
+        }
+      } catch (error) {
+        console.error("Error fetching subteams:", error);
+      }
+    };
+
     if (projectId) {
       fetchMembers();
+      fetchSubteams();
     } else {
-      console.warn("Project ID is missing, not fetching members.");
+      console.warn("Project ID is missing, not fetching members/subteams.");
     }
   }, [projectId]);
 
@@ -85,15 +116,22 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
       return;
     }
 
+    // NEW: Parse comma-separated labels into an array
+    const labelsArray = labelString
+      .split(",")
+      .map(lbl => lbl.trim())
+      .filter(lbl => lbl !== "");
+
     const taskData = {
       name: taskName,
       description: taskDescription,
       due_date: dueDate,
-      assigned_to: selectedMembers[0] || "", // Assign to the first selected member (if any)
+      assigned_to: selectedMembers,
       group: projectId,
-      subteams: selectedSubteams, // Ensure this is included
+      subteams: selectedSubteams,
       status: "To Do",
-      priority: "Medium"
+      priority: taskPriority,
+      labels: labelsArray, // <--- includes user-typed labels
     };
 
     try {
@@ -115,11 +153,11 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
       setTaskName("");
       setTaskDescription("");
       setDueDate("");
-      setSelectedSubteams([]);  // Reset selected subteams
+      setSelectedSubteams([]);
       setSelectedMembers([]);
+      setLabelString(""); // Clear labels
       setErrors({});
 
-      // Call parent's onCreate callback if provided
       if (onCreate) {
         onCreate();
       }
@@ -185,6 +223,33 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
               {errors.dueDate && <p className="error-message">{errors.dueDate}</p>}
             </fieldset>
 
+            {/* Task Priority */}
+            <fieldset className="Fieldset">
+              <label className="Label" htmlFor="task-priority">Task Priority:</label>
+              <select
+                className="Input"
+                id="task-priority"
+                value={taskPriority}
+                onChange={(e) => setTaskPriority(e.target.value)}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </fieldset>
+
+            {/* NEW: Labels (comma-separated) */}
+            <fieldset className="Fieldset">
+              <label className="Label" htmlFor="task-labels">Labels (comma-separated):</label>
+              <input
+                className="Input"
+                id="task-labels"
+                type="text"
+                value={labelString}
+                onChange={(e) => setLabelString(e.target.value)}
+              />
+            </fieldset>
+
             {/* Subteam Selection */}
             <div className="selection-container">
               <p className="selection-title">Assign to Subteams:</p>
@@ -193,7 +258,9 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
                   <button
                     type="button"
                     key={subteam}
-                    className={`task-toggle-button ${selectedSubteams.includes(subteam) ? "selected" : ""}`}
+                    className={`task-toggle-button ${
+                      selectedSubteams.includes(subteam) ? "selected" : ""
+                    }`}
                     onClick={() => toggleSubteam(subteam)}
                   >
                     {subteam}
@@ -210,7 +277,9 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
                   <button
                     type="button"
                     key={member}
-                    className={`task-toggle-button ${selectedMembers.includes(member) ? "selected" : ""}`}
+                    className={`task-toggle-button ${
+                      selectedMembers.includes(member) ? "selected" : ""
+                    }`}
                     onClick={() => toggleMember(member)}
                   >
                     {member}
