@@ -37,3 +37,12 @@ class UpdateUserFreeTimeRequest(BaseModel):
 class GetOverlappingTimeSlotRequest(BaseModel):
     free_time_slots : Optional[list[Dict[str, List[FreeTimeSlot]]]] = Field(default=[], description="A list of free time slot dictionary, i.e. the free slots of each person in the group")
     group_id: str
+    
+    
+class SendCalendarInvitationRequest(BaseModel):
+    day : str # Monday - Sunday
+    start : str # 00:00 - 23:59
+    end : str # 00:00 - 23:59
+    attendees : list[str] # list of emails (doesnt need to include the organizer's email)
+    summary : Optional[str] = None
+    description : Optional[str] = None

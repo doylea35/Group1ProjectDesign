@@ -143,23 +143,22 @@ class GoogleCalendarService:
         # print("Next Monday end datetime:", end_dt)
 
 
-    def create_event(self, summary: str, description: str, start_datetime: datetime.datetime,
-                     end_datetime: datetime.datetime, attendees: list = []):
+    def create_event(self, summary: str, description: str, start_datetime: datetime.datetime, end_datetime: datetime.datetime, attendees: list = []):
         event = {
             "summary": summary,
             "description": description,
             "start": {
                 "dateTime": start_datetime.isoformat(),
-                "timeZone": "IST"  
+                "timeZone": "UTC+01:00"  
             },
             "end": {
                 "dateTime": end_datetime.isoformat(),
-                "timeZone": "IST"
+                "timeZone": "UTC+01:00"
             },
             "attendees": [{"email": email} for email in attendees],
             "reminders": {"useDefault": True},
             "recurrence": [
-                    "RRULE:FREQ=WEEKLY;"
+                    "RRULE:FREQ=WEEKLY;COUNT=12"
             ]
         }
 
@@ -175,28 +174,31 @@ class GoogleCalendarService:
             print("Error creating event:", e)
             return None
 
-if __name__ == "__main__":
-    calendar_client = GoogleCalendarService()
+google_calendar_client = GoogleCalendarService()
 
-    # Create a sample event that starts 1 hour from now and lasts 1 hour
-    # now = datetime.datetime.utcnow()
-    # start = now + datetime.timedelta(hours=1)
-    # end = start + datetime.timedelta(hours=1)
-    summary = "Test Meeting"
-    description = "This is a test meeting created via the Google Calendar API."
-    attendees = ["zhangnuoxi24@gmail.com"] 
+
+# if __name__ == "__main__":
+#     calendar_client = GoogleCalendarService()
+
+#     # Create a sample event that starts 1 hour from now and lasts 1 hour
+#     # now = datetime.datetime.utcnow()
+#     # start = now + datetime.timedelta(hours=1)
+#     # end = start + datetime.timedelta(hours=1)
+#     summary = "Test Meeting"
+#     description = "This is a test meeting created via the Google Calendar API."
+#     attendees = ["zhangnuoxi24@gmail.com"] 
     
     
-    data = {"start": "22:00", "end": "23:30"}
-    day_input = "Wednesday"
+#     data = {"start": "23:00", "end": "23:30"}
+#     day_input = "Wednesday"
 
-    start_dt, end_dt = calendar_client.get_next_weekday_datetime(day_input, data["start"], data["end"])
-    print("Next Monday start datetime:", start_dt)
-    print("Next Monday end datetime:", end_dt)
+#     start_dt, end_dt = calendar_client.get_next_weekday_datetime(day_input, data["start"], data["end"])
+#     print("Next Monday start datetime:", start_dt)
+#     print("Next Monday end datetime:", end_dt)
 
 
-    # event = calendar_client.create_event(summary, description, start, end, attendees)
-    # if event:
-    #     print("Event created successfully!")
-    # else:
-    #     print("Failed to create event.")
+#     event = calendar_client.create_event(summary, description, start_dt, end_dt, attendees)
+#     if event:
+#         print("Event created successfully!")
+#     else:
+#         print("Failed to create event.")
