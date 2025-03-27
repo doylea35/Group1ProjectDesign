@@ -7,6 +7,7 @@ def _user_serial(user: dict) -> User:
         email=user["email"],
         name=user["name"],
         groups=[str(group_id) for group_id in user.get("groups", []) or []],  # Ensure it's a list
+        skills=[str(skill) for skill in user.get("skills", []) or []],  # Ensure it's a list
         free_time={
             day: [{"start": slot["start"], "end": slot["end"]} for slot in (slots or [])]
             for day, slots in (user.get("free_time", {}) or {}).items()  # Ensure it's a dict

@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import os
 from email_service.email_utils import email_sender
 from pydantic import BaseModel
+from pymongo import ReturnDocument
 
 # Load environment variables
 load_dotenv()
@@ -92,7 +93,8 @@ async def register_user(request : UserRegisterRequest):
         "status": "Pending",
         "confirmation_code": confirmation_code,
         "groups":valid_group_ids,
-        "free_time": {}
+        "free_time": {},
+        "skills": request.skills
     }
 
     result = users_collection.insert_one(new_user)
@@ -196,14 +198,16 @@ async def delete_user(request : DeleteUserRequest):
 @user_router.put("/updateUser", status_code=status.HTTP_201_CREATED)
 async def update_user(request : UpdateUserRequest):
     # Check if user exists
-    if not users_collection.find_one({"email": request.email}):
+    user = users_collection.find_one({"email": request.email})
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"User with email {request.email} does not exist."
-            )
-    
+        )
+
     updated_fields = {}
-    user_skills = users_collection.find_one({"email": request.email})["skills"]
+    user_skills = user.get("skills", []) # Default to an empty list if "skills" is missing
+    updated_fields["skills"] = list(set(user_skills))
     
     # Check if user wants to update their name
     if request.new_name:
@@ -215,23 +219,24 @@ async def update_user(request : UpdateUserRequest):
     
     # Check if user wants to remove skills
     if request.remove_skills:
-        updated_fields["skills"] = list(set(user_skills) - set(request.remove_skills))
+        updated_fields["skills"] = list(set(updated_fields["skills"]) - set(request.remove_skills))
 
     # Update user
-    updated_user = users_collection.update_one(
+    updated_user = users_collection.find_one_and_update(
         {"email": request.email},
         {"$set": updated_fields},
-        return_document=True
+        return_document=ReturnDocument.AFTER
     )
 
     if not updated_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Failed to update user with email {request.email}"
-            )
+        )
 
-    return {"message":"User updated successfully", "data":updated_user}
+    updated_user["_id"] = str(updated_user["_id"])
 
+    return {"message": "User updated successfully", "data": updated_user}
 
 
 REGISTRATION_CONFIRMATION_EMAIL_TEMPLATE = """<!DOCTYPE html>

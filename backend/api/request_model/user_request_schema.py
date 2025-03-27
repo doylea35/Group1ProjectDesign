@@ -5,6 +5,7 @@ class CreateUserRequest(BaseModel):
     email: str
     name: str
     groups: Optional[List[str]] = None
+    skills: Optional[List[str]] = None
 
 class DeleteUserRequest(BaseModel):
     email: str
@@ -20,6 +21,7 @@ class UserRegisterRequest(BaseModel):
     email: str
     password: str
     groups: list[str]
+    skills: list[str]
 
 class UserLoginRequest(BaseModel):
     email: str

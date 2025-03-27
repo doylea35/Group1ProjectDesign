@@ -17,6 +17,7 @@ class User(BaseModel):
     email: str # Primary Key ; en un futur plantejar fer-ho amb EmailStr, requerreix email validator
     name: str
     groups: Optional[List[str]] = [] # List of Foreign Keys referencing Group.id
+    skills: Optional[List[str]] = [] # List of skills
     free_time: Optional[Dict[str, List[FreeTimeSlot]]] = {} # optional free_time, by default is {}
     password: Optional[str]
     token: Optional[str]
