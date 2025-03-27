@@ -14,35 +14,6 @@ from email_service.email_utils import email_sender
 from pydantic import BaseModel
 from pymongo import ReturnDocument
 
-
-import openai
-from api.request_model.user_request_schema import GetSkillsCVRequest
-from dotenv import load_dotenv
-import boto3
-from botocore.exceptions import NoCredentialsError
-from db.database import files_collection
-import datetime
-from dotenv import load_dotenv
-from fastapi import File, UploadFile
-
-# Load environment variables
-load_dotenv()
-
-AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
-AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
-AWS_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
-AWS_REGION = os.getenv("AWS_REGION")
-
-s3_client = boto3.client(
-    "s3",
-    aws_access_key_id=AWS_ACCESS_KEY,
-    aws_secret_access_key=AWS_SECRET_KEY,
-    region_name=AWS_REGION
-)
-
-# Set OpenAI API key
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
 # Load environment variables
 load_dotenv()
 JWT_SECRET = os.getenv("JWT_SECRET", "your_jwt_secret")
