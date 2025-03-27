@@ -207,6 +207,7 @@ async def update_user(request : UpdateUserRequest):
 
     updated_fields = {}
     user_skills = user.get("skills", []) # Default to an empty list if "skills" is missing
+    updated_fields["skills"] = list(set(user_skills))
     
     # Check if user wants to update their name
     if request.new_name:
