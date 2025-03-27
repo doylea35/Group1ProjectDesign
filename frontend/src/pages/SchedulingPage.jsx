@@ -35,7 +35,6 @@ const SchedulingPage = () => {
       return;
     }
     fetchFreeTimes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]); 
 
   const fetchFreeTimes = async () => {
@@ -78,7 +77,6 @@ const SchedulingPage = () => {
     }
   };
 
-  // Format free times and include owner's email for comparison
   const formatFreeTimes = (data) => {
     const daysOfWeek = [
       "Monday",
@@ -120,7 +118,6 @@ const SchedulingPage = () => {
     return formattedData;
   };
 
-  // Function to handle deletion of a free time slot (only for current user)
   const handleDeleteSlot = async (day, slot) => {
     try {
       await axios.put(
@@ -136,7 +133,6 @@ const SchedulingPage = () => {
           },
         }
       );
-      // Refresh the free times schedule after deletion
       fetchFreeTimes();
     } catch (error) {
       console.error("Error deleting free time slot:", error);

@@ -12,7 +12,9 @@ function ProjectFilesPage() {
   const [filesLoading, setFilesLoading] = useState(true);
   const [error, setError] = useState("");
   const [files, setFiles] = useState([]);
+  const fileInputRef = useRef(null);
 
+  // Load project name from local storage if available
   useEffect(() => {
     const projectFromStorage = JSON.parse(localStorage.getItem("selectedProject"));
     if (projectFromStorage && projectFromStorage._id === projectId) {
@@ -23,12 +25,7 @@ function ProjectFilesPage() {
     }
   }, [projectId]);
 
-  const fileInputRef = useRef(null);
-
-  const handleClick = () => {
-    fileInputRef.current.click();
-  };
-
+  // Fetch the list of files for the group/project
   const fetchFiles = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user || !user.token) {
@@ -59,20 +56,23 @@ function ProjectFilesPage() {
     fetchFiles();
   }, [projectId]);
 
+  // Trigger file input when upload container is clicked
+  const handleClick = () => {
+    fileInputRef.current.click();
+  };
+
+  // Upload file handler
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user || !user.token) {
       setError("User not authenticated. Please log in first.");
       setLoading(false);
       return;
     }
-
     const formData = new FormData();
     formData.append("file", file);
-
     try {
       const response = await axios.post(
         `https://group-grade-backend-5f919d63857a.herokuapp.com/api/files/upload?group_id=${projectId}`,
@@ -115,7 +115,7 @@ function ProjectFilesPage() {
     }
   };
 
-    // Called when user clicks the "Download" icon/button
+  // Download file by getting a pre-signed URL from backend
   const handleDownload = async (file) => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -123,33 +123,22 @@ function ProjectFilesPage() {
         setError("User not authenticated.");
         return;
       }
-
-      // The filename in your DB (e.g., "testing file metadata.txt")
+      // Use the filename from the DB; encode in case of spaces/special characters
       const filename = file.filename;
-      // Encode in case of spaces or special chars
       const encodedFilename = encodeURIComponent(filename);
-
-      // Construct the exact URL your backend expects
+      // Construct URL for presigned URL retrieval
       const url = `https://group-grade-backend-5f919d63857a.herokuapp.com/api/files/${encodedFilename}?group_id=${projectId}`;
-
-      // Make the request with the user's JWT token
       const response = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${user.token}`
-        }
+        headers: { Authorization: `Bearer ${user.token}` }
       });
-
-      // If found, your backend returns: { "presigned_url": "..." }
       const presignedUrl = response.data.presigned_url;
-
-      // Open that presigned URL to trigger the download
+      // Open presigned URL in a new tab for download
       window.open(presignedUrl, "_blank");
     } catch (err) {
       console.error("Download error:", err);
       setError(err.response ? err.response.data.detail : err.message);
     }
   };
-
 
   if (loading) {
     return <div>Loading project...</div>;
@@ -192,6 +181,7 @@ function ProjectFilesPage() {
                 <div className="file-info">
                   <div className="file-name">{file.filename || file.name}</div>
                   <div className="file-actions">
+                    {/* View File: Opens the file URL directly */}
                     <a
                       href={file.file_url}
                       target="_blank"
@@ -204,6 +194,7 @@ function ProjectFilesPage() {
                         alt="View"
                       />
                     </a>
+                    {/* Download File: Retrieves pre-signed URL from backend */}
                     <a
                       href="#"
                       onClick={(e) => {
