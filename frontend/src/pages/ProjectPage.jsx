@@ -6,6 +6,7 @@ import CreateTask from "../components/CreateTask";
 import axios from "axios";
 import "../App.css";
 import ProjectNavigation from "../components/ProjectNavigator";
+import TaskDetailsModal from "../components/TaskDetailsModal";
 
 // Subcomponent to show stats at top
 function StatsBar({ totalTasks, completedTasks }) {
@@ -60,6 +61,8 @@ function StatsBar({ totalTasks, completedTasks }) {
 function ProjectPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const [showModal, setShowModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
 
   // Project name, tasks, and error states
   const [projectName, setProjectName] = useState("");
@@ -152,6 +155,16 @@ function ProjectPage() {
     labelsMatch(task.labels || [], desiredLabels)
   );
 
+  const openTaskDetails = (task) => {
+    setSelectedTask(task);
+    setShowModal(true);
+  };
+
+  const closeTaskDetails = () => {
+    setShowModal(false);
+    setSelectedTask(null);
+  };
+
   // Separate tasks by status for columns
   const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
   const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
@@ -213,7 +226,8 @@ function ProjectPage() {
                   <div
                     key={task._id}
                     className="task-card"
-                    onClick={() => toggleTaskDescription(task._id)}
+                    //onClick={() => toggleTaskDescription(task._id)}
+                    onClickCapture={() => openTaskDetails(task)}
                   >
                     <h4 className="task-title">{task.name}</h4>
                     {activeTaskId === task._id && (
@@ -289,6 +303,11 @@ function ProjectPage() {
           </div>
         </div>
       </div>
+      <TaskDetailsModal
+        visible={showModal}
+        onClose={closeTaskDetails}
+        task={selectedTask}
+      />
     </div>
   );
 }

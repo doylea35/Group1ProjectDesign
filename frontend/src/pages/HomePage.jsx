@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import axios from "axios";
 import "../App.css";
+import TaskDetailsModal from "../components/TaskDetailsModal";
 
 function StatsBar({ totalTasks, completedTasks }) {
   const progressPercent =
@@ -58,6 +59,9 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [projects, setProjects] = useState({});
   const [activeTaskId, setActiveTaskId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+
 
   // Label filter from hugh/HEAD
   const [labelFilter, setLabelFilter] = useState("");
@@ -152,6 +156,16 @@ export default function HomePage() {
     labelsMatch(task.labels || [], desiredLabels)
   );
 
+  const openTaskDetails = (task) => {
+    setSelectedTask(task);
+    setShowModal(true);
+  }
+
+  const closeTaskDetails = () => {
+    setShowModal(false);
+    setSelectedTask(null);
+  }
+
   if (loading) return <p>Loading tasks...</p>;
   if (error) return <p className="error-message">{error}</p>;
 
@@ -198,7 +212,8 @@ export default function HomePage() {
                   <div
                     key={task._id}
                     className="task-card"
-                    onClick={() => toggleTaskDescription(task._id)}
+                    // onClick={() => toggleTaskDescription(task._id)}
+                    onClick={() => openTaskDetails(task)}
                   >
                     <h4 className="task-title">{task.name}</h4>
                     <p className="task-meta">
@@ -283,6 +298,11 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+      <TaskDetailsModal
+          visible={showModal}
+          onClose={closeTaskDetails}
+          task={selectedTask}
+      />
     </div>
   );
 }
