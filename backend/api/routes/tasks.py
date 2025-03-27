@@ -207,16 +207,15 @@ TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
             box-sizing: border-box;
         }}
         .task-name {{
-            font-size: 22px; /* Made bigger */
+            font-size: 24px; /* Made bigger */
             font-weight: bold;
             color: #333;
-            margin-bottom: 12px; /* Added space below */
+            margin-bottom: 10px; /* Added space below */
         }}
         .task-description {{
             font-size: 16px; /* Kept bigger */
-            font-weight: bold;
-            color: #444;
-            margin-bottom: 20px; /* More space below */
+            color: #555;
+            margin-bottom: 15px; /* More space below */
         }}
         .instruction {{
             font-size: 12px; /* Smaller text */
@@ -252,16 +251,12 @@ TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
             <p>You have been assigned a new task!</p>
             <div class="task-box">
                 <div class="task-name">{task_name}</div>
-                <br> 
                 <br>
                 <div class="task-description">{task_description}</div>
                 <br>
                 <p class="instruction">Click the button below to view and start working on your task.</p>
                 <a href="{task_link}" class="button">View task</a>
             </div>
-        </div>
-        <div class="footer">
-            If you have any questions, please reach out to your groupmates.
         </div>
     </div>
 </body>
