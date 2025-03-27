@@ -26,12 +26,3 @@ class UserRegisterRequest(BaseModel):
 class UserLoginRequest(BaseModel):
     email: str
     password: str
-
-class UploadCVRequest(BaseModel):
-    # upload CV request
-    email: str
-    cv: str
-
-class GetSkillsCVRequest(BaseModel):
-    # get user skills from CV
-    email: str
