@@ -172,13 +172,13 @@ TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Task Assigned</title>
     <style>
-        body {
+        body {{
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
             margin: 0;
             padding: 20px;
-        }
-        .container {
+        }}
+        .container {{
             background-color: #ffffff;
             padding: 20px;
             border-radius: 8px;
@@ -186,18 +186,18 @@ TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
             max-width: 600px;
             margin: auto;
             text-align: center;
-        }
-        .header {
+        }}
+        .header {{
             font-size: 24px;
             font-weight: bold;
             color: #333;
-        }
-        .content {
+        }}
+        .content {{
             font-size: 16px;
             color: #555;
             margin-top: 20px;
-        }
-        .task-box {
+        }}
+        .task-box {{
             border: 2px solid #a463f2;
             border-radius: 12px;
             padding: 20px;
@@ -205,25 +205,25 @@ TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
             display: inline-block;
             width: 100%;
             box-sizing: border-box;
-        }
-        .task-name {
+        }}
+        .task-name {{
             font-size: 22px; /* Made bigger */
             font-weight: bold;
             color: #333;
             margin-bottom: 12px; /* Added space below */
-        }
-        .task-description {
+        }}
+        .task-description {{
             font-size: 16px; /* Kept bigger */
             font-weight: bold;
             color: #444;
             margin-bottom: 20px; /* More space below */
-        }
-        .instruction {
+        }}
+        .instruction {{
             font-size: 12px; /* Smaller text */
             color: #666;
             margin-bottom: 6px; /* Reduced space between instruction and button */
-        }
-        .button {
+        }}
+        .button {{
             display: block;
             width: 150px;
             margin: 0 auto; /* Centered button */
@@ -235,13 +235,13 @@ TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
             border-radius: 8px;
             font-size: 16px;
             font-weight: bold;
-        }
-        .footer {
+        }}
+        .footer {{
             margin-top: 20px;
             font-size: 12px;
             color: #888;
             text-align: center;
-        }
+        }}
     </style>
 </head>
 <body>
@@ -269,7 +269,8 @@ TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
 
 
 frontend_url_dev = os.getenv("FRONTEND_URL_DEV")
-BASE_URL = "{frontend_url}/tasks/{user_email}/{group_id}/{task_id}"
+# BASE_URL = "{frontend_url}/tasks/{user_email}/{group_id}/{task_id}"
+BASE_URL = "{frontend_url}projects/{group_id}"
 
 def send_assigned_task_email(user_email: str, task_name: str, task_description: str, task_id: str, group_id: str, group_name: str):
     # Validate email
@@ -280,7 +281,8 @@ def send_assigned_task_email(user_email: str, task_name: str, task_description: 
     user_email_for_link = user_email if users_collection.find_one({"email": user_email}) else "notRegistered"
 
     # Generate task link
-    task_link = f"{BASE_URL.format(frontend_url=frontend_url_dev, user_email=user_email_for_link, group_id=group_id, task_id=task_id)}"
+    # task_link = f"{BASE_URL.format(frontend_url=frontend_url_dev, user_email=user_email_for_link, group_id=group_id, task_id=task_id)}"
+    task_link = f"{BASE_URL.format(frontend_url=frontend_url_dev, group_id=group_id)}"
 
     # get user
     user = users_collection.find_one({"email": user_email})
