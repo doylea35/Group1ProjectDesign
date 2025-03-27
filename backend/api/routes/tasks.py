@@ -7,15 +7,18 @@ from bson import ObjectId # mongodb uses ObjectId to store _id
 from typing import List
 from datetime import datetime
 from api.request_model.comment_request_schema import AddCommentRequest
-from api.utils import get_current_user  
+from api.utils import get_current_user 
+from api.utils import is_valid_email 
+from email_service.email_utils import email_sender
+import os
 
 
-profiles_router = APIRouter()
+tasks_router = APIRouter()
 
 
 
 # returns all tasks or tasks assigned to a specific user
-@profiles_router.get("/tasks/")
+@tasks_router.get("/tasks/")
 async def get_tasks(assigned_to: Optional[str] = Query(None, description="User email to filter tasks, or blank for all tasks")):
     query = {} if not assigned_to else {"assigned_to": assigned_to}
     tasks = tasks_serial(tasks_collection.find(query))
@@ -23,7 +26,7 @@ async def get_tasks(assigned_to: Optional[str] = Query(None, description="User e
 
 
 #creates task and assigns it to user
-@profiles_router.post("/tasks/")
+@tasks_router.post("/tasks/")
 def create_task(task: Task):
 
     # Check if user exists
@@ -74,6 +77,10 @@ def create_task(task: Task):
         {"$push": {"tasks": str(new_task.inserted_id)}}
     )
 
+    # send email to new user
+    for user in task.assigned_to:
+        send_assigned_task_email(user, task.name, task.description, str(new_task.inserted_id), task.group, assigned_group["name"])
+
     return {
     "id": str(new_task.inserted_id),  
     "message": "task created and assigned successfully",
@@ -81,7 +88,7 @@ def create_task(task: Task):
     }
 
 
-@profiles_router.put("/tasks/assign/")
+@tasks_router.put("/tasks/assign/")
 def assign_task(task_id: str, new_user_email: str):
     # check if task exists
     task = tasks_collection.find_one({"_id": ObjectId(task_id)})
@@ -99,9 +106,12 @@ def assign_task(task_id: str, new_user_email: str):
         {"$addToSet": {"assigned_to": new_user_email}}  # add user to existing list
     )
 
+    # send email to new user
+    send_assigned_task_email(new_user_email, task["name"], task["description"], task_id, task["group"], task["group_name"])
+
     return {"message": "task assigned successfully", "task_id": task_id, "assigned_to": new_user_email}
 
-@profiles_router.put("/tasks/edit/")
+@tasks_router.put("/tasks/edit/")
 def update_task(task_id: str, request_body: dict):
     print(f"Received task_id: {task_id}")
     print(f"Updated fields received: {request_body}")
@@ -135,7 +145,7 @@ def update_task(task_id: str, request_body: dict):
     return {"message": "Task updated successfully", "task_id": task_id, "updated_fields": update_data}
 
 
-@profiles_router.post("/tasks/{task_id}/comments", summary="Add a comment to a task")
+@tasks_router.post("/tasks/{task_id}/comments", summary="Add a comment to a task")
 async def add_comment(task_id: str, comment_request: AddCommentRequest, current_user: dict = Depends(get_current_user)):
     # create the comment object 
     new_comment = {
@@ -154,3 +164,139 @@ async def add_comment(task_id: str, comment_request: AddCommentRequest, current_
         raise HTTPException(status_code=404, detail="Task not found or comment not added")
     
     return {"message": "Comment added successfully", "comment": new_comment}
+
+TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Task Assigned</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }}
+        .container {{
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+        }}
+        .header {{
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }}
+        .content {{
+            font-size: 16px;
+            color: #555;
+            margin-top: 20px;
+        }}
+        .task-box {{
+            border: 2px solid #a463f2;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+        }}
+        .task-name {{
+            font-size: 24px; /* Made bigger */
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px; /* Added space below */
+        }}
+        .task-description {{
+            font-size: 16px; /* Kept bigger */
+            color: #555;
+            margin-bottom: 15px; /* More space below */
+        }}
+        .instruction {{
+            font-size: 12px; /* Smaller text */
+            color: #666;
+            margin-bottom: 6px; /* Reduced space between instruction and button */
+        }}
+        .button {{
+            display: block;
+            width: 150px;
+            margin: 0 auto; /* Centered button */
+            padding: 12px;
+            text-align: center;
+            background-color: #a463f2;
+            color: #FFFFFF;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+        }}
+        .footer {{
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">New Task Assigned: {task_name}</div>
+        <div class="content">
+            <p>Hi {user_name},</p>
+            <p>You have been assigned a new task!</p>
+            <div class="task-box">
+                <div class="task-name">{task_name}</div>
+                <br>
+                <div class="task-description">{task_description}</div>
+                <br>
+                <p class="instruction">Click the button below to view and start working on your task.</p>
+                <a href="{task_link}" class="button">View task</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+
+
+frontend_url_dev = os.getenv("FRONTEND_URL_DEV")
+# BASE_URL = "{frontend_url}/tasks/{user_email}/{group_id}/{task_id}"
+BASE_URL = "{frontend_url}projects/{group_id}"
+
+def send_assigned_task_email(user_email: str, task_name: str, task_description: str, task_id: str, group_id: str, group_name: str):
+    # Validate email
+    if not is_valid_email(user_email):
+        return {"error": "Invalid email format"}
+
+    # Check if the user is registered
+    user_email_for_link = user_email if users_collection.find_one({"email": user_email}) else "notRegistered"
+
+    # Generate task link
+    # task_link = f"{BASE_URL.format(frontend_url=frontend_url_dev, user_email=user_email_for_link, group_id=group_id, task_id=task_id)}"
+    task_link = f"{BASE_URL.format(frontend_url=frontend_url_dev, group_id=group_id)}"
+
+    # get user
+    user = users_collection.find_one({"email": user_email})
+
+    # Format email content with new template
+    email_content = TASK_ASSIGNMENT_EMAIL_TEMPLATE.format(
+        user_name=user["name"],  # Extracting name from email
+        task_name=task_name,
+        task_description=task_description,
+        task_link=task_link
+    )
+
+    # Send email
+    email_sender.send_email(
+        receipient=user_email,
+        email_message=email_content,
+        subject_line=f"New Task Assigned {task_name} from {group_name}"
+    )
+
+    return {"message": "Task assignment email sent successfully", "task_id": task_id, "assigned_to": user_email}
+
+
