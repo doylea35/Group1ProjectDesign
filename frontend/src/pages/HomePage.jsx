@@ -62,7 +62,6 @@ export default function HomePage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
 
-
   // Label filter from hugh/HEAD
   const [labelFilter, setLabelFilter] = useState("");
 
@@ -159,12 +158,12 @@ export default function HomePage() {
   const openTaskDetails = (task) => {
     setSelectedTask(task);
     setShowModal(true);
-  }
+  };
 
   const closeTaskDetails = () => {
     setShowModal(false);
     setSelectedTask(null);
-  }
+  };
 
   if (loading) return <p>Loading tasks...</p>;
   if (error) return <p className="error-message">{error}</p>;
@@ -182,10 +181,10 @@ export default function HomePage() {
     <div className="page-container">
       <PageHeader title="Home" />
 
-      {/* Stats bar (from main) */}
+      {/* Stats bar */}
       <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
 
-      {/* Label filter input (from hugh) */}
+      {/* Label filter input */}
       <div style={{ margin: "1rem 0" }}>
         <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
           Filter by labels (comma-separated):
@@ -200,7 +199,7 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Kanban columns (from main, integrated with HEAD) */}
+      {/* Kanban columns */}
       <div className="task-columns-wrapper">
         <div className="task-columns">
           {/* TO DO */}
@@ -212,12 +211,12 @@ export default function HomePage() {
                   <div
                     key={task._id}
                     className="task-card"
-                    // onClick={() => toggleTaskDescription(task._id)}
                     onClick={() => openTaskDetails(task)}
                   >
                     <h4 className="task-title">{task.name}</h4>
                     <p className="task-meta">
-                      <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                      <strong>Project:</strong>{" "}
+                      {projects[task.group] || "Unknown Project"}
                     </p>
                     {activeTaskId === task._id && (
                       <p className="task-description">
@@ -226,11 +225,19 @@ export default function HomePage() {
                     )}
                     <div className="task-card-footer">
                       <span className="task-date">{task.due_date}</span>
+                      <div className="task-labels">
+                        {task.labels &&
+                          task.labels.map((label, index) => (
+                            <span key={index} className="task-label">
+                              {label}
+                            </span>
+                          ))}
+                      </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <p></p>
+                <p>No tasks in this column.</p>
               )}
             </div>
           </div>
@@ -248,7 +255,8 @@ export default function HomePage() {
                   >
                     <h4 className="task-title">{task.name}</h4>
                     <p className="task-meta">
-                      <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                      <strong>Project:</strong>{" "}
+                      {projects[task.group] || "Unknown Project"}
                     </p>
                     {activeTaskId === task._id && (
                       <p className="task-description">
@@ -257,11 +265,19 @@ export default function HomePage() {
                     )}
                     <div className="task-card-footer">
                       <span className="task-date">{task.due_date}</span>
+                      <div className="task-labels">
+                        {task.labels &&
+                          task.labels.map((label, index) => (
+                            <span key={index} className="task-label">
+                              {label}
+                            </span>
+                          ))}
+                      </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <p></p>
+                <p>No tasks in this column.</p>
               )}
             </div>
           </div>
@@ -279,7 +295,8 @@ export default function HomePage() {
                   >
                     <h4 className="task-title">{task.name}</h4>
                     <p className="task-meta">
-                      <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                      <strong>Project:</strong>{" "}
+                      {projects[task.group] || "Unknown Project"}
                     </p>
                     {activeTaskId === task._id && (
                       <p className="task-description">
@@ -288,20 +305,28 @@ export default function HomePage() {
                     )}
                     <div className="task-card-footer">
                       <span className="task-date">{task.due_date}</span>
+                      <div className="task-labels">
+                        {task.labels &&
+                          task.labels.map((label, index) => (
+                            <span key={index} className="task-label">
+                              {label}
+                            </span>
+                          ))}
+                      </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <p></p>
+                <p>No tasks in this column.</p>
               )}
             </div>
           </div>
         </div>
       </div>
       <TaskDetailsModal
-          visible={showModal}
-          onClose={closeTaskDetails}
-          task={selectedTask}
+        visible={showModal}
+        onClose={closeTaskDetails}
+        task={selectedTask}
       />
     </div>
   );

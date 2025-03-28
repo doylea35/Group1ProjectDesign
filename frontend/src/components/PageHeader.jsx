@@ -1,5 +1,5 @@
 import React from "react";
-import "../App.css"; // or a separate PageHeader.css
+import "../App.css"; 
 
 export default function PageHeader({ title }) {
   return (
