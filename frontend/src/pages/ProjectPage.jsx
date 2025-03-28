@@ -1,3 +1,4 @@
+// src/pages/ProjectPage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
@@ -51,7 +52,7 @@ function StatsBar({ totalTasks, completedTasks }) {
         </div>
         <div className="stats-text">
           <div className="stats-label">Tasks remaining</div>
-          <div className="stats-number">{remainingTasks}</div>
+          <div className="stats-number">{totalTasks - completedTasks}</div>
         </div>
       </div>
     </div>
@@ -64,17 +65,17 @@ function ProjectPage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
 
-  // Project name, tasks, and error states
+  // Project name, tasks, error states
   const [projectName, setProjectName] = useState("");
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState([]);
   const [error, setError] = useState("");
   const [activeTaskId, setActiveTaskId] = useState(null);
 
-  // NEW (from hugh): label filter
+  // Label filter
   const [labelFilter, setLabelFilter] = useState("");
 
-  // Fetch project name from localStorage
+  // Pull project name from localStorage
   useEffect(() => {
     const projectFromStorage = JSON.parse(localStorage.getItem("selectedProject"));
     if (projectFromStorage && projectFromStorage._id === projectId) {
@@ -101,16 +102,14 @@ function ProjectPage() {
         });
 
         if (response.data) {
-          // Priority-based sorting from hugh
+          // Priority-based sorting
           const priorityOrder = { High: 0, Medium: 1, Low: 2 };
           const projectTasks = response.data
             .filter((task) => task.group === projectId)
             .sort((a, b) => {
               const prioA = priorityOrder[a.priority] ?? 999;
               const prioB = priorityOrder[b.priority] ?? 999;
-              if (prioA !== prioB) {
-                return prioA - prioB; // Higher priority first
-              }
+              if (prioA !== prioB) return prioA - prioB;
               return new Date(a.due_date) - new Date(b.due_date);
             });
 
@@ -146,7 +145,7 @@ function ProjectPage() {
     .filter((lbl) => lbl !== "");
 
   function labelsMatch(taskLabels, wanted) {
-    if (!wanted.length) return true; // no filter => match all
+    if (!wanted.length) return true;
     return wanted.some((label) => taskLabels?.includes(label));
   }
 
@@ -165,7 +164,7 @@ function ProjectPage() {
     setSelectedTask(null);
   };
 
-  // Separate tasks by status for columns
+  // Separate tasks by status
   const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
   const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
   const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
@@ -174,11 +173,9 @@ function ProjectPage() {
   const totalTasks = filteredTasks.length;
   const completedCount = completedTasks.length;
 
-  // For subteam creation & task creation
+  // Handlers for subteam & task creation
   const handleCreateSubteam = (subteamName, members) => {
-    alert(
-      `Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(", ")}`
-    );
+    alert(`Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(", ")}`);
   };
 
   const handleCreateTask = () => {
@@ -187,18 +184,17 @@ function ProjectPage() {
 
   return (
     <div className="project-page-container">
-      {/* Page Header & Stats */}
       <PageHeader title={projectName} />
       <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
       <ProjectNavigation projectId={projectId} />
 
-      {/* Buttons for subteam & task creation */}
+      {/* Subteam & task creation buttons */}
       <div className="button-container">
         <CreateSubteam projectName={projectName} onCreate={handleCreateSubteam} />
         <CreateTask projectName={projectName} projectId={projectId} onCreate={handleCreateTask} />
       </div>
 
-      {/* Label Filter input (from hugh) */}
+      {/* Label Filter */}
       <div style={{ margin: "1rem 0" }}>
         <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
           Filter by labels (comma-separated):
@@ -213,11 +209,11 @@ function ProjectPage() {
         />
       </div>
 
-      {/* Task Columns */}
+      {/* Taskboard Columns */}
       <div className="task-columns-wrapper">
         <h4 className="taskboard-title">Group Taskboard</h4>
         <div className="task-columns">
-          {/* TO DO Column */}
+          {/* TO DO */}
           <div className="task-column to-do">
             <h3 className="column-title">To Do</h3>
             <div className="task-items">
@@ -226,7 +222,6 @@ function ProjectPage() {
                   <div
                     key={task._id}
                     className="task-card"
-                    //onClick={() => toggleTaskDescription(task._id)}
                     onClickCapture={() => openTaskDetails(task)}
                   >
                     <h4 className="task-title">{task.name}</h4>
@@ -246,7 +241,7 @@ function ProjectPage() {
             </div>
           </div>
 
-          {/* IN PROGRESS Column */}
+          {/* IN PROGRESS */}
           <div className="task-column in-progress">
             <h3 className="column-title">In Progress</h3>
             <div className="task-items">
@@ -274,7 +269,7 @@ function ProjectPage() {
             </div>
           </div>
 
-          {/* COMPLETED Column */}
+          {/* COMPLETED */}
           <div className="task-column completed">
             <h3 className="column-title">Completed</h3>
             <div className="task-items">
@@ -303,6 +298,8 @@ function ProjectPage() {
           </div>
         </div>
       </div>
+
+      {/* The Task Details Modal */}
       <TaskDetailsModal
         visible={showModal}
         onClose={closeTaskDetails}
