@@ -13,6 +13,7 @@ import RegistrationPage from "./pages/confirmRegistration";
 import ConfirmGroupMembershipPage from "./pages/confirmMembership";
 import ProjectSettingsPage from "./pages/ProjectSettingsPage";
 import ProjectFilesPage from "./pages/FilePage";
+import NotificationsPage from "./pages/NotificationPage";
 import axios from "axios";
 
 
@@ -33,6 +34,7 @@ function App() {
           path="/confirmRegistration/:confirmationCode"
           element={<RegistrationPage />}
         />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route
           path="/confirmMembership/:user_email/:group_id"
           element={<ConfirmGroupMembershipPage />}
