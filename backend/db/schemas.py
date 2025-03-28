@@ -29,7 +29,7 @@ def group_serial(group: dict) -> Group:
 
 def _task_serial(task: dict) -> Task:
     return {
-        # "id": str(task["_id"]),
+        "id": str(task["_id"]),
         "assigned_to": task["assigned_to"],
         "name": task["name"],
         "description": task["description"],
