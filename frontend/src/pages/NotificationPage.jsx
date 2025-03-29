@@ -15,11 +15,9 @@ const NotificationsPage = () => {
         return;
       }
       try {
-        // Adjust the endpoint as needed.
         const response = await axios.get("/api/notifications", {
           headers: { Authorization: `Bearer ${user.token}` },
         });
-        // Assuming response.data.notifications holds your notifications array.
         setNotifications(response.data.notifications);
       } catch (err) {
         setError("Failed to load notifications.");
@@ -33,13 +31,11 @@ const NotificationsPage = () => {
 
   const handleMarkAsRead = async (notificationId) => {
     try {
-      // API endpoint to mark a notification as read
       await axios.patch(`/api/notifications/${notificationId}/read`, null, {
         headers: {
           Authorization: `Bearer ${JSON.parse(localStorage.getItem("user")).token}`,
         },
       });
-      // Update state to reflect the notification is read
       setNotifications((prev) =>
         prev.map((notification) =>
           notification.id === notificationId

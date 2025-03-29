@@ -13,6 +13,7 @@ function ProjectFilesPage() {
   const [error, setError] = useState("");
   const [files, setFiles] = useState([]);
 
+  // Load project info from local storage
   useEffect(() => {
     const projectFromStorage = JSON.parse(localStorage.getItem("selectedProject"));
     if (projectFromStorage && projectFromStorage._id === projectId) {
@@ -24,11 +25,11 @@ function ProjectFilesPage() {
   }, [projectId]);
 
   const fileInputRef = useRef(null);
-
   const handleClick = () => {
     fileInputRef.current.click();
   };
 
+  // Fetch files for the group
   const fetchFiles = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user || !user.token) {
@@ -59,6 +60,7 @@ function ProjectFilesPage() {
     fetchFiles();
   }, [projectId]);
 
+  // Handle file upload
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -115,7 +117,7 @@ function ProjectFilesPage() {
     }
   };
 
-    // Called when user clicks the "Download" icon/button
+  // Handle file download using a pre-signed URL
   const handleDownload = async (file) => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -124,32 +126,29 @@ function ProjectFilesPage() {
         return;
       }
 
-      // The filename in your DB (e.g., "testing file metadata.txt")
+      // The filename stored in your DB (e.g., "my file.txt")
       const filename = file.filename;
-      // Encode in case of spaces or special chars
+      // Encode the filename (this will be decoded on the backend)
       const encodedFilename = encodeURIComponent(filename);
 
-      // Construct the exact URL your backend expects
+      // Construct the URL expected by the backend
       const url = `https://group-grade-backend-5f919d63857a.herokuapp.com/api/files/${encodedFilename}?group_id=${projectId}`;
 
-      // Make the request with the user's JWT token
+      // Request the pre-signed URL from the backend
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${user.token}`
         }
       });
 
-      // If found, your backend returns: { "presigned_url": "..." }
+      // Open the pre-signed URL to trigger the download
       const presignedUrl = response.data.presigned_url;
-
-      // Open that presigned URL to trigger the download
       window.open(presignedUrl, "_blank");
     } catch (err) {
       console.error("Download error:", err);
       setError(err.response ? err.response.data.detail : err.message);
     }
   };
-
 
   if (loading) {
     return <div>Loading project...</div>;
