@@ -20,6 +20,7 @@ const SchedulingPage = () => {
   const [freeTimes, setFreeTimes] = useState({}); 
   const [errorMessage, setErrorMessage] = useState("");
   const [rawFreeTimeData, setRawFreeTimeData] = useState([]);
+  const [teamEmails, setTeamEmails] = useState([]);
 
   const user = JSON.parse(localStorage.getItem("user")); 
   console.log("👤 User:", user);
@@ -62,6 +63,9 @@ const SchedulingPage = () => {
         );
         setRawFreeTimeData(rawData);
         setFreeTimes(formattedFreeTimes);
+        // Extract team emails from the response and update state
+        const emails = response.data.data.map((person) => person.email);
+        setTeamEmails(emails);
       } else {
         setErrorMessage("No free times available.");
       }
@@ -227,11 +231,11 @@ const SchedulingPage = () => {
           zIndex: "10", 
         }}
       >
-      <div className="top-row">
-        <button onClick={() => navigate(`/projects/${projectId}`)} className="back-project-btn">
-          Back to Project Page
-        </button>
-      </div>
+        <div className="top-row">
+          <button onClick={() => navigate(`/projects/${projectId}`)} className="back-project-btn">
+            Back to Project Page
+          </button>
+        </div>
       </div>
       <div
         className="button-section"
@@ -249,6 +253,7 @@ const SchedulingPage = () => {
               freeTimes={freeTimes}
               raw_free_time_data={rawFreeTimeData}
               projectId={projectId}
+              teamEmails={teamEmails} 
             />
           </>
         ) : (

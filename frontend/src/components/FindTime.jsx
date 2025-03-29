@@ -4,6 +4,8 @@ import * as Select from "@radix-ui/react-select";
 import { Cross2Icon, CheckIcon, ChevronDownIcon } from "@radix-ui/react-icons";
 import "../App.css";
 
+const API_URI = "/api/calendar/";
+
 function parseTime(str) {
   const [hh, mm] = str.split(":").map(Number);
   return hh * 60 + mm;
@@ -72,10 +74,11 @@ const FindTime = ({ raw_free_time_data, projectId, teamEmails }) => {
   const [errorMessage, setErrorMessage] = useState("");
   const [hasClickedFindTime, setHasClickedFindTime] = useState(false);
 
-  // New state for meeting form
+  // State for meeting form and success
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [meetingSummary, setMeetingSummary] = useState("");
   const [meetingDescription, setMeetingDescription] = useState("");
+  const [meetingCreated, setMeetingCreated] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user"));
   if (!user || !user.token) {
@@ -92,6 +95,7 @@ const FindTime = ({ raw_free_time_data, projectId, teamEmails }) => {
     setSelectedSlot(null);
     setMeetingSummary("");
     setMeetingDescription("");
+    setMeetingCreated(false);
   };
 
   const findOverlappingTimes = async () => {
@@ -138,36 +142,39 @@ const FindTime = ({ raw_free_time_data, projectId, teamEmails }) => {
       return;
     }
     const token = user.token;
+    const payload = {
+      day: selectedDay,
+      start: selectedSlot.start,
+      end: selectedSlot.end,
+      attendees: teamEmails,
+      summary: meetingSummary || "Team Meeting",
+      description: meetingDescription || "Meeting organized via GroupGrade"
+    };
+    console.log("Sending payload:", payload); 
+  
     try {
-      const response = await fetch("/sendCalendarInvite", {
+      const response = await fetch("https://group-grade-backend-5f919d63857a.herokuapp.com/api/calendar/sendCalendarInvite", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({
-          day: selectedDay,
-          start: selectedSlot.start,
-          end: selectedSlot.end,
-          attendees: teamEmails,
-          summary: meetingSummary || "Team Meeting",
-          description: meetingDescription || "Meeting organized via GroupGrade"
-        })
+        body: JSON.stringify(payload)
       });
   
       // Log response status and text for debugging
       const responseText = await response.text();
       console.log("Response status:", response.status);
       console.log("Response text:", responseText);
-      
+  
       let data;
       if (responseText) {
         data = JSON.parse(responseText);
       }
-      
+  
       if (response.ok) {
-        alert("Calendar invite sent successfully!" + (data?.message ? `: ${data.message}` : ""));
-        resetDialog();
+        // Instead of alerting, we update the dialog content to show the success message.
+        setMeetingCreated(true);
       } else {
         const errorMsg = data?.detail || "Failed to send invite.";
         throw new Error(errorMsg);
@@ -178,7 +185,6 @@ const FindTime = ({ raw_free_time_data, projectId, teamEmails }) => {
     }
   };
   
-
   return (
     <Dialog.Root onOpenChange={(open) => { if (!open) resetDialog(); }}>
       <Dialog.Trigger asChild>
@@ -187,136 +193,145 @@ const FindTime = ({ raw_free_time_data, projectId, teamEmails }) => {
       <Dialog.Portal>
         <Dialog.Overlay className="DialogOverlay" />
         <Dialog.Content className="DialogContent">
-          <Dialog.Title className="DialogTitle">
-            Find Overlapping Free Times
-          </Dialog.Title>
-          <Dialog.Description className="DialogDescription">
-            Select a day and duration to find overlapping free times.
-          </Dialog.Description>
-
-          {/* Day Selection */}
-          <fieldset className="Fieldset">
-            <label className="Label">Select a Day</label>
-            <Select.Root value={selectedDay} onValueChange={setSelectedDay}>
-              <Select.Trigger className="CustomSelectTrigger">
-                <Select.Value placeholder="-" />
-                <ChevronDownIcon className="DropdownIcon" />
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Content className="CustomDropdownContent">
-                  <Select.Viewport>
-                    {[
-                      "Monday",
-                      "Tuesday",
-                      "Wednesday",
-                      "Thursday",
-                      "Friday",
-                      "Saturday",
-                      "Sunday",
-                    ].map((day) => (
-                      <Select.Item key={day} value={day} className="CustomDropdownItem">
-                        <Select.ItemText>{day}</Select.ItemText>
-                        <Select.ItemIndicator>
-                          <CheckIcon className="CheckIcon" />
-                        </Select.ItemIndicator>
-                      </Select.Item>
-                    ))}
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
-            </Select.Root>
-          </fieldset>
-
-          {/* Duration Selection */}
-          <fieldset className="Fieldset">
-            <label className="Label">Select Duration (minutes)</label>
-            <Select.Root value={duration.toString()} onValueChange={(value) => setDuration(Number(value))}>
-              <Select.Trigger className="CustomSelectTrigger">
-                <Select.Value placeholder="-" />
-                <ChevronDownIcon className="DropdownIcon" />
-              </Select.Trigger>
-              <Select.Portal>
-                <Select.Content className="CustomDropdownContent">
-                  <Select.Viewport>
-                    {[15, 30, 45, 60, 90].map((durationOption) => (
-                      <Select.Item
-                        key={durationOption}
-                        value={durationOption.toString()}
-                        className="CustomDropdownItem"
+          {meetingCreated ? (
+            // New content when meeting is successfully created.
+            <div className="success-message">
+              <h3>Group meeting created successfully, check your inbox for the invite!</h3>
+            </div>
+          ) : (
+            <>
+              <Dialog.Title className="DialogTitle">
+                Find Overlapping Free Times
+              </Dialog.Title>
+              <Dialog.Description className="DialogDescription">
+                Select a day and duration to find overlapping free times.
+              </Dialog.Description>
+  
+              {/* Day Selection */}
+              <fieldset className="Fieldset">
+                <label className="Label">Select a Day</label>
+                <Select.Root value={selectedDay} onValueChange={setSelectedDay}>
+                  <Select.Trigger className="CustomSelectTrigger">
+                    <Select.Value placeholder="-" />
+                    <ChevronDownIcon className="DropdownIcon" />
+                  </Select.Trigger>
+                  <Select.Portal>
+                    <Select.Content className="CustomDropdownContent">
+                      <Select.Viewport>
+                        {[
+                          "Monday",
+                          "Tuesday",
+                          "Wednesday",
+                          "Thursday",
+                          "Friday",
+                          "Saturday",
+                          "Sunday",
+                        ].map((day) => (
+                          <Select.Item key={day} value={day} className="CustomDropdownItem">
+                            <Select.ItemText>{day}</Select.ItemText>
+                            <Select.ItemIndicator>
+                              <CheckIcon className="CheckIcon" />
+                            </Select.ItemIndicator>
+                          </Select.Item>
+                        ))}
+                      </Select.Viewport>
+                    </Select.Content>
+                  </Select.Portal>
+                </Select.Root>
+              </fieldset>
+  
+              {/* Duration Selection */}
+              <fieldset className="Fieldset">
+                <label className="Label">Select Duration (minutes)</label>
+                <Select.Root value={duration.toString()} onValueChange={(value) => setDuration(Number(value))}>
+                  <Select.Trigger className="CustomSelectTrigger">
+                    <Select.Value placeholder="-" />
+                    <ChevronDownIcon className="DropdownIcon" />
+                  </Select.Trigger>
+                  <Select.Portal>
+                    <Select.Content className="CustomDropdownContent">
+                      <Select.Viewport>
+                        {[15, 30, 45, 60, 90].map((durationOption) => (
+                          <Select.Item
+                            key={durationOption}
+                            value={durationOption.toString()}
+                            className="CustomDropdownItem"
+                          >
+                            <Select.ItemText>{durationOption} minutes</Select.ItemText>
+                            <Select.ItemIndicator>
+                              <CheckIcon className="CheckIcon" />
+                            </Select.ItemIndicator>
+                          </Select.Item>
+                        ))}
+                      </Select.Viewport>
+                    </Select.Content>
+                  </Select.Portal>
+                </Select.Root>
+              </fieldset>
+  
+              {/* Button to find overlaps */}
+              <button className="Button violet" onClick={findOverlappingTimes}>
+                Find Overlapping Time
+              </button>
+  
+              {/* Error Message */}
+              {hasClickedFindTime && errorMessage && (
+                <p className="ErrorMessage">{errorMessage}</p>
+              )}
+  
+              {/* Display Overlapping Times */}
+              {overlappingTimes.length > 0 && (
+                <div className="overlap-results">
+                  <h3>Available Slots:</h3>
+                  {overlappingTimes.map((overlap, index) => (
+                    <div key={index} className="overlap-box">
+                      <strong>
+                        {overlap.start} - {overlap.end}
+                      </strong>
+                      <button
+                        className="Button green"
+                        onClick={() => setSelectedSlot(overlap)}
                       >
-                        <Select.ItemText>{durationOption} minutes</Select.ItemText>
-                        <Select.ItemIndicator>
-                          <CheckIcon className="CheckIcon" />
-                        </Select.ItemIndicator>
-                      </Select.Item>
-                    ))}
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
-            </Select.Root>
-          </fieldset>
-
-          {/* Button to find overlaps */}
-          <button className="Button violet" onClick={findOverlappingTimes}>
-            Find Overlapping Time
-          </button>
-
-          {/* Error Message */}
-          {hasClickedFindTime && errorMessage && (
-            <p className="ErrorMessage">{errorMessage}</p>
-          )}
-
-          {/* Display Overlapping Times */}
-          {overlappingTimes.length > 0 && (
-            <div className="overlap-results">
-              <h3>Available Slots:</h3>
-              {overlappingTimes.map((overlap, index) => (
-                <div key={index} className="overlap-box">
-                  <strong>
-                    {overlap.start} - {overlap.end}
-                  </strong>
-                  <button
-                    className="Button green"
-                    onClick={() => setSelectedSlot(overlap)}
-                  >
-                    Create Meeting
+                        Create Meeting
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+  
+              {/* Display Meeting Form if a slot is selected */}
+              {selectedSlot && (
+                <div className="meeting-form">
+                  <h3>
+                    Create Meeting for {selectedSlot.start} - {selectedSlot.end}
+                  </h3>
+                  <fieldset className="Fieldset">
+                    <label className="Label">Meeting Summary</label>
+                    <input
+                      type="text"
+                      value={meetingSummary}
+                      onChange={(e) => setMeetingSummary(e.target.value)}
+                      placeholder="Enter meeting title"
+                      className="TextInput"
+                    />
+                  </fieldset>
+                  <fieldset className="Fieldset">
+                    <label className="Label">Meeting Description</label>
+                    <textarea
+                      value={meetingDescription}
+                      onChange={(e) => setMeetingDescription(e.target.value)}
+                      placeholder="Enter meeting description"
+                      className="TextArea"
+                    />
+                  </fieldset>
+                  <button className="Button green" onClick={sendCalendarInvite}>
+                    Send Invite
                   </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
-
-          {/* Display Meeting Form if a slot is selected */}
-          {selectedSlot && (
-            <div className="meeting-form">
-              <h3>
-                Create Meeting for {selectedSlot.start} - {selectedSlot.end}
-              </h3>
-              <fieldset className="Fieldset">
-                <label className="Label">Meeting Summary</label>
-                <input
-                  type="text"
-                  value={meetingSummary}
-                  onChange={(e) => setMeetingSummary(e.target.value)}
-                  placeholder="Enter meeting title"
-                  className="TextInput"
-                />
-              </fieldset>
-              <fieldset className="Fieldset">
-                <label className="Label">Meeting Description</label>
-                <textarea
-                  value={meetingDescription}
-                  onChange={(e) => setMeetingDescription(e.target.value)}
-                  placeholder="Enter meeting description"
-                  className="TextArea"
-                />
-              </fieldset>
-              <button className="Button green" onClick={sendCalendarInvite}>
-                Send Invite
-              </button>
-            </div>
-          )}
-
+  
           <Dialog.Close asChild>
             <button className="IconButton" aria-label="Close">
               <Cross2Icon />
