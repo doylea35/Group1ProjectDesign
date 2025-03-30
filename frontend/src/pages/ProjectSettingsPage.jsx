@@ -254,16 +254,24 @@ function ProjectSettingsPage() {
         <label>Project Name:</label>
         {editingName ? (
           <form onSubmit={handleUpdateName}>
-            <input
-              type="text"
-              value={newProjectName}
-              onChange={(e) => setNewProjectName(e.target.value)}
-            />
-            <button type="submit" disabled={updateNameLoading}>
+            <div className="project-name-container">
+              <input
+                type="text"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+                className="project-name-input"
+              />
+            </div>
+            <button
+              type="submit"
+              className="edit-name-btn"
+              disabled={updateNameLoading}
+            >
               {updateNameLoading ? "Updating..." : "Save"}
             </button>
             <button
               type="button"
+              className="edit-name-btn"
               onClick={() => {
                 setEditingName(false);
                 setNewProjectName(projectName);
@@ -280,7 +288,14 @@ function ProjectSettingsPage() {
           </form>
         ) : (
           <>
-            <input type="text" value={projectName} readOnly />
+            <div className="project-name-container">
+              <input
+                type="text"
+                value={projectName}
+                readOnly
+                className="project-name-input"
+              />
+            </div>
             <button
               className="edit-name-btn"
               onClick={() => setEditingName(true)}
@@ -289,6 +304,7 @@ function ProjectSettingsPage() {
             </button>
           </>
         )}
+
       </div>
 
       <GroupMembers projectId={projectId} projectName={projectName} />

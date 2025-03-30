@@ -1336,6 +1336,7 @@ to {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
+
 .edit-name-btn {
   background-color: var(--violet-9);
   color: #fff;
@@ -1347,6 +1348,11 @@ to {
 .edit-name-btn:hover {
   background-color: var(--violet-10);
 }
+.edit-name-btn:not(:last-child) {
+  margin-right: 8px; 
+  margin-left: 8px; 
+}
+
 
 .members-card {
   background: #fff;
@@ -1613,4 +1619,21 @@ to {
   flex-direction: column;
   height: 100vh; 
   overflow: hidden; 
+}
+
+/* Container that ensures a fixed width for the project name input */
+.project-name-container {
+  width: 300px;             /* Set your desired fixed width */
+  display: block;           /* Prevents shrinking if in a flex layout */
+  margin-bottom: 10px;      /* Optional: space below the input */
+}
+
+/* Styling for the input so it fills its container */
+.project-name-input {
+  width: 100%;
+  box-sizing: border-box;   /* Includes padding and border in the total width */
+  padding: 8px;             /* Consistent padding */
+  font-size: 16px;          /* Consistent font size */
+  border: 1px solid #ccc;   /* Border styling */
+  border-radius: 4px;       /* Rounded corners */
 }
