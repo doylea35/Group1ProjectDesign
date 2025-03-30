@@ -5,6 +5,7 @@ import axios from "axios";
 import "../App.css";
 import TaskDetailsModal from "../components/TaskDetailsModal";
 
+// Subcomponent to show stats at top
 function StatsBar({ totalTasks, completedTasks }) {
   const progressPercent =
     totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -62,8 +63,6 @@ export default function HomePage() {
   const [activeTaskId, setActiveTaskId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-
-  // Label filter
   const [labelFilter, setLabelFilter] = useState("");
 
   // Fetch tasks assigned to user
@@ -76,15 +75,12 @@ export default function HomePage() {
           setLoading(false);
           return;
         }
-
-        // GET /tasks?assigned_to=user.email
         const response = await axios.get("/tasks/", {
           headers: { Authorization: `Bearer ${user.token}` },
           params: { assigned_to: user.email },
         });
-
         if (response.data) {
-          // Priority-based sorting
+
           const priorityOrder = { High: 0, Medium: 1, Low: 2 };
           const sortedTasks = response.data.sort((a, b) => {
             const prioA = priorityOrder[a.priority] ?? 999;
@@ -113,11 +109,9 @@ export default function HomePage() {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user?.token) return;
-
         const response = await axios.get("/api/group/", {
           headers: { Authorization: `Bearer ${user.token}` },
         });
-
         if (response.data?.data) {
           const projectMap = {};
           response.data.data.forEach((project) => {
@@ -146,14 +140,12 @@ export default function HomePage() {
   if (loading) return <p>Loading tasks...</p>;
   if (error) return <p className="error-message">{error}</p>;
 
-  // Label-based filter
   const desiredLabels = labelFilter
     .split(",")
     .map((lbl) => lbl.trim())
     .filter((lbl) => lbl !== "");
-
   function labelsMatch(taskLabels, wanted) {
-    if (!wanted.length) return true; // no filter => all tasks
+    if (!wanted.length) return true;
     return wanted.some((lbl) => taskLabels?.includes(lbl));
   }
 
@@ -166,14 +158,44 @@ export default function HomePage() {
   const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
   const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
 
-  // Stats
+  const filteredTasks = tasks.filter((task) =>
+    labelsMatch(task.labels || [], desiredLabels)
+  );
+  const openTaskDetails = (task) => {
+    setSelectedTask(task);
+    setShowModal(true);
+  };
+  const closeTaskDetails = () => {
+    setShowModal(false);
+    setSelectedTask(null);
+  };
+
+  // Always render the header at the top.
+  if (loading || error) {
+    return (
+      <div className="page-container">
+        <PageHeader title="Home" />
+        {loading && <p>Loading tasks...</p>}
+        {error && <p className="error-message">{error}</p>}
+      </div>
+    );
+  }
+
+  // Build separate lists for columns (based on HEAD)
+  const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
+  const inProgressTasks = filteredTasks.filter(
+    (task) => task.status === "In Progress"
+  );
+  const completedTasks = filteredTasks.filter(
+    (task) => task.status === "Completed"
+  );
+
   const totalTasks = filteredTasks.length;
   const completedCount = completedTasks.length;
 
   return (
     <div className="page-container">
       <PageHeader title="Home" />
-
       <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
 
       {/* Label filter input */}
@@ -194,7 +216,7 @@ export default function HomePage() {
       {/* Kanban columns */}
       <div className="task-columns-wrapper">
         <div className="task-columns">
-          {/* TO DO */}
+          {/* TO DO Column */}
           <div className="task-column to-do">
             <h3 className="column-title">To Do</h3>
             <div className="task-items">
@@ -213,10 +235,44 @@ export default function HomePage() {
                   </div>
                 </div>
               ))}
+              {todoTasks.length > 0 ? (
+                todoTasks.map((task) => (
+                  <div
+                    key={task._id}
+                    className="task-card"
+                    onClick={() => openTaskDetails(task)}
+                  >
+                    <h4 className="task-title">{task.name}</h4>
+                    <p className="task-meta">
+                      <strong>Project:</strong>{" "}
+                      {projects[task.group] || "Unknown Project"}
+                    </p>
+                    {activeTaskId === task._id && (
+                      <p className="task-description">
+                        {task.description || "No description provided."}
+                      </p>
+                    )}
+                    <div className="task-card-footer">
+                      <span className="task-date">{task.due_date}</span>
+                      <div className="task-labels">
+                        {task.labels &&
+                          task.labels.map((label, index) => (
+                            <span key={index} className="task-label">
+                              {label}
+                            </span>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>No tasks in this column.</p>
+              )}
+
             </div>
           </div>
 
-          {/* IN PROGRESS */}
+          {/* IN PROGRESS Column */}
           <div className="task-column in-progress">
             <h3 className="column-title">In Progress</h3>
             <div className="task-items">
@@ -235,10 +291,43 @@ export default function HomePage() {
                   </div>
                 </div>
               ))}
+              {inProgressTasks.length > 0 ? (
+                inProgressTasks.map((task) => (
+                  <div
+                    key={task._id}
+                    className="task-card"
+                    onClick={() => toggleTaskDescription(task._id)}
+                  >
+                    <h4 className="task-title">{task.name}</h4>
+                    <p className="task-meta">
+                      <strong>Project:</strong>{" "}
+                      {projects[task.group] || "Unknown Project"}
+                    </p>
+                    {activeTaskId === task._id && (
+                      <p className="task-description">
+                        {task.description || "No description provided."}
+                      </p>
+                    )}
+                    <div className="task-card-footer">
+                      <span className="task-date">{task.due_date}</span>
+                      <div className="task-labels">
+                        {task.labels &&
+                          task.labels.map((label, index) => (
+                            <span key={index} className="task-label">
+                              {label}
+                            </span>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>No tasks in this column.</p>
+              )}
             </div>
           </div>
 
-          {/* COMPLETED */}
+          {/* COMPLETED Column */}
           <div className="task-column completed">
             <h3 className="column-title">Completed</h3>
             <div className="task-items">
@@ -257,12 +346,43 @@ export default function HomePage() {
                   </div>
                 </div>
               ))}
+              {completedTasks.length > 0 ? (
+                completedTasks.map((task) => (
+                  <div
+                    key={task._id}
+                    className="task-card"
+                    onClick={() => toggleTaskDescription(task._id)}
+                  >
+                    <h4 className="task-title">{task.name}</h4>
+                    <p className="task-meta">
+                      <strong>Project:</strong>{" "}
+                      {projects[task.group] || "Unknown Project"}
+                    </p>
+                    {activeTaskId === task._id && (
+                      <p className="task-description">
+                        {task.description || "No description provided."}
+                      </p>
+                    )}
+                    <div className="task-card-footer">
+                      <span className="task-date">{task.due_date}</span>
+                      <div className="task-labels">
+                        {task.labels &&
+                          task.labels.map((label, index) => (
+                            <span key={index} className="task-label">
+                              {label}
+                            </span>
+                          ))}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>No tasks in this column.</p>
+              )}
             </div>
           </div>
         </div>
       </div>
-
-      {/* The Task Details Modal */}
       <TaskDetailsModal
         visible={showModal}
         onClose={closeTaskDetails}

@@ -71,8 +71,6 @@ function ProjectPage() {
   const [tasks, setTasks] = useState([]);
   const [error, setError] = useState("");
   const [activeTaskId, setActiveTaskId] = useState(null);
-
-  // Label filter
   const [labelFilter, setLabelFilter] = useState("");
 
   // Pull project name from localStorage
@@ -130,10 +128,26 @@ function ProjectPage() {
     }
   }, [projectId]);
 
-  if (loading) return <p>Loading project...</p>;
-  if (error) return <p className="error-message">{error}</p>;
+  // Always render the header, then conditionally render content
+  if (loading) {
+    return (
+      <>
+        <PageHeader title="Loading..." />
+        <p>Loading project...</p>
+      </>
+    );
+  }
 
-  // Toggle expand/collapse of a single task's description
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Error" />
+        <p className="error-message">{error}</p>
+      </>
+    );
+  }
+
+  // Toggle expand/collapse of a task's description
   const toggleTaskDescription = (taskId) => {
     setActiveTaskId((prev) => (prev === taskId ? null : taskId));
   };
@@ -182,6 +196,7 @@ function ProjectPage() {
     // Additional logic if needed
   };
 
+  // Normal "happy path" return if not loading or error
   return (
     <div className="project-page-container">
       <PageHeader title={projectName} />
@@ -194,7 +209,6 @@ function ProjectPage() {
         <CreateTask projectName={projectName} projectId={projectId} onCreate={handleCreateTask} />
       </div>
 
-      {/* Label Filter */}
       <div style={{ margin: "1rem 0" }}>
         <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
           Filter by labels (comma-separated):
@@ -232,6 +246,14 @@ function ProjectPage() {
                     )}
                     <div className="task-card-footer">
                       <span className="task-date">{task.due_date}</span>
+                      <div className="task-labels">
+                        {task.labels &&
+                          task.labels.map((label, index) => (
+                            <span key={index} className="task-label">
+                              {label}
+                            </span>
+                          ))}
+                      </div>
                     </div>
                   </div>
                 ))
@@ -260,6 +282,14 @@ function ProjectPage() {
                     )}
                     <div className="task-card-footer">
                       <span className="task-date">{task.due_date}</span>
+                      <div className="task-labels">
+                        {task.labels &&
+                          task.labels.map((label, index) => (
+                            <span key={index} className="task-label">
+                              {label}
+                            </span>
+                          ))}
+                      </div>
                     </div>
                   </div>
                 ))
@@ -288,6 +318,14 @@ function ProjectPage() {
                     )}
                     <div className="task-card-footer">
                       <span className="task-date">{task.due_date}</span>
+                      <div className="task-labels">
+                        {task.labels &&
+                          task.labels.map((label, index) => (
+                            <span key={index} className="task-label">
+                              {label}
+                            </span>
+                          ))}
+                      </div>
                     </div>
                   </div>
                 ))
@@ -299,7 +337,6 @@ function ProjectPage() {
         </div>
       </div>
 
-      {/* The Task Details Modal */}
       <TaskDetailsModal
         visible={showModal}
         onClose={closeTaskDetails}

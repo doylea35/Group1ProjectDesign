@@ -24,7 +24,6 @@ function ProjectFilesPage() {
   }, [projectId]);
 
   const fileInputRef = useRef(null);
-
   const handleClick = () => {
     fileInputRef.current.click();
   };
@@ -92,7 +91,6 @@ function ProjectFilesPage() {
     }
   };
 
-  // Helper function to choose an icon based on file extension
   const getFileIcon = (filename) => {
     const ext = filename.split('.').pop().toLowerCase();
     const imageExtensions = ["png", "jpg", "jpeg", "gif", "bmp", "svg"];
@@ -115,7 +113,6 @@ function ProjectFilesPage() {
     }
   };
 
-    // Called when user clicks the "Download" icon/button
   const handleDownload = async (file) => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -124,32 +121,23 @@ function ProjectFilesPage() {
         return;
       }
 
-      // The filename in your DB (e.g., "testing file metadata.txt")
       const filename = file.filename;
-      // Encode in case of spaces or special chars
       const encodedFilename = encodeURIComponent(filename);
+      const url = `https://group-grade-backend-5f919d63857a.herokuapp.com/api/files/files/${encodedFilename}?group_id=${projectId}`;
 
-      // Construct the exact URL your backend expects
-      const url = `https://group-grade-backend-5f919d63857a.herokuapp.com/api/files/${encodedFilename}?group_id=${projectId}`;
-
-      // Make the request with the user's JWT token
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${user.token}`
         }
       });
 
-      // If found, your backend returns: { "presigned_url": "..." }
       const presignedUrl = response.data.presigned_url;
-
-      // Open that presigned URL to trigger the download
       window.open(presignedUrl, "_blank");
     } catch (err) {
       console.error("Download error:", err);
       setError(err.response ? err.response.data.detail : err.message);
     }
   };
-
 
   if (loading) {
     return <div>Loading project...</div>;
@@ -192,18 +180,6 @@ function ProjectFilesPage() {
                 <div className="file-info">
                   <div className="file-name">{file.filename || file.name}</div>
                   <div className="file-actions">
-                    <a
-                      href={file.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="action-icon"
-                      title="View File"
-                    >
-                      <img
-                        src="https://img.icons8.com/material-outlined/24/000000/visible.png"
-                        alt="View"
-                      />
-                    </a>
                     <a
                       href="#"
                       onClick={(e) => {

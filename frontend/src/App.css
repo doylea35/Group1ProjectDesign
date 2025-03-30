@@ -51,6 +51,7 @@ body {
   background-color: #fdf9ff;
 }
 
+
 /* Title font*/
 h1 {
   position: static; 
@@ -611,17 +612,17 @@ to {
 }
 
 .page-header {
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 8vh;        
-  top: 0;   
-  left: 0;        
+  height: 80px;             
+  z-index: 9999;             
   display: flex;
-  align-items: center;
-  padding-left: 1.5rem;       
-  position: fixed;
-  z-index: 1;
-  padding-left: 280px;
+  align-items: center;       
+  justify-content: flex-start; 
+  padding-left: 250px;     
 }
+
 
 .page-header h1 {
   font-size: 3rem; 
@@ -1211,6 +1212,23 @@ to {
 .task-date {
   font-size: 14px;
   color: #999;
+  margin-bottom: 8px; 
+}
+
+.task-labels {
+  display: flex;
+  flex-wrap: wrap; 
+  gap: 4px;
+}
+
+.task-label {
+  display: inline-block;
+  background-color: var(--violet-9);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 12px;
+  color: #ffffff; 
 }
 
 .NavigationMenuRoot {
@@ -1580,3 +1598,5 @@ to {
   font-weight: bold; 
   margin-right: 780px; 
 }
+
+
