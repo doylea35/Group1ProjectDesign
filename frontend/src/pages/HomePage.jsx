@@ -1,3 +1,4 @@
+// src/pages/HomePage.jsx
 import React, { useEffect, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import axios from "axios";
@@ -64,7 +65,7 @@ export default function HomePage() {
   const [selectedTask, setSelectedTask] = useState(null);
   const [labelFilter, setLabelFilter] = useState("");
 
-  // Fetch tasks (assigned to user) once
+  // Fetch tasks assigned to user
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -79,13 +80,12 @@ export default function HomePage() {
           params: { assigned_to: user.email },
         });
         if (response.data) {
+
           const priorityOrder = { High: 0, Medium: 1, Low: 2 };
           const sortedTasks = response.data.sort((a, b) => {
             const prioA = priorityOrder[a.priority] ?? 999;
             const prioB = priorityOrder[b.priority] ?? 999;
-            if (prioA !== prioB) {
-              return prioA - prioB;
-            }
+            if (prioA !== prioB) return prioA - prioB;
             return new Date(a.due_date) - new Date(b.due_date);
           });
           setTasks(sortedTasks);
@@ -103,7 +103,7 @@ export default function HomePage() {
     fetchTasks();
   }, []);
 
-  // Fetch project info (for project names) once
+  // Fetch project info (for project names)
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -127,11 +127,19 @@ export default function HomePage() {
     fetchProjects();
   }, []);
 
-  const toggleTaskDescription = (taskId) => {
-    setActiveTaskId((prev) => (prev === taskId ? null : taskId));
+  const openTaskDetails = (task) => {
+    setSelectedTask(task);
+    setShowModal(true);
   };
 
-  // Label filter logic
+  const closeTaskDetails = () => {
+    setShowModal(false);
+    setSelectedTask(null);
+  };
+
+  if (loading) return <p>Loading tasks...</p>;
+  if (error) return <p className="error-message">{error}</p>;
+
   const desiredLabels = labelFilter
     .split(",")
     .map((lbl) => lbl.trim())
@@ -140,6 +148,16 @@ export default function HomePage() {
     if (!wanted.length) return true;
     return wanted.some((lbl) => taskLabels?.includes(lbl));
   }
+
+  const filteredTasks = tasks.filter((task) =>
+    labelsMatch(task.labels || [], desiredLabels)
+  );
+
+  // Separate tasks by status
+  const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
+  const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
+  const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
+
   const filteredTasks = tasks.filter((task) =>
     labelsMatch(task.labels || [], desiredLabels)
   );
@@ -171,14 +189,13 @@ export default function HomePage() {
   const completedTasks = filteredTasks.filter(
     (task) => task.status === "Completed"
   );
+
   const totalTasks = filteredTasks.length;
   const completedCount = completedTasks.length;
 
   return (
     <div className="page-container">
       <PageHeader title="Home" />
-
-      {/* Stats bar */}
       <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
 
       {/* Label filter input */}
@@ -203,6 +220,21 @@ export default function HomePage() {
           <div className="task-column to-do">
             <h3 className="column-title">To Do</h3>
             <div className="task-items">
+              {todoTasks.map((task) => (
+                <div
+                  key={task._id}
+                  className="task-card"
+                  onClick={() => openTaskDetails(task)}
+                >
+                  <h4 className="task-title">{task.name}</h4>
+                  <p className="task-meta">
+                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                  </p>
+                  <div className="task-card-footer">
+                    <span className="task-date">{task.due_date}</span>
+                  </div>
+                </div>
+              ))}
               {todoTasks.length > 0 ? (
                 todoTasks.map((task) => (
                   <div
@@ -236,6 +268,7 @@ export default function HomePage() {
               ) : (
                 <p>No tasks in this column.</p>
               )}
+
             </div>
           </div>
 
@@ -243,6 +276,21 @@ export default function HomePage() {
           <div className="task-column in-progress">
             <h3 className="column-title">In Progress</h3>
             <div className="task-items">
+              {inProgressTasks.map((task) => (
+                <div
+                  key={task._id}
+                  className="task-card"
+                  onClick={() => openTaskDetails(task)}
+                >
+                  <h4 className="task-title">{task.name}</h4>
+                  <p className="task-meta">
+                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                  </p>
+                  <div className="task-card-footer">
+                    <span className="task-date">{task.due_date}</span>
+                  </div>
+                </div>
+              ))}
               {inProgressTasks.length > 0 ? (
                 inProgressTasks.map((task) => (
                   <div
@@ -283,6 +331,21 @@ export default function HomePage() {
           <div className="task-column completed">
             <h3 className="column-title">Completed</h3>
             <div className="task-items">
+              {completedTasks.map((task) => (
+                <div
+                  key={task._id}
+                  className="task-card"
+                  onClick={() => openTaskDetails(task)}
+                >
+                  <h4 className="task-title">{task.name}</h4>
+                  <p className="task-meta">
+                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                  </p>
+                  <div className="task-card-footer">
+                    <span className="task-date">{task.due_date}</span>
+                  </div>
+                </div>
+              ))}
               {completedTasks.length > 0 ? (
                 completedTasks.map((task) => (
                   <div
@@ -320,7 +383,6 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-
       <TaskDetailsModal
         visible={showModal}
         onClose={closeTaskDetails}
