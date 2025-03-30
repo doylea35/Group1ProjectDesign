@@ -13,7 +13,6 @@ function ProjectFilesPage() {
   const [error, setError] = useState("");
   const [files, setFiles] = useState([]);
 
-  // Load project info from local storage
   useEffect(() => {
     const projectFromStorage = JSON.parse(localStorage.getItem("selectedProject"));
     if (projectFromStorage && projectFromStorage._id === projectId) {
@@ -29,7 +28,6 @@ function ProjectFilesPage() {
     fileInputRef.current.click();
   };
 
-  // Fetch files for the group
   const fetchFiles = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user || !user.token) {
@@ -60,7 +58,6 @@ function ProjectFilesPage() {
     fetchFiles();
   }, [projectId]);
 
-  // Handle file upload
   const handleFileChange = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -94,7 +91,6 @@ function ProjectFilesPage() {
     }
   };
 
-  // Helper function to choose an icon based on file extension
   const getFileIcon = (filename) => {
     const ext = filename.split('.').pop().toLowerCase();
     const imageExtensions = ["png", "jpg", "jpeg", "gif", "bmp", "svg"];
@@ -117,7 +113,6 @@ function ProjectFilesPage() {
     }
   };
 
-  // Handle file download using a pre-signed URL
   const handleDownload = async (file) => {
     try {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -126,22 +121,16 @@ function ProjectFilesPage() {
         return;
       }
 
-      // The filename stored in your DB (e.g., "my file.txt")
       const filename = file.filename;
-      // Encode the filename (this will be decoded on the backend)
       const encodedFilename = encodeURIComponent(filename);
+      const url = `https://group-grade-backend-5f919d63857a.herokuapp.com/api/files/files/${encodedFilename}?group_id=${projectId}`;
 
-      // Construct the URL expected by the backend
-      const url = `https://group-grade-backend-5f919d63857a.herokuapp.com/api/files/${encodedFilename}?group_id=${projectId}`;
-
-      // Request the pre-signed URL from the backend
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${user.token}`
         }
       });
 
-      // Open the pre-signed URL to trigger the download
       const presignedUrl = response.data.presigned_url;
       window.open(presignedUrl, "_blank");
     } catch (err) {
@@ -191,18 +180,6 @@ function ProjectFilesPage() {
                 <div className="file-info">
                   <div className="file-name">{file.filename || file.name}</div>
                   <div className="file-actions">
-                    <a
-                      href={file.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="action-icon"
-                      title="View File"
-                    >
-                      <img
-                        src="https://img.icons8.com/material-outlined/24/000000/visible.png"
-                        alt="View"
-                      />
-                    </a>
                     <a
                       href="#"
                       onClick={(e) => {
