@@ -1,4 +1,3 @@
-// src/pages/HomePage.jsx
 import React, { useEffect, useState } from "react";
 import PageHeader from "../components/PageHeader";
 import axios from "axios";
@@ -127,16 +126,6 @@ export default function HomePage() {
     fetchProjects();
   }, []);
 
-  const openTaskDetails = (task) => {
-    setSelectedTask(task);
-    setShowModal(true);
-  };
-
-  const closeTaskDetails = () => {
-    setShowModal(false);
-    setSelectedTask(null);
-  };
-
   if (loading) return <p>Loading tasks...</p>;
   if (error) return <p className="error-message">{error}</p>;
 
@@ -153,14 +142,10 @@ export default function HomePage() {
     labelsMatch(task.labels || [], desiredLabels)
   );
 
-  // Separate tasks by status
   const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
   const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
   const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
 
-  const filteredTasks = tasks.filter((task) =>
-    labelsMatch(task.labels || [], desiredLabels)
-  );
   const openTaskDetails = (task) => {
     setSelectedTask(task);
     setShowModal(true);
@@ -180,16 +165,6 @@ export default function HomePage() {
       </div>
     );
   }
-
-  // Build separate lists for columns (based on HEAD)
-  const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
-  const inProgressTasks = filteredTasks.filter(
-    (task) => task.status === "In Progress"
-  );
-  const completedTasks = filteredTasks.filter(
-    (task) => task.status === "Completed"
-  );
-
   const totalTasks = filteredTasks.length;
   const completedCount = completedTasks.length;
 
