@@ -26,7 +26,6 @@ const AddTime = ({ freeTimes, setFreeTimes, projectId }) => { // Accept projectI
   const handleSave = async () => {
     if (!projectId) {
       setErrorMessage("❌ No project selected.");
-      console.error("❌ No projectId provided!");
       return;
     }
   
@@ -44,9 +43,6 @@ const AddTime = ({ freeTimes, setFreeTimes, projectId }) => { // Accept projectI
       formattedFreeTime[slot.day].push({ start: slot.startTime, end: slot.endTime });
     });
   
-    console.log("📡 Sending Request to API...");
-    console.log("🆔 Project ID:", projectId);
-    console.log("📅 Free Time Data:", formattedFreeTime);
   
     try {
       const response = await axios.put(
@@ -63,10 +59,8 @@ const AddTime = ({ freeTimes, setFreeTimes, projectId }) => { // Accept projectI
         }
       );
       
-      setFreeTimes(response.data.data); // Update state with new free times
-      setSuccessMessage("✅ Free time saved successfully!");
+      setSuccessMessage("Free time saved successfully!");
   
-      // Close the dialog and then reload the page after a short delay
       setTimeout(() => {
         setIsOpen(false);
         window.location.reload();

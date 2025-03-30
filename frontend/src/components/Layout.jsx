@@ -69,6 +69,11 @@ const Sidebar = () => {
             Home
           </Link>
 
+          {/* New Notifications Tab */}
+          <Link to="/notifications" className="nav-link">
+            Notifications
+          </Link>
+
           <Collapsible.Root open={isProjectsOpen} onOpenChange={setIsProjectsOpen}>
             <Collapsible.Trigger asChild>
               <button className={`collapsible-btn ${isProjectsOpen ? "active" : ""}`}>

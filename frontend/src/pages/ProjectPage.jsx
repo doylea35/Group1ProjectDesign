@@ -71,7 +71,7 @@ function ProjectPage() {
   const [error, setError] = useState("");
   const [activeTaskId, setActiveTaskId] = useState(null);
 
-  // NEW (from hugh): label filter
+  // Label filter state
   const [labelFilter, setLabelFilter] = useState("");
 
   // Fetch project name from localStorage
@@ -101,7 +101,7 @@ function ProjectPage() {
         });
 
         if (response.data) {
-          // Priority-based sorting from hugh
+          // Priority-based sorting
           const priorityOrder = { High: 0, Medium: 1, Low: 2 };
           const projectTasks = response.data
             .filter((task) => task.group === projectId)
@@ -109,7 +109,7 @@ function ProjectPage() {
               const prioA = priorityOrder[a.priority] ?? 999;
               const prioB = priorityOrder[b.priority] ?? 999;
               if (prioA !== prioB) {
-                return prioA - prioB; // Higher priority first
+                return prioA - prioB;
               }
               return new Date(a.due_date) - new Date(b.due_date);
             });
@@ -131,10 +131,26 @@ function ProjectPage() {
     }
   }, [projectId]);
 
-  if (loading) return <p>Loading project...</p>;
-  if (error) return <p className="error-message">{error}</p>;
+  // Always render the header, then conditionally render content
+  if (loading) {
+    return (
+      <>
+        <PageHeader title="Loading..." />
+        <p>Loading project...</p>
+      </>
+    );
+  }
 
-  // Toggle expand/collapse of a single task's description
+  if (error) {
+    return (
+      <>
+        <PageHeader title="Error" />
+        <p className="error-message">{error}</p>
+      </>
+    );
+  }
+
+  // Toggle expand/collapse of a task's description
   const toggleTaskDescription = (taskId) => {
     setActiveTaskId((prev) => (prev === taskId ? null : taskId));
   };
@@ -185,9 +201,9 @@ function ProjectPage() {
     // Additional logic if needed
   };
 
+  // Normal "happy path" return if not loading or error
   return (
     <div className="project-page-container">
-      {/* Page Header & Stats */}
       <PageHeader title={projectName} />
       <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
       <ProjectNavigation projectId={projectId} />
@@ -198,7 +214,7 @@ function ProjectPage() {
         <CreateTask projectName={projectName} projectId={projectId} onCreate={handleCreateTask} />
       </div>
 
-      {/* Label Filter input (from hugh) */}
+      {/* Label Filter input */}
       <div style={{ margin: "1rem 0" }}>
         <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
           Filter by labels (comma-separated):
@@ -226,7 +242,6 @@ function ProjectPage() {
                   <div
                     key={task._id}
                     className="task-card"
-                    //onClick={() => toggleTaskDescription(task._id)}
                     onClickCapture={() => openTaskDetails(task)}
                   >
                     <h4 className="task-title">{task.name}</h4>
@@ -237,6 +252,14 @@ function ProjectPage() {
                     )}
                     <div className="task-card-footer">
                       <span className="task-date">{task.due_date}</span>
+                      <div className="task-labels">
+                        {task.labels &&
+                          task.labels.map((label, index) => (
+                            <span key={index} className="task-label">
+                              {label}
+                            </span>
+                          ))}
+                      </div>
                     </div>
                   </div>
                 ))
@@ -265,6 +288,14 @@ function ProjectPage() {
                     )}
                     <div className="task-card-footer">
                       <span className="task-date">{task.due_date}</span>
+                      <div className="task-labels">
+                        {task.labels &&
+                          task.labels.map((label, index) => (
+                            <span key={index} className="task-label">
+                              {label}
+                            </span>
+                          ))}
+                      </div>
                     </div>
                   </div>
                 ))
@@ -293,6 +324,14 @@ function ProjectPage() {
                     )}
                     <div className="task-card-footer">
                       <span className="task-date">{task.due_date}</span>
+                      <div className="task-labels">
+                        {task.labels &&
+                          task.labels.map((label, index) => (
+                            <span key={index} className="task-label">
+                              {label}
+                            </span>
+                          ))}
+                      </div>
                     </div>
                   </div>
                 ))
@@ -303,6 +342,7 @@ function ProjectPage() {
           </div>
         </div>
       </div>
+
       <TaskDetailsModal
         visible={showModal}
         onClose={closeTaskDetails}
