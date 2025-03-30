@@ -1,4 +1,3 @@
-// src/pages/ProjectPage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
@@ -52,7 +51,7 @@ function StatsBar({ totalTasks, completedTasks }) {
         </div>
         <div className="stats-text">
           <div className="stats-label">Tasks remaining</div>
-          <div className="stats-number">{totalTasks - completedTasks}</div>
+          <div className="stats-number">{remainingTasks}</div>
         </div>
       </div>
     </div>
@@ -128,22 +127,22 @@ function ProjectPage() {
     }
   }, [projectId]);
 
-  // Always render the header, then conditionally render content
+  // Show loading or error states within a flex container
   if (loading) {
     return (
-      <>
+      <div className="project-page-container">
         <PageHeader title="Loading..." />
         <p>Loading project...</p>
-      </>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <>
+      <div className="project-page-container">
         <PageHeader title="Error" />
         <p className="error-message">{error}</p>
-      </>
+      </div>
     );
   }
 
@@ -196,142 +195,146 @@ function ProjectPage() {
     // Additional logic if needed
   };
 
-  // Normal "happy path" return if not loading or error
   return (
     <div className="project-page-container">
+      {/* Fixed header, stats and navigation */}
       <PageHeader title={projectName} />
       <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
       <ProjectNavigation projectId={projectId} />
 
-      {/* Subteam & task creation buttons */}
-      <div className="button-container">
-        <CreateSubteam projectName={projectName} onCreate={handleCreateSubteam} />
-        <CreateTask projectName={projectName} projectId={projectId} onCreate={handleCreateTask} />
-      </div>
+      {/* Scrollable content area */}
+      <div className="content-wrapper">
+        {/* Subteam & Task creation buttons */}
+        <div className="button-container">
+          <CreateSubteam projectName={projectName} onCreate={handleCreateSubteam} />
+          <CreateTask projectName={projectName} projectId={projectId} onCreate={handleCreateTask} />
+        </div>
 
-      <div style={{ margin: "1rem 0" }}>
-        <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
-          Filter by labels (comma-separated):
-        </label>
-        <input
-          id="labelFilter"
-          type="text"
-          value={labelFilter}
-          onChange={(e) => setLabelFilter(e.target.value)}
-          placeholder="e.g. urgent, design, homework"
-          style={{ width: "300px" }}
-        />
-      </div>
+        {/* Label filter input */}
+        <div style={{ margin: "1rem 0" }}>
+          <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
+            Filter by labels (comma-separated):
+          </label>
+          <input
+            id="labelFilter"
+            type="text"
+            value={labelFilter}
+            onChange={(e) => setLabelFilter(e.target.value)}
+            placeholder="e.g. urgent, design, homework"
+            style={{ width: "300px" }}
+          />
+        </div>
 
-      {/* Taskboard Columns */}
-      <div className="task-columns-wrapper">
-        <h4 className="taskboard-title">Group Taskboard</h4>
-        <div className="task-columns">
-          {/* TO DO */}
-          <div className="task-column to-do">
-            <h3 className="column-title">To Do</h3>
-            <div className="task-items">
-              {todoTasks.length > 0 ? (
-                todoTasks.map((task) => (
-                  <div
-                    key={task._id}
-                    className="task-card"
-                    onClickCapture={() => openTaskDetails(task)}
-                  >
-                    <h4 className="task-title">{task.name}</h4>
-                    {activeTaskId === task._id && (
-                      <p className="task-description">
-                        {task.description || "No description provided."}
-                      </p>
-                    )}
-                    <div className="task-card-footer">
-                      <span className="task-date">{task.due_date}</span>
-                      <div className="task-labels">
-                        {task.labels &&
-                          task.labels.map((label, index) => (
-                            <span key={index} className="task-label">
-                              {label}
-                            </span>
-                          ))}
+        {/* Taskboard Columns */}
+        <div className="task-columns-wrapper">
+          <h4 className="taskboard-title">Group Taskboard</h4>
+          <div className="task-columns">
+            {/* TO DO */}
+            <div className="task-column to-do">
+              <h3 className="column-title">To Do</h3>
+              <div className="task-items">
+                {todoTasks.length > 0 ? (
+                  todoTasks.map((task) => (
+                    <div
+                      key={task._id}
+                      className="task-card"
+                      onClickCapture={() => openTaskDetails(task)}
+                    >
+                      <h4 className="task-title">{task.name}</h4>
+                      {activeTaskId === task._id && (
+                        <p className="task-description">
+                          {task.description || "No description provided."}
+                        </p>
+                      )}
+                      <div className="task-card-footer">
+                        <span className="task-date">{task.due_date}</span>
+                        <div className="task-labels">
+                          {task.labels &&
+                            task.labels.map((label, index) => (
+                              <span key={index} className="task-label">
+                                {label}
+                              </span>
+                            ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p>No tasks available.</p>
-              )}
+                  ))
+                ) : (
+                  <p>No tasks available.</p>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* IN PROGRESS */}
-          <div className="task-column in-progress">
-            <h3 className="column-title">In Progress</h3>
-            <div className="task-items">
-              {inProgressTasks.length > 0 ? (
-                inProgressTasks.map((task) => (
-                  <div
-                    key={task._id}
-                    className="task-card"
-                    onClick={() => toggleTaskDescription(task._id)}
-                  >
-                    <h4 className="task-title">{task.name}</h4>
-                    {activeTaskId === task._id && (
-                      <p className="task-description">
-                        {task.description || "No description provided."}
-                      </p>
-                    )}
-                    <div className="task-card-footer">
-                      <span className="task-date">{task.due_date}</span>
-                      <div className="task-labels">
-                        {task.labels &&
-                          task.labels.map((label, index) => (
-                            <span key={index} className="task-label">
-                              {label}
-                            </span>
-                          ))}
+            {/* IN PROGRESS */}
+            <div className="task-column in-progress">
+              <h3 className="column-title">In Progress</h3>
+              <div className="task-items">
+                {inProgressTasks.length > 0 ? (
+                  inProgressTasks.map((task) => (
+                    <div
+                      key={task._id}
+                      className="task-card"
+                      onClick={() => toggleTaskDescription(task._id)}
+                    >
+                      <h4 className="task-title">{task.name}</h4>
+                      {activeTaskId === task._id && (
+                        <p className="task-description">
+                          {task.description || "No description provided."}
+                        </p>
+                      )}
+                      <div className="task-card-footer">
+                        <span className="task-date">{task.due_date}</span>
+                        <div className="task-labels">
+                          {task.labels &&
+                            task.labels.map((label, index) => (
+                              <span key={index} className="task-label">
+                                {label}
+                              </span>
+                            ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p>No tasks available.</p>
-              )}
+                  ))
+                ) : (
+                  <p>No tasks available.</p>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* COMPLETED */}
-          <div className="task-column completed">
-            <h3 className="column-title">Completed</h3>
-            <div className="task-items">
-              {completedTasks.length > 0 ? (
-                completedTasks.map((task) => (
-                  <div
-                    key={task._id}
-                    className="task-card"
-                    onClick={() => toggleTaskDescription(task._id)}
-                  >
-                    <h4 className="task-title">{task.name}</h4>
-                    {activeTaskId === task._id && (
-                      <p className="task-description">
-                        {task.description || "No description provided."}
-                      </p>
-                    )}
-                    <div className="task-card-footer">
-                      <span className="task-date">{task.due_date}</span>
-                      <div className="task-labels">
-                        {task.labels &&
-                          task.labels.map((label, index) => (
-                            <span key={index} className="task-label">
-                              {label}
-                            </span>
-                          ))}
+            {/* COMPLETED */}
+            <div className="task-column completed">
+              <h3 className="column-title">Completed</h3>
+              <div className="task-items">
+                {completedTasks.length > 0 ? (
+                  completedTasks.map((task) => (
+                    <div
+                      key={task._id}
+                      className="task-card"
+                      onClick={() => toggleTaskDescription(task._id)}
+                    >
+                      <h4 className="task-title">{task.name}</h4>
+                      {activeTaskId === task._id && (
+                        <p className="task-description">
+                          {task.description || "No description provided."}
+                        </p>
+                      )}
+                      <div className="task-card-footer">
+                        <span className="task-date">{task.due_date}</span>
+                        <div className="task-labels">
+                          {task.labels &&
+                            task.labels.map((label, index) => (
+                              <span key={index} className="task-label">
+                                {label}
+                              </span>
+                            ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p>No tasks available.</p>
-              )}
+                  ))
+                ) : (
+                  <p>No tasks available.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
