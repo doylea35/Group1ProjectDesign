@@ -129,6 +129,7 @@ export default function HomePage() {
   if (loading) return <p>Loading tasks...</p>;
   if (error) return <p className="error-message">{error}</p>;
 
+  // Filter and organize tasks
   const desiredLabels = labelFilter
     .split(",")
     .map((lbl) => lbl.trim())
@@ -137,14 +138,14 @@ export default function HomePage() {
     if (!wanted.length) return true;
     return wanted.some((lbl) => taskLabels?.includes(lbl));
   }
-
   const filteredTasks = tasks.filter((task) =>
     labelsMatch(task.labels || [], desiredLabels)
   );
-
   const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
   const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
   const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
+  const totalTasks = filteredTasks.length;
+  const completedCount = completedTasks.length;
 
   const openTaskDetails = (task) => {
     setSelectedTask(task);
@@ -155,209 +156,113 @@ export default function HomePage() {
     setSelectedTask(null);
   };
 
-  // Always render the header at the top.
-  if (loading || error) {
-    return (
-      <div className="page-container">
-        <PageHeader title="Home" />
-        {loading && <p>Loading tasks...</p>}
-        {error && <p className="error-message">{error}</p>}
-      </div>
-    );
-  }
-  const totalTasks = filteredTasks.length;
-  const completedCount = completedTasks.length;
-
   return (
     <div className="page-container">
+      {/* Fixed header and stats */}
       <PageHeader title="Home" />
       <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
 
-      {/* Label filter input */}
-      <div style={{ margin: "1rem 0" }}>
-        <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
-          Filter by labels (comma-separated):
-        </label>
-        <input
-          id="labelFilter"
-          type="text"
-          value={labelFilter}
-          onChange={(e) => setLabelFilter(e.target.value)}
-          placeholder="e.g. urgent, midterm, meeting"
-          style={{ width: "300px" }}
-        />
-      </div>
+      {/* Scrollable content area */}
+      <div className="content-wrapper">
+        {/* Label filter input */}
+        <div style={{ margin: "1rem 0" }}>
+          <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
+            Filter by labels (comma-separated):
+          </label>
+          <input
+            id="labelFilter"
+            type="text"
+            value={labelFilter}
+            onChange={(e) => setLabelFilter(e.target.value)}
+            placeholder="e.g. urgent, midterm, meeting"
+            style={{ width: "300px" }}
+          />
+        </div>
 
-      {/* Kanban columns */}
-      <div className="task-columns-wrapper">
-        <div className="task-columns">
-          {/* TO DO Column */}
-          <div className="task-column to-do">
-            <h3 className="column-title">To Do</h3>
-            <div className="task-items">
-              {todoTasks.map((task) => (
-                <div
-                  key={task._id}
-                  className="task-card"
-                  onClick={() => openTaskDetails(task)}
-                >
-                  <h4 className="task-title">{task.name}</h4>
-                  <p className="task-meta">
-                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
-                  </p>
-                  <div className="task-card-footer">
-                    <span className="task-date">{task.due_date}</span>
-                  </div>
-                </div>
-              ))}
-              {todoTasks.length > 0 ? (
-                todoTasks.map((task) => (
-                  <div
-                    key={task._id}
-                    className="task-card"
-                    onClick={() => openTaskDetails(task)}
-                  >
-                    <h4 className="task-title">{task.name}</h4>
-                    <p className="task-meta">
-                      <strong>Project:</strong>{" "}
-                      {projects[task.group] || "Unknown Project"}
-                    </p>
-                    {activeTaskId === task._id && (
-                      <p className="task-description">
-                        {task.description || "No description provided."}
+        {/* Task Board */}
+        <div className="task-columns-wrapper">
+          <div className="task-columns">
+            {/* TO DO Column */}
+            <div className="task-column to-do">
+              <h3 className="column-title">To Do</h3>
+              <div className="task-items">
+                {todoTasks.length > 0 ? (
+                  todoTasks.map((task) => (
+                    <div
+                      key={task._id}
+                      className="task-card"
+                      onClick={() => openTaskDetails(task)}
+                    >
+                      <h4 className="task-title">{task.name}</h4>
+                      <p className="task-meta">
+                        <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
                       </p>
-                    )}
-                    <div className="task-card-footer">
-                      <span className="task-date">{task.due_date}</span>
-                      <div className="task-labels">
-                        {task.labels &&
-                          task.labels.map((label, index) => (
-                            <span key={index} className="task-label">
-                              {label}
-                            </span>
-                          ))}
+                      <div className="task-card-footer">
+                        <span className="task-date">{task.due_date}</span>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p>No tasks in this column.</p>
-              )}
-
+                  ))
+                ) : (
+                  <p>No tasks in this column.</p>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* IN PROGRESS Column */}
-          <div className="task-column in-progress">
-            <h3 className="column-title">In Progress</h3>
-            <div className="task-items">
-              {inProgressTasks.map((task) => (
-                <div
-                  key={task._id}
-                  className="task-card"
-                  onClick={() => openTaskDetails(task)}
-                >
-                  <h4 className="task-title">{task.name}</h4>
-                  <p className="task-meta">
-                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
-                  </p>
-                  <div className="task-card-footer">
-                    <span className="task-date">{task.due_date}</span>
-                  </div>
-                </div>
-              ))}
-              {inProgressTasks.length > 0 ? (
-                inProgressTasks.map((task) => (
-                  <div
-                    key={task._id}
-                    className="task-card"
-                    onClick={() => toggleTaskDescription(task._id)}
-                  >
-                    <h4 className="task-title">{task.name}</h4>
-                    <p className="task-meta">
-                      <strong>Project:</strong>{" "}
-                      {projects[task.group] || "Unknown Project"}
-                    </p>
-                    {activeTaskId === task._id && (
-                      <p className="task-description">
-                        {task.description || "No description provided."}
+            {/* IN PROGRESS Column */}
+            <div className="task-column in-progress">
+              <h3 className="column-title">In Progress</h3>
+              <div className="task-items">
+                {inProgressTasks.length > 0 ? (
+                  inProgressTasks.map((task) => (
+                    <div
+                      key={task._id}
+                      className="task-card"
+                      onClick={() => openTaskDetails(task)}
+                    >
+                      <h4 className="task-title">{task.name}</h4>
+                      <p className="task-meta">
+                        <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
                       </p>
-                    )}
-                    <div className="task-card-footer">
-                      <span className="task-date">{task.due_date}</span>
-                      <div className="task-labels">
-                        {task.labels &&
-                          task.labels.map((label, index) => (
-                            <span key={index} className="task-label">
-                              {label}
-                            </span>
-                          ))}
+                      <div className="task-card-footer">
+                        <span className="task-date">{task.due_date}</span>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p>No tasks in this column.</p>
-              )}
+                  ))
+                ) : (
+                  <p>No tasks in this column.</p>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* COMPLETED Column */}
-          <div className="task-column completed">
-            <h3 className="column-title">Completed</h3>
-            <div className="task-items">
-              {completedTasks.map((task) => (
-                <div
-                  key={task._id}
-                  className="task-card"
-                  onClick={() => openTaskDetails(task)}
-                >
-                  <h4 className="task-title">{task.name}</h4>
-                  <p className="task-meta">
-                    <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
-                  </p>
-                  <div className="task-card-footer">
-                    <span className="task-date">{task.due_date}</span>
-                  </div>
-                </div>
-              ))}
-              {completedTasks.length > 0 ? (
-                completedTasks.map((task) => (
-                  <div
-                    key={task._id}
-                    className="task-card"
-                    onClick={() => toggleTaskDescription(task._id)}
-                  >
-                    <h4 className="task-title">{task.name}</h4>
-                    <p className="task-meta">
-                      <strong>Project:</strong>{" "}
-                      {projects[task.group] || "Unknown Project"}
-                    </p>
-                    {activeTaskId === task._id && (
-                      <p className="task-description">
-                        {task.description || "No description provided."}
+            {/* COMPLETED Column */}
+            <div className="task-column completed">
+              <h3 className="column-title">Completed</h3>
+              <div className="task-items">
+                {completedTasks.length > 0 ? (
+                  completedTasks.map((task) => (
+                    <div
+                      key={task._id}
+                      className="task-card"
+                      onClick={() => openTaskDetails(task)}
+                    >
+                      <h4 className="task-title">{task.name}</h4>
+                      <p className="task-meta">
+                        <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
                       </p>
-                    )}
-                    <div className="task-card-footer">
-                      <span className="task-date">{task.due_date}</span>
-                      <div className="task-labels">
-                        {task.labels &&
-                          task.labels.map((label, index) => (
-                            <span key={index} className="task-label">
-                              {label}
-                            </span>
-                          ))}
+                      <div className="task-card-footer">
+                        <span className="task-date">{task.due_date}</span>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p>No tasks in this column.</p>
-              )}
+                  ))
+                ) : (
+                  <p>No tasks in this column.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
+
       <TaskDetailsModal
         visible={showModal}
         onClose={closeTaskDetails}
