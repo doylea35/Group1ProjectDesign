@@ -1694,3 +1694,53 @@ small {
   font-size: 0.8rem; 
   color: #666; 
 }
+
+.skills-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.skill-tag {
+  background-color: #a78bfa; /* Tailwind violet-400 */
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.skill-tag .delete-skill {
+  background: none;
+  border: none;
+  color: black;
+  margin-left: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.skill-tag .delete-skill:hover {
+  color: #333;
+}
+
+.skill-input {
+  width: 100%;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  padding: 0 10px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--violet-11);
+  box-shadow: 0 0 0 1px var(--violet-7);
+  height: 35px;
+  }
