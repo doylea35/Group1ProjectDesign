@@ -96,10 +96,6 @@ async def delete_group_handler(request : DeleteGroupRequest):
             )
     return {"message": "Deletion was successful"}
 
-    # remove_group(group_id)
-    # remove_task(group_id)
-
-
 @group_router.get("/confirmMembership/{user_email}/{group_id}")
 async def confirm_member(user_email: str, group_id: str):
 
