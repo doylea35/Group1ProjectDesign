@@ -1,0 +1,98 @@
+from db.models import Notification
+from db.database import notifications_collection
+from db.schemas import _notification_serial, notifications_serial
+from fastapi import APIRouter, HTTPException
+from email_service.email_utils import email_sender
+from api.utils import is_valid_email
+from bson import ObjectId
+from api.request_model.notifications_request_schema import CreateNotificationRequest, MarkNotificationAsReadRequest, GetNotificationsByUserRequest, GetNotificationsByGroupRequest
+
+
+notifications_router = APIRouter()
+
+@notifications_router.post("/create_notification")
+async def create_notification(request: CreateNotificationRequest):
+    """
+    Create a new notification.
+    """
+    # Validate email
+    if not is_valid_email(request.user_email):
+        raise HTTPException(status_code=400, detail="Invalid email format")
+
+    # Check if the group exists
+    group = await notifications_collection.find_one({"_id": ObjectId(request.group_id)})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    # Create a new notification
+    notification = Notification(
+        user_email=request.user_email,
+        group_id=request.group_id,
+        notification_type=request.notification_type,
+        content=request.content
+    )
+
+    # Insert the notification into the database
+    result = await notifications_collection.insert_one(notification.dict())
+    
+    # Send email notification
+    email_sender.send_notification_email(request.user_email, request.notification_type, request.content)
+
+    return {"message": "Notification created successfully", "data": notification}
+
+@notifications_router.post("/mark_notification_as_read")
+async def mark_notification_as_read(request: MarkNotificationAsReadRequest):
+    """
+    Mark a notification as read.
+    """
+    # Validate email
+    if not is_valid_email(request.user_email):
+        raise HTTPException(status_code=400, detail="Invalid email format")
+
+    # Check if the notification exists
+    notification = await notifications_collection.find_one({"_id": ObjectId(request.notification_id)})
+    if not notification:
+        raise HTTPException(status_code=404, detail="Notification not found")
+
+    # Update the notification to mark it as read
+    await notifications_collection.update_one(
+        {"_id": ObjectId(request.notification_id)},
+        {"$set": {"read": True}}
+    )
+
+    return {"message": "Notification marked as read successfully"}
+
+
+@notifications_router.post("/get_notifications_by_user")
+async def get_notifications_by_user(request: GetNotificationsByUserRequest):
+    """
+    Get notifications by user.
+    """
+    # Validate email
+    if not is_valid_email(request.user_email):
+        raise HTTPException(status_code=400, detail="Invalid email format")
+
+    # Check if the group exists
+    group = await notifications_collection.find_one({"_id": ObjectId(request.group_id)})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    # Find notifications for the user
+    notifications = await notifications_collection.find({"user_email": request.user_email}).to_list(length=None)
+
+    return {"notifications": notifications_serial(notifications)}
+
+@notifications_router.post("/get_notifications_by_group")
+async def get_notifications_by_group(request: GetNotificationsByGroupRequest):
+    """
+    Get notifications by group.
+    """
+    # Check if the group exists
+    group = await notifications_collection.find_one({"_id": ObjectId(request.group_id)})
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    # Find notifications for the group
+    notifications = await notifications_collection.find({"group_id": request.group_id}).to_list(length=None)
+
+    return {"notifications": notifications_serial(notifications)}

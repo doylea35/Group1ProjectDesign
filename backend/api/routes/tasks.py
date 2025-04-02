@@ -9,6 +9,7 @@ from datetime import datetime
 from api.request_model.comment_request_schema import AddCommentRequest
 from api.utils import get_current_user 
 from api.utils import is_valid_email 
+from api.routes.notifications import create_notification
 from email_service.email_utils import email_sender
 import os
 
@@ -80,6 +81,8 @@ def create_task(task: Task):
     # send email to new user
     for user in task.assigned_to:
         send_assigned_task_email(user, task.name, task.description, str(new_task.inserted_id), task.group, assigned_group["name"])
+        # create notification for each user
+        create_notification(user, task.group, "Task Assigned", f"You have been assigned a new task: {task.name}", str(new_task.inserted_id))
 
     return {
     "id": str(new_task.inserted_id),  
