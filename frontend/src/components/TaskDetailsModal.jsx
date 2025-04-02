@@ -1,50 +1,48 @@
 // src/components/TaskDetailsModal.jsx
-import React from "react";
+import React, { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import axios from "axios";
 import "../App.css";
-
+import EditTask from "./EditTask"; // <-- import your new EditTask component
 
 function TaskDetailsModal({ visible, onClose, task }) {
   if (!task) return null;
 
-  // Calculate the "days left" text
+  // Track whether the edit dialog is open
+  const [editOpen, setEditOpen] = useState(false);
+
   const dueDate = new Date(task.due_date);
   const now = new Date();
   const diffMs = dueDate - now;
   const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   const daysLeftText = diffDays > 0 ? `${diffDays} days left` : "Due date passed";
 
-  // ------------------------------------------------------
-  // Handler to update the status for the current task
-  // ------------------------------------------------------
   const handleStatusChange = async (newStatus) => {
     try {
-      // Make sure user is logged in
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user?.token) {
         console.error("User not authenticated.");
         return;
       }
 
-      // Example: PUT /tasks/edit?task_id=<TASK._ID>
-      // Body: { "updated_fields": { "status": <newStatus> } }
       await axios.put(
-        `/tasks/edit/?task_id=${task.id}`,  // Make sure _id is returned from the backend
+        `/tasks/edit/?task_id=${task.id}`,
         { updated_fields: { status: newStatus } },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
-
-      // Option 1: Reload the entire page so the columns show the new status
-      window.location.reload();
-
-      // Option 2 (alternative): Re-fetch tasks in the parent
-      // onClose();
-      // refetchTasks();
+      window.location.reload(); // or refetch in parent
     } catch (error) {
       console.error("Failed to update task status:", error);
     }
+  };
+
+  // Called after a successful edit so we can close the detail modal or refetch data
+  const handleTaskEdited = () => {
+    // Option 1: simply reload the page
+    window.location.reload();
+    // Option 2: onClose(); parent might re-fetch tasks
+    // ...
   };
 
   return (
@@ -55,10 +53,6 @@ function TaskDetailsModal({ visible, onClose, task }) {
 
           <Dialog.Title className="DialogTitle">{task.name}</Dialog.Title>
 
-          {/* 
-            IMPORTANT: Replace nested <p> tags with <div> or <span>
-            so you don't get <p> within <p> warnings. 
-          */}
           <Dialog.Description className="DialogDescription">
             <div style={{ marginTop: "0.5rem" }}>
               <strong>Due:</strong> {task.due_date} ({daysLeftText})
@@ -80,7 +74,7 @@ function TaskDetailsModal({ visible, onClose, task }) {
                 : "None"}
             </div>
 
-            {/* Show comments if any */}
+            {/* If you have comments, etc. */}
             {Array.isArray(task.comments) && task.comments.length > 0 && (
               <div style={{ marginTop: "1rem" }}>
                 <strong>Comments:</strong>
@@ -96,12 +90,9 @@ function TaskDetailsModal({ visible, onClose, task }) {
             )}
           </Dialog.Description>
 
-          {/* 
-            Buttons to mark as In Progress or Completed
-            Calls handleStatusChange().
-          */}
+          {/* Status update buttons */}
           <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
-          {task.status !== "To Do" && (
+            {task.status !== "To Do" && (
               <button
                 className="Button grey"
                 onClick={() => handleStatusChange("To Do")}
@@ -109,7 +100,6 @@ function TaskDetailsModal({ visible, onClose, task }) {
                 Move to To Do
               </button>
             )}
-
             {task.status !== "In Progress" && (
               <button
                 className="Button green"
@@ -118,7 +108,6 @@ function TaskDetailsModal({ visible, onClose, task }) {
                 Mark In Progress
               </button>
             )}
-
             {task.status !== "Completed" && (
               <button
                 className="Button violet"
@@ -129,7 +118,27 @@ function TaskDetailsModal({ visible, onClose, task }) {
             )}
           </div>
 
-          {/* Close (X) Button */}
+          {/* ADD an Edit button that opens the EditTask dialog */}
+          <div style={{ marginTop: "1rem" }}>
+            <button className="Button" onClick={() => setEditOpen(true)}>
+              Edit Task
+            </button>
+          </div>
+
+          {/* If editOpen is true, show the EditTask form 
+              We pass the selected task, plus an onEdit callback and onClose 
+          */}
+          {editOpen && (
+            <Dialog.Root open={editOpen} onOpenChange={setEditOpen}>
+              <EditTask 
+                task={task} 
+                onEdit={handleTaskEdited} 
+                onClose={() => setEditOpen(false)} 
+              />
+            </Dialog.Root>
+          )}
+
+          {/* Close (X) Button for the TaskDetailsModal */}
           <Dialog.Close asChild>
             <button className="IconButton" aria-label="Close">
               <Cross2Icon />
