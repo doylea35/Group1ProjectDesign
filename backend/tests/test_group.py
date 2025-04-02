@@ -55,6 +55,15 @@ def test_create_group_handler(test_client, monkeypatch):
         if query.get("email") == "test@example.com"
         else None,
     )
+    
+    # Prepare a container to capture the chat document inserted.
+    captured_chat = {}
+
+    def fake_chat_insert_one(doc):
+        captured_chat.update(doc)
+        return doc
+
+    monkeypatch.setattr(chat_collection, "insert_one", fake_chat_insert_one)
 
     # Simulate group insertion returning a fixed ObjectId.
     monkeypatch.setattr(
@@ -70,14 +79,7 @@ def test_create_group_handler(test_client, monkeypatch):
         lambda query, update, return_document: {"email": "test@example.com", "groups": ["507f191e810c19729de860ea"]},
     )
 
-    # Prepare a container to capture the chat document inserted.
-    captured_chat = {}
-
-    def fake_chat_insert_one(doc):
-        captured_chat.update(doc)
-        return doc
-
-    monkeypatch.setattr(chat_collection, "insert_one", fake_chat_insert_one)
+    # monkeypatch.setattr(chat_collection, "insert_one", fake_chat_insert_one)
 
     # Override the invitation email function.
     # Adjust the module path if your send_project_invitation_email is defined elsewhere.
