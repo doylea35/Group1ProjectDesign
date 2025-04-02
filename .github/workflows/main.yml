@@ -36,32 +36,13 @@ jobs:
       - name: Run Tests
         run: pytest
 
-  # deploy_backend:
-  #   env:
-  #     TEST_PIPELINE: "False"
-  #   needs: [lint, test] # Deploy backend after lint and test
-  #   uses: ./.github/workflows/deploy.yml
-  #   secrets:
-  #     HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
-  #     HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-
-
-
-
   deploy_backend:
     env:
       TEST_PIPELINE: "False"
-    needs: [lint, test]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Setup Deployment Variables
-        if: env.TEST_PIPELINE == 'False'
-        run: |
-          echo "Creating deployment variables..."
-      - name: Deploy Application
-        uses: ./.github/workflows/deploy.yml
-        secrets:
-          HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+    needs: [lint, test] # Deploy backend after lint and test
+    uses: ./.github/workflows/deploy.yml
+    secrets:
+      HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+ 
