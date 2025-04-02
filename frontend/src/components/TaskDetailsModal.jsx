@@ -31,7 +31,7 @@ function TaskDetailsModal({ visible, onClose, task }) {
       // Example: PUT /tasks/edit?task_id=<TASK._ID>
       // Body: { "updated_fields": { "status": <newStatus> } }
       await axios.put(
-        `/tasks/edit?task_id=${task._id}`,  // Make sure _id is returned from the backend
+        `/tasks/edit/?task_id=${task.id}`,  // Make sure _id is returned from the backend
         { updated_fields: { status: newStatus } },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
