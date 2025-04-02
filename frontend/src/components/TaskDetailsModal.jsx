@@ -101,6 +101,15 @@ function TaskDetailsModal({ visible, onClose, task }) {
             Calls handleStatusChange().
           */}
           <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+          {task.status !== "To Do" && (
+              <button
+                className="Button grey"
+                onClick={() => handleStatusChange("To Do")}
+              >
+                Move to To Do
+              </button>
+            )}
+
             {task.status !== "In Progress" && (
               <button
                 className="Button green"
@@ -109,6 +118,7 @@ function TaskDetailsModal({ visible, onClose, task }) {
                 Mark In Progress
               </button>
             )}
+
             {task.status !== "Completed" && (
               <button
                 className="Button violet"
