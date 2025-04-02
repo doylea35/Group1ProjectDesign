@@ -37,6 +37,8 @@ jobs:
         run: pytest
 
   deploy_backend:
+    env:
+      TEST_PIPELINE: "False"
     needs: [lint, test] # Deploy backend after lint and test
     uses: ./.github/workflows/deploy.yml
     secrets:
