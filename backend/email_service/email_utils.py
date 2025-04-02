@@ -120,8 +120,10 @@ print(f'DISABLE_EMAIL_SENDER: {os.getenv("DISABLE_EMAIL_SENDER", "False")}')
     
 # email_sender : EmailSender = EmailSender()
 if os.getenv("DISABLE_EMAIL_SENDER", "False").lower() is "true":
+    print("email_sender = None")
     email_sender = None
 else:
+    print("email_sender is created")
     email_sender = EmailSender()
 
 # cred = load_credentials_from_env()
