@@ -116,6 +116,8 @@ class EmailSender():
 
         return True
     
+print(f'DISABLE_EMAIL_SENDER: {os.getenv("DISABLE_EMAIL_SENDER", "False")}')
+    
 # email_sender : EmailSender = EmailSender()
 if not os.getenv("DISABLE_EMAIL_SENDER", "False").lower() in ("true", "1", "yes"):
     email_sender = EmailSender()

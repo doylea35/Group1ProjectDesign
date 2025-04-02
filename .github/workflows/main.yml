@@ -20,6 +20,8 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    env:
+      DISABLE_EMAIL_SENDER: "True"
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -28,8 +30,6 @@ jobs:
         with:
           python-version: "3.x"
       - name: Install dependencies
-        env:
-          DISABLE_EMAIL_SENDER: "True"
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
