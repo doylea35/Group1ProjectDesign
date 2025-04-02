@@ -110,3 +110,88 @@ def test_create_group_handler(test_client, monkeypatch):
     assert captured_chat.get("participants") == ["test@example.com"]
     assert captured_chat.get("chat_history") == []
     assert captured_chat.get("group_id") == "507f191e810c19729de860ea"
+
+# Test when membership confirmation is successful.
+def test_confirm_member_success(test_client, monkeypatch):
+    group_id = "507f191e810c19729de860ea"
+    # Dummy group: "new@example.com" is pending.
+    dummy_group = {
+        "_id": ObjectId(group_id),
+        "members": ["existing@example.com"],
+        "pending_members": ["new@example.com"],
+        "name": "Test Group",
+    }
+    # Dummy user: not yet in the group. Note the inclusion of an "_id" field.
+    dummy_user = {
+        "_id": "dummy_user_id",
+        "email": "new@example.com",
+        "groups": []
+    }
+    from db.database import groups_collection, users_collection, chat_collection
+
+    # Override groups_collection.find_one to return the dummy group.
+    monkeypatch.setattr(
+        groups_collection,
+        "find_one",
+        lambda query: dummy_group if query.get("_id") == ObjectId(group_id) else None
+    )
+    # Override users_collection.find_one to return the dummy user.
+    monkeypatch.setattr(
+        users_collection,
+        "find_one",
+        lambda query: dummy_user if query.get("email") == "new@example.com" else None
+    )
+    # Simulate updating the group: add the user to members and remove from pending_members.
+    def fake_group_update(query, update, return_document):
+        if "new@example.com" not in dummy_group["members"]:
+            dummy_group["members"].append("new@example.com")
+        if "new@example.com" in dummy_group["pending_members"]:
+            dummy_group["pending_members"].remove("new@example.com")
+        return dummy_group
+    monkeypatch.setattr(groups_collection, "find_one_and_update", fake_group_update)
+    # Simulate updating the user: add the group id.
+    monkeypatch.setattr(
+        users_collection,
+        "find_one_and_update",
+        lambda query, update, return_document: {**dummy_user, "groups": dummy_user["groups"] + [group_id], "_id": dummy_user["_id"]}
+    )
+    # Simulate updating the chat (can be a no-op or return a dummy updated chat).
+    monkeypatch.setattr(
+        chat_collection,
+        "find_one_and_update",
+        lambda query, update: {"group_id": group_id, "participants": ["existing@example.com", "new@example.com"]}
+    )
+    
+    response = test_client.get(f"/api/group/confirmMembership/new@example.com/{group_id}")
+    assert response.status_code == status.HTTP_200_OK
+    json_data = response.json()
+    assert "User is now added to the group." in json_data["message"]
+    assert "updated_group" in json_data["data"]
+    assert "updated_user" in json_data["data"]
+
+# Test when the user is not found.
+def test_confirm_member_user_not_found(test_client, monkeypatch):
+    group_id = "507f191e810c19729de860ea"
+    dummy_group = {
+        "_id": ObjectId(group_id),
+        "members": ["existing@example.com"],
+        "pending_members": ["new@example.com"],
+        "name": "Test Group",
+    }
+    from db.database import groups_collection, users_collection
+    monkeypatch.setattr(
+        groups_collection,
+        "find_one",
+        lambda query: dummy_group if query.get("_id") == ObjectId(group_id) else None
+    )
+    # Simulate that the user is not found.
+    monkeypatch.setattr(users_collection, "find_one", lambda query: None)
+    
+    response = test_client.get(f"/api/group/confirmMembership/unknown@example.com/{group_id}")
+    print(f"\nResponse: {response.json()}\n")
+    # Expecting a 400 error.
+    json_data = response.json()
+    assert json_data["status_code"] == status.HTTP_400_BAD_REQUEST
+    
+    assert "is not a registered user" in json_data["detail"]["message"]
+
