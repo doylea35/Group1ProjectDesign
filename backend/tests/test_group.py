@@ -195,3 +195,87 @@ def test_confirm_member_user_not_found(test_client, monkeypatch):
     
     assert "is not a registered user" in json_data["detail"]["message"]
 
+# Test when the group is not found.
+def test_confirm_member_group_not_found(test_client, monkeypatch):
+    group_id = "507f191e810c19729de860ea"
+    dummy_user = {
+        "_id": "dummy_user_id",
+        "email": "new@example.com",
+        "groups": []
+    }
+    from db.database import groups_collection, users_collection
+    # Simulate group not found.
+    monkeypatch.setattr(groups_collection, "find_one", lambda query: None)
+    monkeypatch.setattr(
+        users_collection,
+        "find_one",
+        lambda query: dummy_user if query.get("email") == "new@example.com" else None
+    )
+    
+    response = test_client.get(f"/api/group/confirmMembership/new@example.com/{group_id}")
+    json_data = response.json()
+    assert json_data["status_code"] == status.HTTP_400_BAD_REQUEST
+    assert "does not exist" in json_data["detail"]["message"]
+
+# Test when the user is already a member.
+def test_confirm_member_already_member(test_client, monkeypatch):
+    group_id = "507f191e810c19729de860ea"
+    dummy_group = {
+        "_id": ObjectId(group_id),
+        "members": ["existing@example.com", "new@example.com"],
+        "pending_members": [],
+        "name": "Test Group",
+    }
+    dummy_user = {
+        "_id": "dummy_user_id",
+        "email": "new@example.com",
+        "groups": [group_id]
+    }
+    from db.database import groups_collection, users_collection
+    monkeypatch.setattr(
+        groups_collection,
+        "find_one",
+        lambda query: dummy_group if query.get("_id") == ObjectId(group_id) else None
+    )
+    monkeypatch.setattr(
+        users_collection,
+        "find_one",
+        lambda query: dummy_user if query.get("email") == "new@example.com" else None
+    )
+    
+    response = test_client.get(f"/api/group/confirmMembership/new@example.com/{group_id}")
+    json_data = response.json()
+
+    assert json_data["status_code"] == status.HTTP_200_OK
+    assert "already in the group" in json_data["message"]
+
+# Test when the user is not in the pending_members list.
+def test_confirm_member_not_pending(test_client, monkeypatch):
+    group_id = "507f191e810c19729de860ea"
+    dummy_group = {
+        "_id": ObjectId(group_id),
+        "members": ["existing@example.com"],
+        "pending_members": [],  # new@example.com is not pending.
+        "name": "Test Group",
+    }
+    dummy_user = {
+        "_id": "dummy_user_id",
+        "email": "new@example.com",
+        "groups": []
+    }
+    from db.database import groups_collection, users_collection
+    monkeypatch.setattr(
+        groups_collection,
+        "find_one",
+        lambda query: dummy_group if query.get("_id") == ObjectId(group_id) else None
+    )
+    monkeypatch.setattr(
+        users_collection,
+        "find_one",
+        lambda query: dummy_user if query.get("email") == "new@example.com" else None
+    )
+    
+    response = test_client.get(f"/api/group/confirmMembership/new@example.com/{group_id}")
+    json_data = response.json()
+    assert json_data["status_code"] == status.HTTP_400_BAD_REQUEST
+    assert "is not a pending memeber" in json_data["detail"]["message"]

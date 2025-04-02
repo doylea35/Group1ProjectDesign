@@ -117,7 +117,7 @@ async def confirm_member(user_email: str, group_id: str):
     updated_group = None
 
     if user_email in group["members"]:
-        return {"message": f"Successful operation: {user_email} is already in the group."}
+        return {"message": f"Successful operation: {user_email} is already in the group.", "status_code": status.HTTP_200_OK}
 
     if user_email not in group["pending_members"]:
         return HTTPException(
