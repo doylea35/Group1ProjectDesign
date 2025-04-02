@@ -274,7 +274,7 @@ function ProjectPage() {
                     <div
                       key={task._id}
                       className="task-card"
-                      onClick={() => toggleTaskDescription(task._id)}
+                      onClick={() => openTaskDetails(task)}
                     >
                       <h4 className="task-title">{task.name}</h4>
                       {activeTaskId === task._id && (
@@ -310,7 +310,7 @@ function ProjectPage() {
                     <div
                       key={task._id}
                       className="task-card"
-                      onClick={() => toggleTaskDescription(task._id)}
+                      onClick={() => openTaskDetails(task)}
                     >
                       <h4 className="task-title">{task.name}</h4>
                       {activeTaskId === task._id && (
