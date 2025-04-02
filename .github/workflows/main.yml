@@ -1,13 +1,13 @@
-name: Main Workflow 
+name: Main Workflow
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'frontend/**'
-      - 'backend/**'
-      - '.github/**'
+      - "frontend/**"
+      - "backend/**"
+      - ".github/**"
 
 jobs:
   lint:
@@ -23,11 +23,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+      - name: Install dependencies
+        run: pip install pytest
       - name: Run Tests
         run: pytest
 
   deploy_backend:
-    needs: [lint, test]  # Deploy backend after lint and test
+    needs: [lint, test] # Deploy backend after lint and test
     uses: ./.github/workflows/deploy.yml
     secrets:
       HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
