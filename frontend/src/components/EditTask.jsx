@@ -14,13 +14,11 @@ const EditTask = ({ task, onEdit, onClose }) => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    // Pre-fill form with existing task data
     if (task) {
       setTaskName(task.name || "");
       setTaskDescription(task.description || "");
       setDueDate(task.due_date || "");
       setTaskPriority(task.priority || "Medium");
-      // Convert existing labels array to comma-separated string:
       setLabelString(Array.isArray(task.labels) ? task.labels.join(", ") : "");
     }
   }, [task]);
@@ -38,23 +36,17 @@ const EditTask = ({ task, onEdit, onClose }) => {
       return;
     }
 
-    // Convert comma-separated labels to array
     const labelsArray = labelString
       .split(",")
       .map((lbl) => lbl.trim())
       .filter((lbl) => lbl !== "");
 
-    // Build the fields to update
     const updatedFields = {
       name: taskName,
       description: taskDescription,
       due_date: dueDate,
       priority: taskPriority,
-      // status could also be edited here if you wish:
-      // status: "In Progress" or ...
-      // For now, let's not override status unless you want the user to edit it in the same UI.
-      // labels are not yet supported by the /tasks/edit route unless you expand the backend's allowed_fields 
-      // so we'll skip them. If you want to also edit labels on the server side, see the explanation below.
+
     };
 
     try {
@@ -64,9 +56,6 @@ const EditTask = ({ task, onEdit, onClose }) => {
         return;
       }
 
-      // The backend’s /tasks/edit route, e.g.:
-      // PUT /tasks/edit?task_id=<task.id>
-      // body: { "updated_fields": { "name": "...", "description": "...", etc. } }
       await axios.put(
         `/tasks/edit/?task_id=${task.id}`, 
         { updated_fields: updatedFields },
@@ -75,14 +64,10 @@ const EditTask = ({ task, onEdit, onClose }) => {
         }
       );
 
-      // Optionally reload or call onEdit() in the parent to refetch tasks
       if (onEdit) {
         onEdit();
       }
-      // You can also do a forced reload:
-      // window.location.reload();
 
-      // Close the edit dialog
       if (onClose) {
         onClose();
       }
