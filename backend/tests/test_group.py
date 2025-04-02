@@ -1,8 +1,8 @@
 from bson import ObjectId
 from api.utils import get_current_user
 from fastapi import status
-from fastapi.testclient import TestClient
-from api.routes import group
+# from fastapi.testclient import TestClient
+# from api.routes import group
 
 
 def test_get_groups(test_client, monkeypatch):
@@ -46,6 +46,7 @@ def test_create_group_handler(test_client, monkeypatch):
     """
     from fastapi import status
     from db.database import users_collection, groups_collection, chat_collection
+    import backend.api.routes.group as group
 
     # Simulate that the creator exists.
     monkeypatch.setattr(
@@ -55,7 +56,14 @@ def test_create_group_handler(test_client, monkeypatch):
         if query.get("email") == "test@example.com"
         else None,
     )
-    
+
+    # Monkeypatch the user update so no real DB call is made.
+    monkeypatch.setattr(
+        users_collection,
+        "find_one_and_update",
+        lambda query, update, return_document: {"email": "test@example.com", "groups": ["507f191e810c19729de860ea"]}
+    )
+
     # Prepare a container to capture the chat document inserted.
     captured_chat = {}
 
@@ -69,20 +77,18 @@ def test_create_group_handler(test_client, monkeypatch):
     monkeypatch.setattr(
         groups_collection,
         "insert_one",
-        lambda doc: type("InsertResult", (), {"inserted_id": "507f191e810c19729de860ea"}),
+        lambda doc: type("InsertResult", (), {"inserted_id": "507f191e810c19729de860ea"})
     )
 
-    # Override the update that adds the group id to the user.
+    # Optionally, if your endpoint calls groups_collection.find_one_and_update anywhere,
+    # you could monkeypatch that as well.
     monkeypatch.setattr(
         groups_collection,
         "find_one_and_update",
-        lambda query, update, return_document: {"email": "test@example.com", "groups": ["507f191e810c19729de860ea"]},
+        lambda query, update, return_document: {"dummy": "value"}  # adjust if needed
     )
 
-    # monkeypatch.setattr(chat_collection, "insert_one", fake_chat_insert_one)
-
     # Override the invitation email function.
-    # Adjust the module path if your send_project_invitation_email is defined elsewhere.
     monkeypatch.setattr(group, "send_project_invitation_email", lambda members, creator_email, group_id, group_name: None)
 
     payload = {
@@ -112,6 +118,7 @@ def test_create_group_handler(test_client, monkeypatch):
     assert captured_chat.get("participants") == ["test@example.com"]
     assert captured_chat.get("chat_history") == []
     assert captured_chat.get("group_id") == "507f191e810c19729de860ea"
+
 
 # Test when membership confirmation is successful.
 def test_confirm_member_success(test_client, monkeypatch):
