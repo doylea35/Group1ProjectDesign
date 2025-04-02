@@ -10,6 +10,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      TEST_PIPELINE: "False"
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
