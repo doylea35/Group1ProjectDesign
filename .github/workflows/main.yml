@@ -21,7 +21,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      DISABLE_EMAIL_SENDER: "True"
+      TEST_PIPELINE: "True"
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

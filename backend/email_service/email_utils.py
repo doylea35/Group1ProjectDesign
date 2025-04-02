@@ -116,10 +116,10 @@ class EmailSender():
 
         return True
     
-print(f'DISABLE_EMAIL_SENDER: {os.getenv("DISABLE_EMAIL_SENDER", "False")}')
+print(f'TEST_PIPELINE: {os.getenv("TEST_PIPELINE", "False")}')
     
 # email_sender : EmailSender = EmailSender()
-if os.getenv("DISABLE_EMAIL_SENDER", "False").lower() == "true":
+if os.getenv("TEST_PIPELINE", "False").lower() == "true":
     print("email_sender = None")
     email_sender = None
 else:

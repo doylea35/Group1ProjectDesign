@@ -174,7 +174,13 @@ class GoogleCalendarService:
             print("Error creating event:", e)
             return None
 
-google_calendar_client = GoogleCalendarService()
+# google_calendar_client = GoogleCalendarService()
+
+if os.getenv("TEST_PIPELINE", "False").lower() == "true":
+    google_calendar_client = None
+else:
+    google_calendar_client = GoogleCalendarService()
+
 
 
 # if __name__ == "__main__":
