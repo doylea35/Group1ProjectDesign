@@ -16,7 +16,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Run Linter
-        run: echo "Running linting checks..." # Modify if needed
+        run: echo "Running linting checks..." # Currently dont have a linter
 
   test:
     runs-on: ubuntu-latest
@@ -24,7 +24,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Run Tests
-        run: echo "Running tests..." # Modify if needed
+        run: pytest
 
   deploy_backend:
     needs: [lint, test]  # Deploy backend after lint and test
@@ -32,11 +32,3 @@ jobs:
     secrets:
       HEROKU_APP_NAME: ${{ secrets.HEROKU_APP_NAME }}
       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-
-  # deploy_frontend:
-  #   needs: [lint, test]  # Deploy frontend after lint and test
-  #   uses: ./.github/workflows/deployFrontend.yml
-  #   secrets:
-  #     VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-  #     VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-  #     VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
