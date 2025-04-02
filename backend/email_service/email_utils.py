@@ -116,8 +116,11 @@ class EmailSender():
 
         return True
     
-email_sender : EmailSender = EmailSender()
-
+# email_sender : EmailSender = EmailSender()
+if not os.getenv("DISABLE_EMAIL_SENDER", "False").lower() in ("true", "1", "yes"):
+    email_sender = EmailSender()
+else:
+    email_sender = None  # or a dummy object that does nothing
 
 # cred = load_credentials_from_env()
 # if cred:
