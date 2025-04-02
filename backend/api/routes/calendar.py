@@ -89,6 +89,8 @@ async def send_calendar_invitation(request :SendCalendarInvitationRequest, curre
     if user_email not in attendee_emails:
         attendee_emails.append(user_email)
         
+    print(f"\n\n\n google_calendar_client: {google_calendar_client}\n\n\n")
+        
     start_datetime, end_datetime = google_calendar_client.get_next_weekday_datetime(request.day, request.start, request.end)
     
     google_calendar_client.create_event(summary, description, start_datetime, end_datetime, attendee_emails)
