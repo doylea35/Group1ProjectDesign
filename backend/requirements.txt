@@ -14,3 +14,4 @@ python-multipart==0.0.17
 boto3==1.37.11
 gunicorn==23.0.0
 websockets==11.0.3
+pytest==8.3.5
