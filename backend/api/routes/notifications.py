@@ -28,21 +28,21 @@ async def create_notification(request: CreateNotificationRequest):
             )
 
     # Create a new notification
-    notification = Notification(
-        user=request.user_email,
-        task_id=request.task_id,
-        group_id=request.group_id,
-        notification_type=request.notification_type,
-        message=request.content,
-        timestamp=datetime.now(),
-        read=False
-    )
+    notification = {
+        "user": request.user_email,
+        "task_id": request.task_id,
+        "group_id": request.group_id,
+        "notification_type": request.notification_type,
+        "message":request.content,
+        "timestamp":datetime.now(),
+        "read":False
+    }
     
     # Send email notification
     # email_sender.send_notification_email(request.user_email, request.notification_type, request.content)
 
     # Insert the notification into the database
-    new_notification = notifications_collection.insert_one(notification.dict())
+    new_notification = notifications_collection.insert_one(notification)
 
     return {
         "message": "Notification created successfully",
@@ -82,9 +82,11 @@ async def get_notifications_by_user(request: GetNotificationsByUserRequest):
         raise HTTPException(status_code=400, detail="Invalid email format")
 
     # Find notifications for the user
-    notifications = notifications_serial(notifications_collection.find({"user_email": request.user_email}))
+    notifications = notifications_serial(
+        notifications_collection.find({"user": request.user_email})
+    )
 
-    return {"notifications": notifications_serial(notifications)}
+    return {"notifications": notifications}
 
 @notifications_router.get("/get_notifications_by_group")
 async def get_notifications_by_group(request: GetNotificationsByGroupRequest):

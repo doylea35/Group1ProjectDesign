@@ -1,4 +1,4 @@
-from db.models import User, Group, Task, SubTeam
+from db.models import User, Group, Task, SubTeam, Notification
 from bson import ObjectId
 
 def _user_serial(user: dict) -> User:
@@ -49,14 +49,18 @@ def _subteam_serial(subteam: dict) -> SubTeam:
         "group": str(subteam["group"])
     }
 
-def _notification_serial(notification: dict) -> dict:
-    return {
-        "id": str(notification["_id"]),
-        "user": notification["user"],
-        "task_id": str(notification["task_id"]),
-        "message": notification["message"],
-        "status": notification["status"]
-    }
+def _notification_serial(notification: dict) -> Notification:
+    return Notification(
+        _id=str(notification["_id"]),
+        user=notification["user"],
+        task_id=str(notification["task_id"]),
+        group_id=str(notification["group_id"]),
+        notification_type=notification["notification_type"],
+        message=notification["message"],
+        timestamp=notification["timestamp"],
+        read=notification["read"]
+    )
+
 
 def users_serial(users: list[dict]) -> list[User]:
     return [_user_serial(user) for user in users]
@@ -70,5 +74,5 @@ def tasks_serial(tasks: list[dict]) -> list[Task]:
 def subteams_serial(subteams: list[dict]) -> list[SubTeam]:
     return [_subteam_serial(subteam) for subteam in subteams]
 
-def notifications_serial(notifications: list[dict]) -> list[dict]:
+def notifications_serial(notifications: list[dict]) -> list[Notification]:
     return [_notification_serial(notification) for notification in notifications]
