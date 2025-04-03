@@ -9,30 +9,19 @@ function ChatInterface() {
   const [newMessage, setNewMessage] = useState("");
   const [isSocketReady, setIsSocketReady] = useState(false);
   const ws = useRef(null);
-
-  //   const userEmail = localStorage.getItem("userEmail");
-  //   const authToken = sessionStorage.getItem("authToken");
+  const messagesEndRef = useRef(null); // Reference for the auto-scroll container
 
   const user = JSON.parse(localStorage.getItem("user"));
   const userEmail = user["email"];
   const authToken = user["token"];
 
-  console.log(
-    `user: ${user}, userEmail: ${userEmail}, authToken: ${authToken}`
-  );
   // Helper function to check if projectId is a valid ObjectId-like string
   const isValidObjectId = (id) => /^[a-f\d]{24}$/i.test(id);
 
-  // Fetch chat document using group_id from the route
   useEffect(() => {
-    console.log(`inside ChatInterface projectId: ${projectId}\n`);
     const fetchChat = async () => {
-      console.log("fetch chat is called");
       if (!isValidObjectId(projectId)) {
-        console.warn(
-          "Invalid group_id format (must be 24-character hex):",
-          projectId
-        );
+        console.warn("Invalid group_id format (must be 24-character hex):", projectId);
         return;
       }
 
@@ -46,33 +35,23 @@ function ChatInterface() {
           }
         );
 
-        console.log("get chat history returned");
-
         const chatData = response.data.data;
         setChatId(chatData._id);
         setMessages(chatData.chat_history || []);
-        console.log("Chat loaded successfully");
       } catch (error) {
-        console.error(
-          "Failed to fetch chat:",
-          error.response?.data || error.message
-        );
+        console.error("Failed to fetch chat:", error.response?.data || error.message);
       }
     };
-    console.log(`authToken: ${authToken}`);
 
     if (projectId && authToken) {
       fetchChat();
     }
   }, [projectId, authToken]);
 
-  // Establish WebSocket connection when chatId and userEmail are ready
   useEffect(() => {
     if (!chatId || !userEmail) return;
 
     const wsUrl = `wss://group-grade-backend-5f919d63857a.herokuapp.com/ws/chat/${chatId}/${userEmail}`;
-    console.log("Connecting to WebSocket:", wsUrl);
-
     ws.current = new WebSocket(wsUrl);
 
     ws.current.onopen = () => {
@@ -82,42 +61,22 @@ function ChatInterface() {
 
     ws.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log("Received message:", data);
-
-      if (data.message) {
-        setMessages((prev) => [...prev, data]);
-      }
+      setMessages((prev) => [...prev, data]);
+      scrollToBottom(); // Scroll to bottom on new message
     };
 
-    ws.current.onclose = () => {
-      console.log("WebSocket closed");
-      setIsSocketReady(false);
-    };
-
-    ws.current.onerror = (error) => {
-      console.error("WebSocket error:", error);
-      setIsSocketReady(false);
-    };
-
-    const ping = setInterval(() => {
-      if (ws.current.readyState === WebSocket.OPEN) {
-        ws.current.send(
-          JSON.stringify({
-            message: "heartbeat",
-            is_heartbeat_msg: true,
-            close_connection: false,
-          })
-        );
-      }
-    }, 40000);
+    ws.current.onclose = () => setIsSocketReady(false);
+    ws.current.onerror = (error) => setIsSocketReady(false);
 
     return () => {
-      clearInterval(ping);
       if (ws.current) ws.current.close();
     };
   }, [chatId, userEmail]);
 
-  // Handle sending a new message through WebSocket
+  useEffect(() => {
+    scrollToBottom(); // Scroll to bottom when the component mounts
+  }, [messages]);
+
   const sendMessage = (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -139,26 +98,38 @@ function ChatInterface() {
     setNewMessage("");
   };
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const formatIrishTime = (date) => {
+    const dt = new Date(date);
+  
+    const formatter = new Intl.DateTimeFormat('en-IE', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Europe/Dublin'
+    });
+    dt.setHours(dt.getHours() + (dt.getTimezoneOffset() < 0 ? 1 : 0)); 
+  
+    return formatter.format(dt);
+  };
+
   return (
     <div className="chat-container">
-      {!isSocketReady && (
-        <div className="connecting-message">Connecting to chat...</div>
-      )}
+      {!isSocketReady && <div className="connecting-message">Connecting to chat...</div>}
 
       <ul className="message-list">
-        {messages.length === 0 && <li>No messages yet.</li>}
         {messages.map((msg, index) => (
-          <li
-            key={index}
-            className={`message-item ${
-              msg.sender === userEmail || msg.sender_email === userEmail
-                ? "mine"
-                : "theirs"
-            }`}
-          >
+          <li key={index} className={`message-item ${msg.sender === userEmail ? "mine" : "theirs"}`}>
             {msg.message}
+            <span className="timestamp">
+              {formatIrishTime(msg.delivered_time)}
+            </span>  {/* Display timestamp */}
           </li>
         ))}
+        <div ref={messagesEndRef} /> {/* Invisible div for auto-scrolling */}
       </ul>
 
       <form onSubmit={sendMessage} className="send-message-form">
