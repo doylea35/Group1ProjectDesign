@@ -101,6 +101,8 @@ async def get_notifications_by_group(request: GetNotificationsByGroupRequest):
             )
 
     # Find notifications for the group
-    notifications = notifications_serial(notifications_collection.find({"group_id": request.group_id}))
+    notifications = notifications_serial(
+        notifications_collection.find({"group_id": request.group_id})
+    )
 
-    return {"notifications": notifications_serial(notifications)}
+    return {"notifications": notifications}
