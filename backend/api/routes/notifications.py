@@ -106,3 +106,39 @@ async def get_notifications_by_group(request: GetNotificationsByGroupRequest):
     )
 
     return {"notifications": notifications}
+
+
+@notifications_router.get("/get_unread_notifications_by_user")
+async def get_unread_notifications_by_user(request: GetNotificationsByUserRequest):
+    """
+    Get unread notifications by user.
+    """
+    # Validate email
+    if not is_valid_email(request.user_email):
+        raise HTTPException(status_code=400, detail="Invalid email format")
+
+    # Find unread notifications for the user
+    notifications = notifications_serial(
+        notifications_collection.find({"user": request.user_email, "read": False})
+    )
+
+    return {"notifications": notifications}
+
+@notifications_router.get("/get_unread_notifications_by_group")
+async def get_unread_notifications_by_group(request: GetNotificationsByGroupRequest):
+    """
+    Get unread notifications by group.
+    """
+    # Check if the group exists
+    if not groups_collection.find_one({"_id": ObjectId(request.group_id)}):
+        raise HTTPException(
+                status_code=404,
+                detail=f"Group with ID {request.group_id} does not exist."
+            )
+
+    # Find unread notifications for the group
+    notifications = notifications_serial(
+        notifications_collection.find({"group_id": request.group_id, "read": False})
+    )
+
+    return {"notifications": notifications}

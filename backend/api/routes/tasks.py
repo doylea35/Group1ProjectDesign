@@ -86,7 +86,7 @@ async def create_task(task: Task):
         notification_dir = {
             "user_email": user,
             "group_id": task.group,
-            "notification_type": "New Task",
+            "notification_type": "Task Assigned",
             "content": f"You have been assigned a new task: {task.name}",
             "task_id": str(new_task.inserted_id)
         }
