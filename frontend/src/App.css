@@ -1748,3 +1748,93 @@ small {
   .violet-text {
     color: var(--violet-10); /* Or use the hex code if necessary */
 }
+
+/* Chat Interface Styles */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  width: 80vw;
+  max-width: 900px; 
+  height: 70vh;
+  background-color: var(--violet-3);
+  padding: 20px;
+  box-sizing: border-box; 
+  border-radius: 15px; 
+  margin: 0 auto; 
+  border: 3px solid var(--violet-7); 
+}
+
+/* For the message list */
+.message-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 10px;
+  width: 100%;
+  overflow-y: auto;
+  height: 80%; /* Adjust the height of the messages area */
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.message-item {
+  margin-bottom: 8px;
+  padding: 10px;
+  max-width: 60%;
+  border-radius: 20px;
+  line-height: 1.6;
+  position: relative;
+  color: white; /* Ensure text is white for visibility */
+}
+
+.message-item.mine {
+  margin-left: auto;
+  background-color: var(--violet-9); /* Darker violet for sent messages */
+}
+
+.message-item.theirs {
+  background-color: var(--violet-4); /* Lighter violet for received messages */
+}
+
+.send-message-form {
+  display: flex;
+  padding: 10px;
+}
+
+.input-message {
+  flex-grow: 1;
+  padding: 10px;
+  margin-right: 10px;
+  border: 2px solid var(--violet-7); /* Violet border for input */
+  border-radius: 20px;
+  background-color: var(--violet-2); /* Very light violet for input background */
+  color: var(--violet-12); /* Dark violet for text */
+}
+
+.send-button {
+  padding: 10px 20px;
+  background-color: var(--violet-8); /* Dark violet for button */
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.send-button:hover {
+  background-color: var(--violet-10); /* Even darker violet on hover */
+}
+
+.connecting-message {
+  text-align: center;
+  color: gray;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.timestamp {
+  font-size: 0.75em; 
+  color: var(--violet-7); 
+  position: absolute; 
+  bottom: 5px; 
+  right: 10px; 
+  margin-top: 4px; 
+}
