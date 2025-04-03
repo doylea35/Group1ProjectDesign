@@ -15,6 +15,7 @@ import ProjectSettingsPage from "./pages/ProjectSettingsPage";
 import ProjectFilesPage from "./pages/FilePage";
 import NotificationsPage from "./pages/NotificationPage";
 import AccountPage from "./pages/AccountsPage";
+import ChatInterface from "./components/ChatInterface";
 import axios from "axios";
 
 
@@ -44,6 +45,7 @@ function App() {
         <Route path="schedule/:projectId" element={<SchedulingPage />} />
         <Route path="/project/:projectId/settings" element={<ProjectSettingsPage />} />
         <Route path="/project/:projectId/files" element={<ProjectFilesPage />} />
+        <Route path="/project/:projectId/message" element={<ChatInterface />} />
         <Route path="home" element={<HomePage />} />
         <Route path="account" element={<AccountPage />} /> 
       </Route>
