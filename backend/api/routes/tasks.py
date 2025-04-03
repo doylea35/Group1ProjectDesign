@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, Query, Depends
 from typing import Dict, Optional
 from db.database import groups_collection, users_collection, tasks_collection
-from db.models import User, Group, Task
+from db.models import User, Group, Task, Notification
 from db.schemas import users_serial, groups_serial, tasks_serial
 from bson import ObjectId # mongodb uses ObjectId to store _id
 from typing import List
@@ -9,6 +9,8 @@ from datetime import datetime
 from api.request_model.comment_request_schema import AddCommentRequest
 from api.utils import get_current_user 
 from api.utils import is_valid_email 
+from api.routes.notifications import create_notification
+from api.request_model.notifications_request_schema import CreateNotificationRequest
 from email_service.email_utils import email_sender
 import os
 
@@ -27,7 +29,7 @@ async def get_tasks(assigned_to: Optional[str] = Query(None, description="User e
 
 #creates task and assigns it to user
 @tasks_router.post("/tasks/")
-def create_task(task: Task):
+async def create_task(task: Task):
 
     # Check if user exists
     assigned_users = [user for user in task.assigned_to if users_collection.find_one({"email": user})]    
@@ -80,6 +82,18 @@ def create_task(task: Task):
     # send email to new user
     for user in task.assigned_to:
         send_assigned_task_email(user, task.name, task.description, str(new_task.inserted_id), task.group, assigned_group["name"])
+        # create notification for each user
+        notification_dir = {
+            "user_email": user,
+            "group_id": task.group,
+            "notification_type": "Task Assigned",
+            "content": f"You have been assigned a new task: {task.name}",
+            "task_id": str(new_task.inserted_id)
+        }
+
+        # create notification in database
+        notification = CreateNotificationRequest(**notification_dir)
+        await create_notification(notification)
 
     return {
     "id": str(new_task.inserted_id),  
@@ -89,7 +103,7 @@ def create_task(task: Task):
 
 
 @tasks_router.put("/tasks/assign/")
-def assign_task(task_id: str, new_user_email: str):
+async def assign_task(task_id: str, new_user_email: str):
     # check if task exists
     task = tasks_collection.find_one({"_id": ObjectId(task_id)})
     if not task:
@@ -108,11 +122,23 @@ def assign_task(task_id: str, new_user_email: str):
 
     # send email to new user
     send_assigned_task_email(new_user_email, task["name"], task["description"], task_id, task["group"], task["group_name"])
+    # create notification for new user
+    notification_dir = {
+        "user_email": new_user_email,
+        "group_id": task["group"],
+        "notification_type": "Task Assigned",
+        "content": f"You have been assigned a new task: {task["name"]}",
+        "task_id": str(task_id)
+    }
+
+    # create notification in database
+    notification = CreateNotificationRequest(**notification_dir)
+    await create_notification(notification)
 
     return {"message": "task assigned successfully", "task_id": task_id, "assigned_to": new_user_email}
 
 @tasks_router.put("/tasks/edit/")
-def update_task(task_id: str, request_body: dict):
+async def update_task(task_id: str, request_body: dict):
     print(f"Received task_id: {task_id}")
     print(f"Updated fields received: {request_body}")
 
@@ -141,6 +167,20 @@ def update_task(task_id: str, request_body: dict):
         {"$set": update_data}
     )
 
+    # create notification for updated task
+    for user in task["assigned_to"]:
+        notification_dir = {
+            "user_email": user,
+            "group_id": task["group"],
+            "notification_type": "Task Updated",
+            "content": f"Your task has been updated: {task["name"]}",
+            "task_id": str(task_id)
+        }
+
+        # create notification in database
+        notification = CreateNotificationRequest(**notification_dir)
+        await create_notification(notification)
+
     # Return a success response with the updated fields
     return {"message": "Task updated successfully", "task_id": task_id, "updated_fields": update_data}
 
@@ -162,6 +202,21 @@ async def add_comment(task_id: str, comment_request: AddCommentRequest, current_
     
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Task not found or comment not added")
+    
+    # create notification for each user assigned to the task
+    task = tasks_collection.find_one({"_id": ObjectId(task_id)})
+    for user in task["assigned_to"]:
+        notification_dir = {
+            "user_email": user,
+            "group_id": task["group"],
+            "notification_type": "Task Commented",
+            "content": f"New comment on your task: {task["name"]}",
+            "task_id": str(task_id)
+        }
+
+        # create notification in database
+        notification = CreateNotificationRequest(**notification_dir)
+        await create_notification(notification)
     
     return {"message": "Comment added successfully", "comment": new_comment}
 
