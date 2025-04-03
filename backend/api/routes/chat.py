@@ -23,7 +23,7 @@ class CreateChatQuery(BaseModel):
 @chat_router.get("/api/chat/{group_id}")
 async def get_groupchat(group_id : str, current_user: dict = Depends(get_current_user)):
     
-    chat = chat_collection.find_one({"group_id": ObjectId(group_id)})
+    chat = chat_collection.find_one({"group_id": group_id})
     
     if chat is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chat not found")
