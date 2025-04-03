@@ -1,5 +1,5 @@
 from db.models import Notification
-from db.database import notifications_collection
+from db.database import notifications_collection, groups_collection, users_collection
 from db.schemas import _notification_serial, notifications_serial
 from fastapi import APIRouter, HTTPException
 from email_service.email_utils import email_sender
@@ -20,9 +20,11 @@ async def create_notification(request: CreateNotificationRequest):
         raise HTTPException(status_code=400, detail="Invalid email format")
 
     # Check if the group exists
-    group = await notifications_collection.find_one({"_id": ObjectId(request.group_id)})
-    if not group:
-        raise HTTPException(status_code=404, detail="Group not found")
+    if not groups_collection.find_one({"_id": ObjectId(request.group_id)}):
+        raise HTTPException(
+                status_code=404,
+                detail=f"Group with ID {request.group_id} does not exist."
+            )
 
     # Create a new notification
     notification = Notification(
@@ -73,7 +75,7 @@ async def get_notifications_by_user(request: GetNotificationsByUserRequest):
         raise HTTPException(status_code=400, detail="Invalid email format")
 
     # Find notifications for the user
-    notifications = await notifications_collection.find({"user_email": request.user_email}).to_list(length=None)
+    notifications = notifications_serial(notifications_collection.find({"user_email": request.user_email}))
 
     return {"notifications": notifications_serial(notifications)}
 
@@ -83,11 +85,13 @@ async def get_notifications_by_group(request: GetNotificationsByGroupRequest):
     Get notifications by group.
     """
     # Check if the group exists
-    group = await notifications_collection.find_one({"_id": ObjectId(request.group_id)})
-    if not group:
-        raise HTTPException(status_code=404, detail="Group not found")
+    if not groups_collection.find_one({"_id": ObjectId(request.group_id)}):
+        raise HTTPException(
+                status_code=404,
+                detail=f"Group with ID {request.group_id} does not exist."
+            )
 
     # Find notifications for the group
-    notifications = await notifications_collection.find({"group_id": request.group_id}).to_list(length=None)
+    notifications = notifications_serial(notifications_collection.find({"group_id": request.group_id}))
 
     return {"notifications": notifications_serial(notifications)}
