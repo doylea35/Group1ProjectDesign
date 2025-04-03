@@ -6,6 +6,7 @@ from email_service.email_utils import email_sender
 from api.utils import is_valid_email
 from bson import ObjectId
 from api.request_model.notifications_request_schema import CreateNotificationRequest, MarkNotificationAsReadRequest, GetNotificationsByUserRequest, GetNotificationsByGroupRequest
+from datetime import datetime
 
 
 notifications_router = APIRouter()
@@ -28,19 +29,22 @@ async def create_notification(request: CreateNotificationRequest):
 
     # Create a new notification
     notification = Notification(
-        user_email=request.user_email,
+        user=request.user_email,
+        task_id=request.task_id,
         group_id=request.group_id,
         notification_type=request.notification_type,
-        content=request.content
+        message=request.content,
+        timestamp=datetime.now(),
+        read=False
     )
 
     # Insert the notification into the database
-    result = await notifications_collection.insert_one(notification.dict())
+    new_notification = notifications_collection.insert_one(notification.dict())
     
     # Send email notification
     email_sender.send_notification_email(request.user_email, request.notification_type, request.content)
 
-    return {"message": "Notification created successfully", "data": notification}
+    return {"message": "Notification created successfully", "data": new_notification}
 
 @notifications_router.put("/mark_notification_as_read")
 async def mark_notification_as_read(request: MarkNotificationAsReadRequest):
