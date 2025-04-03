@@ -1792,7 +1792,7 @@ small {
 }
 
 .message-item.theirs {
-  background-color: var(--violet-4); /* Lighter violet for received messages */
+  background-color: var(--violet-7); /* Lighter violet for received messages */
 }
 
 .send-message-form {
@@ -1832,9 +1832,17 @@ small {
 
 .timestamp {
   font-size: 0.75em; 
-  color: var(--violet-7); 
+  color: gray;
   position: absolute; 
   bottom: 5px; 
   right: 10px; 
   margin-top: 4px; 
+}
+
+.sender-name {
+  font-size: 0.85em;
+  color: black;
+  top: 5px; 
+  position: absolute;
+  left: 10px;
 }

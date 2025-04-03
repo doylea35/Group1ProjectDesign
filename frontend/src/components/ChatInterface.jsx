@@ -11,12 +11,12 @@ function ChatInterface() {
   const ws = useRef(null);
   const messagesEndRef = useRef(null); // Reference for the auto-scroll container
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  const userEmail = user["email"];
-  const authToken = user["token"];
+  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const { email: userEmail, name: userName, token: authToken } = user;
 
   // Helper function to check if projectId is a valid ObjectId-like string
   const isValidObjectId = (id) => /^[a-f\d]{24}$/i.test(id);
+  
 
   useEffect(() => {
     const fetchChat = async () => {
@@ -77,6 +77,15 @@ function ChatInterface() {
     scrollToBottom(); // Scroll to bottom when the component mounts
   }, [messages]);
 
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if(user && user.name) {
+      console.log("Loaded User Name:", user.name);
+    } else {
+      console.log("No User Name Found in Local Storage");
+    }
+  }, []);
+
   const sendMessage = (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -89,6 +98,7 @@ function ChatInterface() {
     ws.current.send(
       JSON.stringify({
         message: newMessage,
+        sender_name: userName,
         sender_email: userEmail,
         is_heartbeat_msg: false,
         close_connection: false,
@@ -123,13 +133,14 @@ function ChatInterface() {
       <ul className="message-list">
         {messages.map((msg, index) => (
           <li key={index} className={`message-item ${msg.sender === userEmail ? "mine" : "theirs"}`}>
+           <div className="sender-name">{msg.sender_name || 'No Name'}</div>
             {msg.message}
             <span className="timestamp">
               {formatIrishTime(msg.delivered_time)}
-            </span>  {/* Display timestamp */}
+            </span>  
           </li>
         ))}
-        <div ref={messagesEndRef} /> {/* Invisible div for auto-scrolling */}
+        <div ref={messagesEndRef} /> 
       </ul>
 
       <form onSubmit={sendMessage} className="send-message-form">
