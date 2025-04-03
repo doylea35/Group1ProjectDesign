@@ -84,10 +84,11 @@ def create_task(task: Task):
         send_assigned_task_email(user, task.name, task.description, str(new_task.inserted_id), task.group, assigned_group["name"])
         # create notification for each user
         notification_dir = {
-            "user": user,
-            "task_id": str(new_task.inserted_id),
+            "user_email": user,
             "group_id": task.group,
-            "message": f"You have been assigned a new task: {task.name}"
+            "notification_type": "New Task",
+            "content": f"You have been assigned a new task: {task.name}",
+            "task_id": str(new_task.inserted_id)
         }
 
         # create notification in database
