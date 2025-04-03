@@ -29,7 +29,7 @@ async def get_tasks(assigned_to: Optional[str] = Query(None, description="User e
 
 #creates task and assigns it to user
 @tasks_router.post("/tasks/")
-def create_task(task: Task):
+async def create_task(task: Task):
 
     # Check if user exists
     assigned_users = [user for user in task.assigned_to if users_collection.find_one({"email": user})]    
@@ -93,7 +93,7 @@ def create_task(task: Task):
 
         # create notification in database
         notification = CreateNotificationRequest(**notification_dir)
-        create_notification(notification)
+        await create_notification(notification)
 
     return {
     "id": str(new_task.inserted_id),  
