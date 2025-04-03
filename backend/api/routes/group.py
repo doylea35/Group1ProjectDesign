@@ -158,7 +158,7 @@ async def confirm_member(user_email: str, group_id: str):
                 )
             
     # add new user to the chat   
-    chat_collection.find_one_and_update({"group_id": group_id},
+    chat_collection.find_one_and_update({"group_id": ObjectId(group_id)},
                                         {"$addToSet": {"participants": user_email}})
     
     
