@@ -25,9 +25,14 @@ const LoginPage = ({ setOpen }) => {
       });
       console.log("Login successful:", response.data); // Debugging log
 
-      // Store user data in localStorage
-      const { email, token } = response.data; // Assuming response contains email and token
-      localStorage.setItem('user', JSON.stringify({ email, token }));
+      const { email, token } = response.data;
+
+       // Retrieve existing user details from local storage to keep the skills
+       const existingUserData = JSON.parse(localStorage.getItem('user'));
+       const skills = existingUserData && existingUserData.skills ? existingUserData.skills : [];
+
+       // Store user data in localStorage with the existing or empty skills array
+       localStorage.setItem('user', JSON.stringify({ email, token, skills }));
 
       // Navigate to home page
       navigate('/home');

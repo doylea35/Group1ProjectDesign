@@ -14,6 +14,7 @@ const AccountPage = () => {
     const [newEmail, setNewEmail] = useState('');
 
     useEffect(() => {
+        // Load user data from local storage
         const userData = JSON.parse(localStorage.getItem('user'));
         if (userData) {
             console.log("Loaded user from localStorage:", userData);
@@ -25,36 +26,39 @@ const AccountPage = () => {
         }
     }, []);
 
-    const syncSkillsToBackend = async (skillsToSend) => {
+    const syncSkillsToBackend = async (skillsToAdd, skillsToRemove) => {
         try {
-            console.log("Syncing skills to backend:", skillsToSend);
+            console.log("Syncing skills to backend:", skillsToAdd, skillsToRemove);
             await axios.put('/api/user/updateUser', {
                 email: userDetails.email,
-                add_skills: skillsToSend,
+                add_skills: skillsToAdd,
+                remove_skills: skillsToRemove
             }, {
                 headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem('user')).token}` }
             });
             console.log("Skills updated successfully.");
+            
+            // Update local storage and state to reflect the changes
+            const newUserDetails = {
+                ...userDetails,
+                skills: userDetails.skills.filter(skill => !skillsToRemove.includes(skill)).concat(skillsToAdd)
+            };
+            localStorage.setItem('user', JSON.stringify(newUserDetails));
+            setUserDetails(newUserDetails);
         } catch (error) {
             console.error("Failed to sync skills:", error);
         }
     };
 
     const handleDeleteSkill = (skillToDelete) => {
-        const updatedSkills = userDetails.skills.filter(skill => skill !== skillToDelete);
-        setUserDetails(prev => ({ ...prev, skills: updatedSkills }));
-        syncSkillsToBackend(updatedSkills);
-        console.log("Deleted skill:", skillToDelete);
+        syncSkillsToBackend([], [skillToDelete]);
     };
 
     const handleAdditionSkill = (e) => {
         if (e.key === 'Enter' && e.target.value) {
             const newSkill = e.target.value.trim();
             if (!userDetails.skills.includes(newSkill)) {
-                const updatedSkills = [...userDetails.skills, newSkill];
-                setUserDetails(prev => ({ ...prev, skills: updatedSkills }));
-                syncSkillsToBackend(updatedSkills);
-                console.log("Added new skill:", newSkill);
+                syncSkillsToBackend([newSkill], []);
             }
             e.target.value = '';
         }
@@ -74,7 +78,6 @@ const AccountPage = () => {
                 ...prev,
                 email: newEmail
             }));
-
             console.log("Email updated successfully.");
             setEditMode(false);
         } catch (error) {
@@ -109,7 +112,9 @@ const AccountPage = () => {
                         <p className="violet-text"><strong>Skills:</strong></p>
                         <div className="skills-container">
                             {userDetails.skills.map((skill, index) => (
-                                <div key={index} className="skill-tag">{skill}</div>
+                                <div key={index} className="skill-tag">
+                                    {skill}
+                                </div>
                             ))}
                         </div>
 
