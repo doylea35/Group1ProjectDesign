@@ -900,13 +900,6 @@ to {
   margin-left: 250px; 
 }
 
-.page-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh; /* Full viewport height */
-  overflow: hidden; /* Prevent overall page scrolling */
-}
-
 /* Free Time Schedule (Bottom Section) */
 .show-free-times {
   margin-top: 40px;
@@ -1636,4 +1629,122 @@ to {
   font-size: 16px;          /* Consistent font size */
   border: 1px solid #ccc;   /* Border styling */
   border-radius: 4px;       /* Rounded corners */
+}
+
+
+.Button.red {
+  background-color: #ffcccc; /* Pale red background */
+  color: #ff4d4f; 
+}
+
+.Button.red:hover {
+  background-color: #ffb3b3; /* Darker red on hover */
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  margin-left: 1rem;
+}
+
+.left-align {
+  text-align: left;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  margin: 1rem;
+  max-width: 600px;
+}
+
+.ButtonContainer {
+  display: flex;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+/* Additional specific targeting for Accounts Page */
+.accounts-page .page-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding-left: 300px;
+  justify-content: flex-start; /* Ensures content is left aligned */
+}
+
+.accounts-page .page-header h1 {
+  font-size: 4rem; /* Adjust size as needed */
+  margin: 0;
+  padding: 0; /* Removes any default padding */
+}
+
+.Input, small {
+  display: block; 
+  margin-bottom: 8px; 
+}
+
+small {
+  font-size: 0.8rem; 
+  color: #666; 
+}
+
+.skills-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.skill-tag {
+  background-color: #a78bfa; /* Tailwind violet-400 */
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.skill-tag .delete-skill {
+  background: none;
+  border: none;
+  color: black;
+  margin-left: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.skill-tag .delete-skill:hover {
+  color: #333;
+}
+
+.skill-input {
+  width: 100%;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  padding: 0 10px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--violet-11);
+  box-shadow: 0 0 0 1px var(--violet-7);
+  height: 35px;
+  }
+
+  .violet-text {
+    color: var(--violet-10); /* Or use the hex code if necessary */
 }

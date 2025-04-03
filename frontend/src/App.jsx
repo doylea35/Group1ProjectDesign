@@ -14,6 +14,7 @@ import ConfirmGroupMembershipPage from "./pages/confirmMembership";
 import ProjectSettingsPage from "./pages/ProjectSettingsPage";
 import ProjectFilesPage from "./pages/FilePage";
 import NotificationsPage from "./pages/NotificationPage";
+import AccountPage from "./pages/AccountsPage";
 import axios from "axios";
 
 
@@ -44,6 +45,7 @@ function App() {
         <Route path="/project/:projectId/settings" element={<ProjectSettingsPage />} />
         <Route path="/project/:projectId/files" element={<ProjectFilesPage />} />
         <Route path="home" element={<HomePage />} />
+        <Route path="account" element={<AccountPage />} /> 
       </Route>
     </Routes>
   );
