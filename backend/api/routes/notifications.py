@@ -59,12 +59,12 @@ async def mark_notification_as_read(request: MarkNotificationAsReadRequest):
         raise HTTPException(status_code=400, detail="Invalid email format")
 
     # Check if the notification exists
-    notification = await notifications_collection.find_one({"_id": ObjectId(request.notification_id)})
+    notification = notifications_collection.find_one({"_id": ObjectId(request.notification_id)})
     if not notification:
         raise HTTPException(status_code=404, detail="Notification not found")
 
     # Update the notification to mark it as read
-    await notifications_collection.update_one(
+    notifications_collection.update_one(
         {"_id": ObjectId(request.notification_id)},
         {"$set": {"read": True}}
     )
