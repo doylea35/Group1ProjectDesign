@@ -37,14 +37,17 @@ async def create_notification(request: CreateNotificationRequest):
         timestamp=datetime.now(),
         read=False
     )
+    
+    # Send email notification
+    # email_sender.send_notification_email(request.user_email, request.notification_type, request.content)
 
     # Insert the notification into the database
     new_notification = notifications_collection.insert_one(notification.dict())
-    
-    # Send email notification
-    email_sender.send_notification_email(request.user_email, request.notification_type, request.content)
 
-    return {"message": "Notification created successfully", "data": new_notification}
+    return {
+        "message": "Notification created successfully",
+        "data": {"id": str(new_notification.inserted_id)}  # Return only the ID
+    }
 
 @notifications_router.put("/mark_notification_as_read")
 async def mark_notification_as_read(request: MarkNotificationAsReadRequest):
