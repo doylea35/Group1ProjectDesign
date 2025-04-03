@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, Query, Depends
 from typing import Dict, Optional
 from db.database import groups_collection, users_collection, tasks_collection
-from db.models import User, Group, Task
+from db.models import User, Group, Task, Notification
 from db.schemas import users_serial, groups_serial, tasks_serial
 from bson import ObjectId # mongodb uses ObjectId to store _id
 from typing import List
@@ -10,6 +10,7 @@ from api.request_model.comment_request_schema import AddCommentRequest
 from api.utils import get_current_user 
 from api.utils import is_valid_email 
 from api.routes.notifications import create_notification
+from api.request_model.notifications_request_schema import CreateNotificationRequest
 from email_service.email_utils import email_sender
 import os
 
@@ -82,7 +83,16 @@ def create_task(task: Task):
     for user in task.assigned_to:
         send_assigned_task_email(user, task.name, task.description, str(new_task.inserted_id), task.group, assigned_group["name"])
         # create notification for each user
-        create_notification(user, task.group, "Task Assigned", f"You have been assigned a new task: {task.name}", str(new_task.inserted_id))
+        notification_dir = {
+            "user": user,
+            "task_id": str(new_task.inserted_id),
+            "group_id": task.group,
+            "message": f"You have been assigned a new task: {task.name}"
+        }
+
+        # create notification in database
+        notification = CreateNotificationRequest(**notification_dir)
+        create_notification(notification)
 
     return {
     "id": str(new_task.inserted_id),  
