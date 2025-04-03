@@ -40,7 +40,7 @@ async def create_notification(request: CreateNotificationRequest):
 
     return {"message": "Notification created successfully", "data": notification}
 
-@notifications_router.post("/mark_notification_as_read")
+@notifications_router.put("/mark_notification_as_read")
 async def mark_notification_as_read(request: MarkNotificationAsReadRequest):
     """
     Mark a notification as read.
@@ -63,7 +63,7 @@ async def mark_notification_as_read(request: MarkNotificationAsReadRequest):
     return {"message": "Notification marked as read successfully"}
 
 
-@notifications_router.post("/get_notifications_by_user")
+@notifications_router.get("/get_notifications_by_user")
 async def get_notifications_by_user(request: GetNotificationsByUserRequest):
     """
     Get notifications by user.
@@ -72,17 +72,12 @@ async def get_notifications_by_user(request: GetNotificationsByUserRequest):
     if not is_valid_email(request.user_email):
         raise HTTPException(status_code=400, detail="Invalid email format")
 
-    # Check if the group exists
-    group = await notifications_collection.find_one({"_id": ObjectId(request.group_id)})
-    if not group:
-        raise HTTPException(status_code=404, detail="Group not found")
-
     # Find notifications for the user
     notifications = await notifications_collection.find({"user_email": request.user_email}).to_list(length=None)
 
     return {"notifications": notifications_serial(notifications)}
 
-@notifications_router.post("/get_notifications_by_group")
+@notifications_router.get("/get_notifications_by_group")
 async def get_notifications_by_group(request: GetNotificationsByGroupRequest):
     """
     Get notifications by group.

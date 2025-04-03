@@ -16,7 +16,6 @@ class MarkNotificationAsReadRequest(BaseModel):
 class GetNotificationsByUserRequest(BaseModel):
     """Request schema for getting notifications by user."""
     user_email: str # the email of the user that needs to receive the notification
-    group_id: str # the group that the notification is related to
 
 class GetNotificationsByGroupRequest(BaseModel):
     """Request schema for getting notifications by group."""
