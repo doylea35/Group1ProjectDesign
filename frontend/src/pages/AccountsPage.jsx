@@ -166,9 +166,9 @@ const AccountPage = () => {
 
                 {previewMode && (
                     <>
-                        <h3>Profile Preview</h3>
-                        <p><strong>Email:</strong> {userDetails.email}</p>
-                        <p><strong>Skills:</strong></p>
+                        <h3 className="violet-text"><strong>Profile Preview</strong></h3>
+                        <p className="violet-text"><strong>Email:</strong> {userDetails.email}</p>
+                        <p className="violet-text"><strong>Skills:</strong></p>
                         <div className="skills-container">
                             {userDetails.skills.map((skill, index) => (
                                 <div key={index} className="skill-tag">{skill}</div>
