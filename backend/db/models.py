@@ -63,3 +63,13 @@ class Chat(BaseModel):
     participants: list[str] = []
     chat_history: list[Message] = []
     group_id : str = None
+
+class Notification(BaseModel):
+    id: Optional[str] = Field(alias="_id", default=None)
+    user: str # Foreign Key referencing User.email
+    task_id: str # Foreign Key referencing Task.id
+    group_id: str # Foreign Key referencing Group.id
+    notification_type: str # ["Task Assigned", "Task Updated", "Task Commented"
+    message: str
+    timestamp: datetime
+    read: bool = False
