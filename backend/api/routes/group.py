@@ -126,12 +126,19 @@ async def confirm_member(user_email: str, group_id: str):
                     detail={"message": f"{user_email} is not a pending memeber in the group: {group['name']}"}
                 )
 
+    print("confirm membership is called")
     
+    
+    email_key = user_email
+
+    # Encode the key by replacing the dot with a placeholder (e.g., "[dot]")
+    encoded_email = email_key.replace('.', '[dot]')
     
     updated_group = groups_collection.find_one_and_update(
         {"_id": ObjectId(group_id)},
         {
-            "$addToSet": {"members": user_email, "member_names": {user_email: user["name"]}},
+            "$addToSet": {"members": user_email},
+            "$set": {f"member_names.{encoded_email}": user["name"]},
             "$pull": {"pending_members": user_email}
         }
         , return_document=True)

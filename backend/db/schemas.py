@@ -20,14 +20,16 @@ def group_serial(group: dict) -> Group:
     print(f"inside group_serial: {str(group['_id'])}\n")
     
     if "member_names" in group:
-
+        
+        processed_member_names = {key.replace('[dot]', '.'): value for key, value in group["member_names"].items()}
+        
         return Group(  # Use the Group model instead of a plain dictionary
             _id=str(group["_id"]),  # Ensure _id is a string
             members=group["members"],
             name=group["name"],
             tasks=[str(task_id) for task_id in group.get("tasks", [])],  #  Convert task IDs to strings
             pending_members=group["pending_members"],
-            member_names=group["member_names"]
+            member_names=processed_member_names
         )
     else:
         return Group(  # Use the Group model instead of a plain dictionary

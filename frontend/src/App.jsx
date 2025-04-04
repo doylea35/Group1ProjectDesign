@@ -43,11 +43,17 @@ function App() {
         />
         <Route path="projects/:projectId" element={<ProjectPage />} />
         <Route path="schedule/:projectId" element={<SchedulingPage />} />
-        <Route path="/project/:projectId/settings" element={<ProjectSettingsPage />} />
-        <Route path="/project/:projectId/files" element={<ProjectFilesPage />} />
+        <Route
+          path="/project/:projectId/settings"
+          element={<ProjectSettingsPage />}
+        />
+        <Route
+          path="/project/:projectId/files"
+          element={<ProjectFilesPage />}
+        />
         <Route path="/project/:projectId/message" element={<ChatInterface />} />
         <Route path="home" element={<HomePage />} />
-        <Route path="account" element={<AccountPage />} /> 
+        <Route path="account" element={<AccountPage />} />
       </Route>
     </Routes>
   );
