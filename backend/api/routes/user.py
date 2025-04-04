@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query,  Depends, status, Body
+from fastapi import APIRouter, HTTPException, Query,  Depends, status, Body, File, UploadFile
 from typing import Dict, Optional
 from db.database import groups_collection, users_collection, tasks_collection, subteams_collection
 from db.models import User, Group, Task
@@ -346,14 +346,19 @@ async def upload_cv(
 import datetime
 import pdfplumber
 import spacy
-from skillNer import SkillExtractor
-from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
+from skillNer.general_params import SKILL_DB
+from skillNer.skill_extractor_class import SkillExtractor
+from spacy.matcher import PhraseMatcher
 from db.database import files_collection
 from api.request_model.user_request_schema import UploadCVRequest
+import boto3
+from botocore.exceptions import NoCredentialsError
 
-# Load spaCy model & initialize skill extractor
+# Load spaCy model
 nlp = spacy.load("en_core_web_sm")
-skill_extractor = SkillExtractor(nlp, skills_file_path=None)  # Default skill list
+
+# Initialize skill extractor with SKILL_DB and PhraseMatcher
+skill_extractor = SkillExtractor(nlp, SKILL_DB, PhraseMatcher)
 
 load_dotenv()
 
@@ -378,21 +383,20 @@ def extract_text_from_pdf(file_path):
     return text.strip()
 
 @user_router.post("/uploadCV", summary="Upload a CV for a user")
-async def upload_cv(request: UploadCVRequest):
+async def upload_cv(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
     """Upload a CV for a user and extract text from it"""
 
     # check if user exists
-    if not users_collection.find_one({"email": request.creator_email}):
+    if not users_collection.find_one({"email": current_user["email"]}):
         raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"User with email {request.creator_email} does not exist."
+                detail=f"User with email {current_user['email']} does not exist."
             )
-    
-    # get current user
-    current_user = get_current_user()
 
     # get file +  check file is pdf
-    file = request.cv
     if not file:
         raise HTTPException(status_code=400, detail="No file uploaded")
     if file.content_type != "application/pdf":
@@ -406,32 +410,21 @@ async def upload_cv(request: UploadCVRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
     
+    # construct public url of the uploaded file
+    file_url = f"https://{AWS_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{file.filename}"
 
-    try:
-        # Save the uploaded file locally
-        file_path = f"/tmp/{file.filename}"
-        with open(file_path, "wb") as f:
-            f.write(file.file.read())
+    # store file metadata in MongoDB (using "files" collection)
+    file_metadata = {
+        "filename": file.filename,
+        "file_url": file_url,
+        "user_email": current_user["email"],
+        "uploaded_by": current_user["email"],
+        "upload_date": datetime.datetime.utcnow()
+    }
+    files_collection.insert_one(file_metadata)
 
-        # Extract text from the PDF
-        extracted_text = extract_text_from_pdf(file_path)
+    return {"message": "CV uploaded successfully", "filename": file.filename}
 
-        if not extracted_text:
-            raise HTTPException(status_code=400, detail="Failed to extract text from the CV")
-
-        # Store file metadata in MongoDB (using "files" collection)
-        file_metadata = {
-            "filename": file.filename,
-            "user_email": current_user["email"],
-            "upload_date": datetime.datetime.utcnow(),
-            "extracted_text": extracted_text  # Store text for skill extraction
-        }
-        files_collection.insert_one(file_metadata)
-
-        return {"message": "CV uploaded successfully", "filename": file.filename}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"File upload failed: {str(e)}")
 
 @user_router.post("/extractSkills", summary="Extract skills from a user's uploaded CV")
 async def extract_skills_from_cv(current_user: dict = Depends(get_current_user)):
