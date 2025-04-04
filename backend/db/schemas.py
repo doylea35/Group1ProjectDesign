@@ -23,7 +23,8 @@ def group_serial(group: dict) -> Group:
         _id=str(group["_id"]),  # Ensure _id is a string
         members=group["members"],
         name=group["name"],
-        tasks=[str(task_id) for task_id in group.get("tasks", [])]  # Convert task IDs to strings
+        tasks=[str(task_id) for task_id in group.get("tasks", [])],  # Convert task IDs to strings
+        pending_members=group["pending_members"]
     )
 
 
