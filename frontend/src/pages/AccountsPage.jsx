@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import PageHeader from "../components/PageHeader";
 import '../App.css';
@@ -6,21 +6,21 @@ import '../App.css';
 const AccountPage = () => {
     const [userDetails, setUserDetails] = useState({
         email: '',
-        skills: []
+        skills: [],
+        token: '',
     });
-
     const [editMode, setEditMode] = useState(false);
     const [previewMode, setPreviewMode] = useState(false);
     const [newEmail, setNewEmail] = useState('');
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
-        // Load user data from local storage
         const userData = JSON.parse(localStorage.getItem('user'));
         if (userData) {
-            console.log("Loaded user from localStorage:", userData);
             setUserDetails({
                 email: userData.email,
-                skills: userData.skills || []
+                skills: userData.skills || [],
+                token: userData.token,
             });
             setNewEmail(userData.email);
         }
@@ -28,7 +28,6 @@ const AccountPage = () => {
 
     const syncSkillsToBackend = async (skillsToAdd, skillsToRemove) => {
         try {
-            console.log("Syncing skills to backend:", skillsToAdd, skillsToRemove);
             await axios.put('/api/user/updateUser', {
                 email: userDetails.email,
                 add_skills: skillsToAdd,
@@ -36,9 +35,7 @@ const AccountPage = () => {
             }, {
                 headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem('user')).token}` }
             });
-            console.log("Skills updated successfully.");
-            
-            // Update local storage and state to reflect the changes
+
             const newUserDetails = {
                 ...userDetails,
                 skills: userDetails.skills.filter(skill => !skillsToRemove.includes(skill)).concat(skillsToAdd)
@@ -66,7 +63,6 @@ const AccountPage = () => {
 
     const handleSave = async () => {
         try {
-            console.log("Updating email to:", newEmail);
             await axios.put('/api/user/updateUser', {
                 email: userDetails.email,
                 new_email: newEmail,
@@ -78,7 +74,6 @@ const AccountPage = () => {
                 ...prev,
                 email: newEmail
             }));
-            console.log("Email updated successfully.");
             setEditMode(false);
         } catch (error) {
             console.error("Error updating profile:", error);
@@ -87,18 +82,48 @@ const AccountPage = () => {
 
     const handleDeleteAccount = async () => {
         try {
-            console.log("Sending request to delete account...");
             await axios.delete('/api/user/deleteUser', {
                 data: { email: userDetails.email },
-                headers: {
-                    Authorization: `Bearer ${JSON.parse(localStorage.getItem('user')).token}`
-                }
+                headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem('user')).token}` }
             });
-            console.log("Account deleted. Redirecting to login...");
             localStorage.removeItem("user");
             window.location.href = "/login";
         } catch (error) {
             console.error("Failed to delete account:", error);
+        }
+    };
+
+    const handleClick = () => {
+        fileInputRef.current.click();
+    };
+
+    const handleFileChange = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append("file", file);
+        const user = JSON.parse(localStorage.getItem("user"));
+        console.log("Loaded user from localStorage:", user);
+        console.log("Token:", user?.token);
+        console.log("Group ID:", user?.group_id);
+        if (!user || !user.token) {
+            console.error("User not authenticated. Please log in first.");
+            return;
+        }
+        try {
+            const response = await axios.post(
+                `https://group-grade-backend-5f919d63857a.herokuapp.com/api/files/upload?group_id=${user.group_id}`,
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${user.token}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+            );
+            console.log("File uploaded successfully:", response.data);
+        } catch (err) {
+            console.error("Error uploading file:", err.response ? err.response.data : err.message);
         }
     };
 
@@ -121,6 +146,7 @@ const AccountPage = () => {
                         <div className="ButtonContainer">
                             <button className="Button violet" onClick={() => setEditMode(true)}>Edit Profile</button>
                             <button className="Button violet" onClick={() => setPreviewMode(true)}>Preview Public Profile</button>
+                            <button className="Button red" onClick={handleDeleteAccount}>Delete Account</button>
                         </div>
                     </>
                 )}
@@ -151,16 +177,17 @@ const AccountPage = () => {
                             ))}
                         </div>
 
-                        <div className="account-actions">
-                            <div className="delete-section">
-                                <button className="Button red" onClick={handleDeleteAccount}>Delete Account</button>
-                            </div>
-                        </div>
-
                         <div className="ButtonContainer">
+                            <button className="Button violet" onClick={handleClick}>Upload CV</button>
                             <button className="Button violet" onClick={handleSave}>Save Changes</button>
                             <button className="Button violet" onClick={() => setEditMode(false)}>Cancel</button>
                         </div>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            style={{ display: "none" }}
+                            onChange={handleFileChange}
+                        />
                     </>
                 )}
 
