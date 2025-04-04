@@ -155,12 +155,18 @@ async def login_user(request: UserLoginRequest):
     except Exception as e:
         print(e)
         raise HTTPException(status_code=400, detail="Invalid password")
-    return {
-        "name": user["name"],
-        "email": user["email"],
-        "token": generate_token(str(user["_id"]), user["email"]),
-        "status": user["status"],
-    }
+    
+    user["_id"] = str(user["_id"])
+    user["token"] = generate_token(str(user["_id"]), user["email"])
+    
+    return user
+    
+    # return {
+    #     "name": user["name"],
+    #     "email": user["email"],
+    #     "token": generate_token(str(user["_id"]), user["email"]),
+    #     "status": user["status"],
+    # }
 
 @user_router.delete("/deleteUser",  status_code=status.HTTP_201_CREATED)
 async def delete_user(request : DeleteUserRequest):
