@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List
+from fastapi import File, UploadFile
 
 class CreateUserRequest(BaseModel):
     email: str
@@ -30,7 +31,7 @@ class UserLoginRequest(BaseModel):
 class UploadCVRequest(BaseModel):
     # upload CV request
     email: str
-    cv: str
+    cv: UploadFile = File(...)
 
 class GetSkillsCVRequest(BaseModel):
     # get user skills from CV
