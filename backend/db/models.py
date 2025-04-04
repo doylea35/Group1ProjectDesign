@@ -30,6 +30,7 @@ class Group(BaseModel): #_id as Primary key, automatically created, can be found
     name: str
     tasks: Optional[List[str]] = None # List of Foreign Keys referencing Task.id
     pending_members:Optional[List[str]] =[]
+    member_names: Dict = {}
 
 class Task(BaseModel):
     assigned_to: List[str]         # List of foreign keys referencing User.email

@@ -38,23 +38,26 @@ async def get_groups_handler(
 
 @group_router.post("/create", status_code=status.HTTP_201_CREATED)
 async def create_group_handler(request : CreateGroupRequest):
-    if not users_collection.find_one({"email": request.creator_email}):
+    user = users_collection.find_one({"email": request.creator_email})
+    if not user:
         raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"User with email {request.creator_email} does not exist."
             )
 
     # Create a new group object with the creator as the only member
+    if request.creator_email in request.members:
+        request.members.remove(request.creator_email)
     newGroup = {
         "members" : [request.creator_email],  
         "name": request.group_name,
         "tasks" : [],
-        "pending_members": request.members
+        "pending_members": request.members,
+        "member_names": {request.creator_email: user["name"]}
     }
 
     # insert into database
     inserted_group = groups_collection.insert_one(newGroup)
-    print(f"inserted_group: {str(inserted_group.inserted_id)}\n")
 
     # send invitation email to the user
     send_project_invitation_email(request.members, request.creator_email, str(inserted_group.inserted_id), request.group_name)
@@ -99,8 +102,6 @@ async def delete_group_handler(request : DeleteGroupRequest):
 @group_router.get("/confirmMembership/{user_email}/{group_id}")
 async def confirm_member(user_email: str, group_id: str):
 
-    print(f"\ngroup_id: {group_id}, user_email: {user_email}\n")
-    
     group = groups_collection.find_one({"_id": ObjectId(group_id)})
     user = users_collection.find_one({"email":user_email})
     if not user:
@@ -128,9 +129,9 @@ async def confirm_member(user_email: str, group_id: str):
     
     
     updated_group = groups_collection.find_one_and_update(
-        {"_id": ObjectId(group_id)}, # find by user email
+        {"_id": ObjectId(group_id)},
         {
-            "$addToSet": {"members": user_email},
+            "$addToSet": {"members": user_email, "member_names": {user_email: user["name"]}},
             "$pull": {"pending_members": user_email}
         }
         , return_document=True)
