@@ -192,12 +192,20 @@ async def delete_user(request : DeleteUserRequest):
     # if there are no members in the subteam, delete it
     subteams_collection.delete_many({"members": []})
 
-    # remove the departing user's email from the list
+    # find tasks where the user is the only assignee ( orphan tasks)
+    orphan_tasks = tasks_collection.find({"assigned_to": [request.email]})
+    orphan_task_ids = [task["_id"] for task in orphan_tasks]
+    
+    # remove user from tasks
     tasks_collection.update_many(
         {"assigned_to": request.email},
         {"$pull": {"assigned_to": request.email}}
     )
-
+    
+    # delete tasks where the user was the only assignee
+    if orphan_task_ids:
+        tasks_collection.delete_many({"_id": {"$in": orphan_task_ids}})
+    
     return {"message": "User deleted successfully"}
 
 

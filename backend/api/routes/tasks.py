@@ -127,7 +127,7 @@ async def assign_task(task_id: str, new_user_email: str):
         "user_email": new_user_email,
         "group_id": task["group"],
         "notification_type": "Task Assigned",
-        "content": f"You have been assigned a new task: {task["name"]}",
+        "content": f"You have been assigned a new task: {task['name']}",
         "task_id": str(task_id)
     }
 
@@ -173,7 +173,7 @@ async def update_task(task_id: str, request_body: dict):
             "user_email": user,
             "group_id": task["group"],
             "notification_type": "Task Updated",
-            "content": f"Your task has been updated: {task["name"]}",
+            "content": f"Your task has been updated: {task['name']}",
             "task_id": str(task_id)
         }
 
@@ -210,7 +210,7 @@ async def add_comment(task_id: str, comment_request: AddCommentRequest, current_
             "user_email": user,
             "group_id": task["group"],
             "notification_type": "Task Commented",
-            "content": f"New comment on your task: {task["name"]}",
+            "content": f"New comment on your task: {task['name']}",
             "task_id": str(task_id)
         }
 
