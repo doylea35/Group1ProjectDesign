@@ -261,10 +261,10 @@ INVITATION_EMAIL_TEMPLATE = """\
       Didn't expect this? You can safely ignore this message.
     </div>
     <div class="footer">
-      Questions? Contact <a href="mailto:support@groupgrade.com">support@groupgrade.com</a><br/>
-      &copy; 2025 GroupGrade. All rights reserved.
+            Need help? Contact us at <a href="mailto:support@groupgrade.com">support@groupgrade.com</a><br/>
+            &copy; 2025 GroupGrade. All rights reserved.
     </div>
-  </div>
+  </div>  
 </body>
 </html>
 """
