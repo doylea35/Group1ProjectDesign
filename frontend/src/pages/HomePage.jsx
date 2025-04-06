@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import PageHeader from "../components/PageHeader";
 import axios from "axios";
 import "../App.css";
@@ -59,10 +59,32 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [projects, setProjects] = useState({});
-  const [activeTaskId, setActiveTaskId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [labelFilter, setLabelFilter] = useState("");
+
+  // For label dropdown
+  const [availableLabels, setAvailableLabels] = useState([]);
+  const [selectedLabels, setSelectedLabels] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Ref for detecting clicks outside of the dropdown
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownRef]);
 
   // Fetch tasks assigned to user
   useEffect(() => {
@@ -79,7 +101,7 @@ export default function HomePage() {
           params: { assigned_to: user.email },
         });
         if (response.data) {
-
+          // Sort tasks by priority first, then by due date
           const priorityOrder = { High: 0, Medium: 1, Low: 2 };
           const sortedTasks = response.data.sort((a, b) => {
             const prioA = priorityOrder[a.priority] ?? 999;
@@ -126,27 +148,36 @@ export default function HomePage() {
     fetchProjects();
   }, []);
 
+  // Compute list of available labels from the tasks
+  useEffect(() => {
+    const uniqueLabels = new Set();
+    tasks.forEach((t) => {
+      (t.labels || []).forEach((lbl) => uniqueLabels.add(lbl));
+    });
+    setAvailableLabels(Array.from(uniqueLabels));
+  }, [tasks]);
+
   if (loading) return <p>Loading tasks...</p>;
   if (error) return <p className="error-message">{error}</p>;
 
-  // Filter and organize tasks
-  const desiredLabels = labelFilter
-    .split(",")
-    .map((lbl) => lbl.trim())
-    .filter((lbl) => lbl !== "");
-  function labelsMatch(taskLabels, wanted) {
-    if (!wanted.length) return true;
-    return wanted.some((lbl) => taskLabels?.includes(lbl));
-  }
-  const filteredTasks = tasks.filter((task) =>
-    labelsMatch(task.labels || [], desiredLabels)
-  );
+  // OR-based label filter
+  const filteredTasks = tasks.filter((task) => {
+    if (selectedLabels.length === 0) return true;
+    const taskLabels = task.labels || [];
+    // Show task if it has any one of the selected labels
+    return taskLabels.some((label) => selectedLabels.includes(label));
+  });
+
+  // Separate tasks by status
   const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
-  const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
+  const inProgressTasks = filteredTasks.filter(
+    (task) => task.status === "In Progress"
+  );
   const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
   const totalTasks = filteredTasks.length;
   const completedCount = completedTasks.length;
 
+  // Click handlers for modal
   const openTaskDetails = (task) => {
     setSelectedTask(task);
     setShowModal(true);
@@ -154,6 +185,21 @@ export default function HomePage() {
   const closeTaskDetails = () => {
     setShowModal(false);
     setSelectedTask(null);
+  };
+
+  // Handlers for label selection
+  const handleLabelClick = (label) => {
+    // If label is already selected, remove it; else add it
+    setSelectedLabels((prev) =>
+      prev.includes(label)
+        ? prev.filter((l) => l !== label)
+        : [...prev, label]
+    );
+  };
+
+  // Handler to remove a label when the user clicks the "x"
+  const handleRemoveLabel = (label) => {
+    setSelectedLabels((prev) => prev.filter((l) => l !== label));
   };
 
   return (
@@ -164,19 +210,83 @@ export default function HomePage() {
 
       {/* Scrollable content area */}
       <div className="content-wrapper">
-        {/* Label filter input */}
-        <div style={{ margin: "1rem 0" }}>
-          <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
-            Filter by labels (comma-separated):
-          </label>
-          <input
-            id="labelFilter"
-            type="text"
-            value={labelFilter}
-            onChange={(e) => setLabelFilter(e.target.value)}
-            placeholder="e.g. urgent, midterm, meeting"
-            style={{ width: "300px" }}
-          />
+        {/* Label Filter Dropdown */}
+        <div className="label-filter-container" style={{ marginBottom: "1rem" }}>
+          <div
+            className="filter-dropdown-toggle"
+            style={{
+              display: "inline-block",
+              marginRight: "1rem",
+              position: "relative",
+            }}
+            ref={dropdownRef}
+          >
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="Button"
+            >
+              Filter by label ▾
+            </button>
+            {dropdownOpen && (
+              <div
+                className="label-dropdown"
+                style={{
+                  position: "absolute",
+                  background: "#fff",
+                  border: "1px solid #ccc",
+                  marginTop: "4px",
+                  padding: "8px",
+                  zIndex: 10,
+                }}
+              >
+                {availableLabels.length === 0 && (
+                  <div style={{ padding: "4px 0" }}>No labels found</div>
+                )}
+                {availableLabels.map((label) => (
+                  <div
+                    key={label}
+                    style={{
+                      padding: "4px 0",
+                      cursor: "pointer",
+                      fontWeight: selectedLabels.includes(label)
+                        ? "bold"
+                        : "normal",
+                    }}
+                    onClick={() => handleLabelClick(label)}
+                  >
+                    {label}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Selected filters (pills) */}
+          <div style={{ display: "inline-flex", gap: "8px", flexWrap: "wrap" }}>
+            {selectedLabels.map((label) => (
+              <div
+                key={label}
+                style={{
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  padding: "4px 8px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
+              >
+                {label}{" "}
+                <span
+                  style={{
+                    marginLeft: "6px",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                  }}
+                  onClick={() => handleRemoveLabel(label)}
+                >
+                  x
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Task Board */}
@@ -195,10 +305,19 @@ export default function HomePage() {
                     >
                       <h4 className="task-title">{task.name}</h4>
                       <p className="task-meta">
-                        <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                        <strong>Project:</strong>{" "}
+                        {projects[task.group] || "Unknown Project"}
                       </p>
                       <div className="task-card-footer">
                         <span className="task-date">{task.due_date}</span>
+                        <div className="task-labels">
+                          {task.labels &&
+                            task.labels.map((label, index) => (
+                              <span key={index} className="task-label">
+                                {label}
+                              </span>
+                            ))}
+                        </div>
                       </div>
                     </div>
                   ))
@@ -221,10 +340,19 @@ export default function HomePage() {
                     >
                       <h4 className="task-title">{task.name}</h4>
                       <p className="task-meta">
-                        <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                        <strong>Project:</strong>{" "}
+                        {projects[task.group] || "Unknown Project"}
                       </p>
                       <div className="task-card-footer">
                         <span className="task-date">{task.due_date}</span>
+                        <div className="task-labels">
+                          {task.labels &&
+                            task.labels.map((label, index) => (
+                              <span key={index} className="task-label">
+                                {label}
+                              </span>
+                            ))}
+                        </div>
                       </div>
                     </div>
                   ))
@@ -247,10 +375,19 @@ export default function HomePage() {
                     >
                       <h4 className="task-title">{task.name}</h4>
                       <p className="task-meta">
-                        <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                        <strong>Project:</strong>{" "}
+                        {projects[task.group] || "Unknown Project"}
                       </p>
                       <div className="task-card-footer">
                         <span className="task-date">{task.due_date}</span>
+                        <div className="task-labels">
+                          {task.labels &&
+                            task.labels.map((label, index) => (
+                              <span key={index} className="task-label">
+                                {label}
+                              </span>
+                            ))}
+                        </div>
                       </div>
                     </div>
                   ))
