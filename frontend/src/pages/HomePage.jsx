@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import PageHeader from "../components/PageHeader";
 import axios from "axios";
 import "../App.css";
@@ -67,6 +67,25 @@ export default function HomePage() {
   const [selectedLabels, setSelectedLabels] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // Ref for detecting clicks outside of the dropdown
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownRef]);
+
   // Fetch tasks assigned to user
   useEffect(() => {
     const fetchTasks = async () => {
@@ -82,7 +101,7 @@ export default function HomePage() {
           params: { assigned_to: user.email },
         });
         if (response.data) {
-          // Sort by priority first, then by date
+          // Sort tasks by priority first, then by due date
           const priorityOrder = { High: 0, Medium: 1, Low: 2 };
           const sortedTasks = response.data.sort((a, b) => {
             const prioA = priorityOrder[a.priority] ?? 999;
@@ -145,7 +164,7 @@ export default function HomePage() {
   const filteredTasks = tasks.filter((task) => {
     if (selectedLabels.length === 0) return true;
     const taskLabels = task.labels || [];
-    // Return true if the task has at least one label in selectedLabels
+    // Show task if it has any one of the selected labels
     return taskLabels.some((label) => selectedLabels.includes(label));
   });
 
@@ -158,6 +177,7 @@ export default function HomePage() {
   const totalTasks = filteredTasks.length;
   const completedCount = completedTasks.length;
 
+  // Click handlers for modal
   const openTaskDetails = (task) => {
     setSelectedTask(task);
     setShowModal(true);
@@ -167,15 +187,17 @@ export default function HomePage() {
     setSelectedTask(null);
   };
 
-  // Handler for clicking a label in the dropdown
+  // Handlers for label selection
   const handleLabelClick = (label) => {
     // If label is already selected, remove it; else add it
     setSelectedLabels((prev) =>
-      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+      prev.includes(label)
+        ? prev.filter((l) => l !== label)
+        : [...prev, label]
     );
   };
 
-  // Handler to remove a label from the selected list (when X is clicked)
+  // Handler to remove a label when the user clicks the "x"
   const handleRemoveLabel = (label) => {
     setSelectedLabels((prev) => prev.filter((l) => l !== label));
   };
@@ -197,6 +219,7 @@ export default function HomePage() {
               marginRight: "1rem",
               position: "relative",
             }}
+            ref={dropdownRef}
           >
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -225,7 +248,9 @@ export default function HomePage() {
                     style={{
                       padding: "4px 0",
                       cursor: "pointer",
-                      fontWeight: selectedLabels.includes(label) ? "bold" : "normal",
+                      fontWeight: selectedLabels.includes(label)
+                        ? "bold"
+                        : "normal",
                     }}
                     onClick={() => handleLabelClick(label)}
                   >
@@ -280,10 +305,19 @@ export default function HomePage() {
                     >
                       <h4 className="task-title">{task.name}</h4>
                       <p className="task-meta">
-                        <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                        <strong>Project:</strong>{" "}
+                        {projects[task.group] || "Unknown Project"}
                       </p>
                       <div className="task-card-footer">
                         <span className="task-date">{task.due_date}</span>
+                        <div className="task-labels">
+                          {task.labels &&
+                            task.labels.map((label, index) => (
+                              <span key={index} className="task-label">
+                                {label}
+                              </span>
+                            ))}
+                        </div>
                       </div>
                     </div>
                   ))
@@ -306,10 +340,19 @@ export default function HomePage() {
                     >
                       <h4 className="task-title">{task.name}</h4>
                       <p className="task-meta">
-                        <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                        <strong>Project:</strong>{" "}
+                        {projects[task.group] || "Unknown Project"}
                       </p>
                       <div className="task-card-footer">
                         <span className="task-date">{task.due_date}</span>
+                        <div className="task-labels">
+                          {task.labels &&
+                            task.labels.map((label, index) => (
+                              <span key={index} className="task-label">
+                                {label}
+                              </span>
+                            ))}
+                        </div>
                       </div>
                     </div>
                   ))
@@ -332,10 +375,19 @@ export default function HomePage() {
                     >
                       <h4 className="task-title">{task.name}</h4>
                       <p className="task-meta">
-                        <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                        <strong>Project:</strong>{" "}
+                        {projects[task.group] || "Unknown Project"}
                       </p>
                       <div className="task-card-footer">
                         <span className="task-date">{task.due_date}</span>
+                        <div className="task-labels">
+                          {task.labels &&
+                            task.labels.map((label, index) => (
+                              <span key={index} className="task-label">
+                                {label}
+                              </span>
+                            ))}
+                        </div>
                       </div>
                     </div>
                   ))

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import CreateSubteam from "../components/CreateSubteam";
@@ -76,6 +76,25 @@ function ProjectPage() {
   const [selectedLabels, setSelectedLabels] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // Ref for detecting clicks outside of the dropdown
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownRef]);
+
   // Pull project name from localStorage
   useEffect(() => {
     const projectFromStorage = JSON.parse(localStorage.getItem("selectedProject"));
@@ -103,7 +122,7 @@ function ProjectPage() {
         });
 
         if (response.data) {
-          // Priority-based sorting
+          // Sort by priority first, then due date
           const priorityOrder = { High: 0, Medium: 1, Low: 2 };
           const projectTasks = response.data
             .filter((task) => task.group === projectId)
@@ -140,7 +159,7 @@ function ProjectPage() {
     setAvailableLabels(Array.from(uniqueLabels));
   }, [tasks]);
 
-  // Show loading or error states within a flex container
+  // Show loading or error states
   if (loading) {
     return (
       <div className="project-page-container">
@@ -183,8 +202,12 @@ function ProjectPage() {
 
   // Separate tasks by status
   const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
-  const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
-  const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
+  const inProgressTasks = filteredTasks.filter(
+    (task) => task.status === "In Progress"
+  );
+  const completedTasks = filteredTasks.filter(
+    (task) => task.status === "Completed"
+  );
 
   // For stats bar
   const totalTasks = filteredTasks.length;
@@ -193,7 +216,9 @@ function ProjectPage() {
   // Handlers for subteam & task creation
   const handleCreateSubteam = (subteamName, members) => {
     alert(
-      `Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(", ")}`
+      `Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(
+        ", "
+      )}`
     );
   };
 
@@ -201,7 +226,7 @@ function ProjectPage() {
     // Additional logic if needed
   };
 
-  // Handlers for label dropdown
+  // Handlers for label selection
   const handleLabelClick = (label) => {
     setSelectedLabels((prev) =>
       prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
@@ -224,11 +249,18 @@ function ProjectPage() {
         {/* Subteam & Task creation buttons */}
         <div className="button-container">
           <CreateSubteam projectName={projectName} onCreate={handleCreateSubteam} />
-          <CreateTask projectName={projectName} projectId={projectId} onCreate={handleCreateTask} />
+          <CreateTask
+            projectName={projectName}
+            projectId={projectId}
+            onCreate={handleCreateTask}
+          />
         </div>
 
         {/* Label Filter Dropdown */}
-        <div className="label-filter-container" style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+        <div
+          className="label-filter-container"
+          style={{ marginTop: "1rem", marginBottom: "1rem" }}
+        >
           <div
             className="filter-dropdown-toggle"
             style={{
@@ -236,11 +268,9 @@ function ProjectPage() {
               marginRight: "1rem",
               position: "relative",
             }}
+            ref={dropdownRef}
           >
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="Button"
-            >
+            <button onClick={() => setDropdownOpen(!dropdownOpen)} className="Button">
               Filter by label ▾
             </button>
             {dropdownOpen && (
@@ -264,7 +294,9 @@ function ProjectPage() {
                     style={{
                       padding: "4px 0",
                       cursor: "pointer",
-                      fontWeight: selectedLabels.includes(label) ? "bold" : "normal",
+                      fontWeight: selectedLabels.includes(label)
+                        ? "bold"
+                        : "normal",
                     }}
                     onClick={() => handleLabelClick(label)}
                   >
