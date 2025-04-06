@@ -77,19 +77,38 @@ function GroupMembers({ projectId, projectName }) {
     }
   }, [projectId]);
 
-  // Build combined members array; if the member is a string, we assume an empty skills array.
-  const combinedMembers = [
-    ...acceptedMembers.map((member) =>
-      typeof member === "string"
-        ? { email: member, skills: [], status: "accepted" }
-        : { ...member, status: "accepted" }
-    ),
-    ...pendingMembers.map((member) =>
-      typeof member === "string"
-        ? { email: member, skills: [], status: "invited" }
-        : { ...member, status: "invited" }
-    ),
-  ];
+  // Build combined members dictionary keyed by email.
+  // If an email appears in both accepted and pending, accepted takes precedence.
+  const combinedMembersDict = {};
+
+  acceptedMembers.forEach((member) => {
+    let email, skills;
+    if (typeof member === "string") {
+      email = member;
+      skills = [];
+    } else {
+      email = member.email;
+      skills = member.skills || [];
+    }
+    combinedMembersDict[email] = { email, skills, status: "accepted" };
+  });
+
+  pendingMembers.forEach((member) => {
+    let email, skills;
+    if (typeof member === "string") {
+      email = member;
+      skills = [];
+    } else {
+      email = member.email;
+      skills = member.skills || [];
+    }
+    // Only add pending member if it doesn't exist already as accepted.
+    if (!combinedMembersDict[email]) {
+      combinedMembersDict[email] = { email, skills, status: "invited" };
+    }
+  });
+
+  const combinedMembers = Object.values(combinedMembersDict);
 
   const handleUpdateMembers = async (e) => {
     e.preventDefault();

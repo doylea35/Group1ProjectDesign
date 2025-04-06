@@ -101,69 +101,76 @@ const AccountPage = () => {
 
   return (
     <div className="page-container accounts-page">
-      <PageHeader title="Account Management" />
-      <div className="card">
-        {(!editMode && !previewMode) && (
-          <>
-            <p className="violet-text"><strong>Email:</strong> {userDetails.email}</p>
-            <p className="violet-text"><strong>Skills:</strong></p>
-            <div className="skills-container">
-              {userDetails.skills.map((skill, index) => (
-                <div key={index} className="skill-tag">{skill}</div>
-              ))}
-            </div>
-            <div className="ButtonContainer">
-              <button className="Button violet" onClick={() => setEditMode(true)}>Edit Profile</button>
-              <button className="Button violet" onClick={() => setPreviewMode(true)}>Preview Public Profile</button>
-            </div>
-          </>
-        )}
+      {/* Header Section */}
+      <div className="header-container">
+        <PageHeader title="Account Management" />
+      </div>
 
-        {editMode && (
-          <>
-            <label className="Label">New Email:</label>
-            <input
-              className="Input"
-              type="email"
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-            />
-
-            <label className="Label">Edit Skills:</label>
-            <input
-              type="text"
-              className="skill-input"
-              placeholder="Type new skill and press Enter"
-              onKeyDown={handleAdditionSkill}
-            />
-            <div className="skills-container">
-              {userDetails.skills.map((skill, index) => (
-                <div key={index} className="skill-tag">
-                  {skill}
-                  <button onClick={() => handleDeleteSkill(skill)} className="delete-skill">x</button>
-                </div>
-              ))}
-            </div>
-
-            <div className="account-actions">
-              <div className="delete-section">
-                <button className="Button red" onClick={handleDeleteAccount}>Delete Account</button>
+      {/* Content Section */}
+      <div className="content-container">
+        <div className="card">
+          {(!editMode && !previewMode) && (
+            <>
+              <p className="violet-text"><strong>Email:</strong> {userDetails.email}</p>
+              <p className="violet-text"><strong>Skills:</strong></p>
+              <div className="skills-container">
+                {userDetails.skills.map((skill, index) => (
+                  <div key={index} className="skill-tag">{skill}</div>
+                ))}
               </div>
-            </div>
+              <div className="ButtonContainer">
+                <button className="Button violet" onClick={() => setEditMode(true)}>Edit Profile</button>
+                <button className="Button violet" onClick={() => setPreviewMode(true)}>Preview Public Profile</button>
+              </div>
+            </>
+          )}
 
-            <div className="ButtonContainer">
-              <button className="Button violet" onClick={handleSave}>Save Changes</button>
-              <button className="Button violet" onClick={() => setEditMode(false)}>Cancel</button>
-            </div>
-          </>
-        )}
+          {editMode && (
+            <>
+              <label className="Label">New Email:</label>
+              <input
+                className="Input"
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+              />
 
-        {previewMode && (
-          <>
-            <PublicProfile email={userDetails.email} skills={userDetails.skills} />
-            <button className="Button violet" onClick={() => setPreviewMode(false)}>Back to Profile</button>
-          </>
-        )}
+              <label className="Label">Edit Skills:</label>
+              <input
+                type="text"
+                className="skill-input"
+                placeholder="Type new skill and press Enter"
+                onKeyDown={handleAdditionSkill}
+              />
+              <div className="skills-container">
+                {userDetails.skills.map((skill, index) => (
+                  <div key={index} className="skill-tag">
+                    {skill}
+                    <button onClick={() => handleDeleteSkill(skill)} className="delete-skill">x</button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="account-actions">
+                <div className="delete-section">
+                  <button className="Button red" onClick={handleDeleteAccount}>Delete Account</button>
+                </div>
+              </div>
+
+              <div className="ButtonContainer">
+                <button className="Button violet" onClick={handleSave}>Save Changes</button>
+                <button className="Button violet" onClick={() => setEditMode(false)}>Cancel</button>
+              </div>
+            </>
+          )}
+
+          {previewMode && (
+            <>
+              <PublicProfile email={userDetails.email} skills={userDetails.skills} />
+              <button className="Button violet" onClick={() => setPreviewMode(false)}>Back to Profile</button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

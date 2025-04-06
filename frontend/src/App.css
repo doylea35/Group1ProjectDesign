@@ -46,9 +46,9 @@
 
 .header-section {
   flex: 0 0 auto;
-  position: sticky; /* or fixed, if you prefer */
+  position: sticky; 
   top: 0;
-  z-index: 100; /* Ensure it stays above the content */
+  z-index: 100;
 }
 
 .content-wrapper {
@@ -1865,4 +1865,11 @@ small {
   top: 5px; 
   position: absolute;
   left: 10px;
+}
+
+
+.content-container {
+  flex: 1;
+  padding-top: 5rem; 
+  overflow-y: auto;
 }
