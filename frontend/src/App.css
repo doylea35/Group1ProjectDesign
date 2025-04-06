@@ -63,10 +63,17 @@ h1 {
 
 /* Dialog pop up styling /*
 /* reset */
-button,
 fieldset,
 input {
 	all: unset;
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
 }
 
 /* Ensure the overlay is always above everything */
@@ -147,6 +154,15 @@ outline-color: var(--green-7);
 }
 .Button.green:hover {
 background-color: var(--green-5);
+}
+
+.Button.grey {
+  background-color: #d1d5db; 
+  color: #111827;
+  outline-color: #9ca3af;
+}
+.Button.grey:hover {
+  background-color: #9ca3af; 
 }
 
 .Button2 {

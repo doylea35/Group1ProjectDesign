@@ -152,7 +152,7 @@ async def update_task(task_id: str, request_body: dict):
         raise HTTPException(status_code=404, detail="Task not found")
 
     # Define the list of allowed fields that can be updated
-    allowed_fields = ["name", "description", "due_date", "status", "priority"]
+    allowed_fields = ["name", "description", "due_date", "status", "priority", "labels"]
 
     # Filter out any fields that are not in the allowed list
     update_data = {key: value for key, value in updated_fields.items() if key in allowed_fields}
