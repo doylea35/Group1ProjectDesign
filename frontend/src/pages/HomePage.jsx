@@ -79,7 +79,6 @@ export default function HomePage() {
           params: { assigned_to: user.email },
         });
         if (response.data) {
-
           const priorityOrder = { High: 0, Medium: 1, Low: 2 };
           const sortedTasks = response.data.sort((a, b) => {
             const prioA = priorityOrder[a.priority] ?? 999;
@@ -142,8 +141,12 @@ export default function HomePage() {
     labelsMatch(task.labels || [], desiredLabels)
   );
   const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
-  const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
-  const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
+  const inProgressTasks = filteredTasks.filter(
+    (task) => task.status === "In Progress"
+  );
+  const completedTasks = filteredTasks.filter(
+    (task) => task.status === "Completed"
+  );
   const totalTasks = filteredTasks.length;
   const completedCount = completedTasks.length;
 
@@ -158,11 +161,13 @@ export default function HomePage() {
 
   return (
     <div className="page-container">
-      {/* Fixed header and stats */}
-      <PageHeader title="Home" />
-      <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
+      {/* Header section fixed at top */}
+      <div className="header-section">
+        <PageHeader title="Home" />
+        <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
+      </div>
 
-      {/* Scrollable content area */}
+      {/* Scrollable content area for tasks */}
       <div className="content-wrapper">
         {/* Label filter input */}
         <div style={{ margin: "1rem 0" }}>
@@ -195,7 +200,8 @@ export default function HomePage() {
                     >
                       <h4 className="task-title">{task.name}</h4>
                       <p className="task-meta">
-                        <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                        <strong>Project:</strong>{" "}
+                        {projects[task.group] || "Unknown Project"}
                       </p>
                       <div className="task-card-footer">
                         <span className="task-date">{task.due_date}</span>
@@ -221,7 +227,8 @@ export default function HomePage() {
                     >
                       <h4 className="task-title">{task.name}</h4>
                       <p className="task-meta">
-                        <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                        <strong>Project:</strong>{" "}
+                        {projects[task.group] || "Unknown Project"}
                       </p>
                       <div className="task-card-footer">
                         <span className="task-date">{task.due_date}</span>
@@ -247,7 +254,8 @@ export default function HomePage() {
                     >
                       <h4 className="task-title">{task.name}</h4>
                       <p className="task-meta">
-                        <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                        <strong>Project:</strong>{" "}
+                        {projects[task.group] || "Unknown Project"}
                       </p>
                       <div className="task-card-footer">
                         <span className="task-date">{task.due_date}</span>

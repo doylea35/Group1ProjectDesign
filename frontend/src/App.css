@@ -38,6 +38,26 @@
   }
 }
 
+.page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Fill the viewport height */
+}
+
+.header-section {
+  flex: 0 0 auto;
+  position: sticky; /* or fixed, if you prefer */
+  top: 0;
+  z-index: 100; /* Ensure it stays above the content */
+}
+
+.content-wrapper {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+
 .card {
   padding: 2em;
 }

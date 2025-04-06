@@ -1,7 +1,9 @@
+// src/pages/ProjectSettingsPage.js
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import PageHeader from "../components/PageHeader";
+import PublicProfile from "../components/PublicProfile"; // imported reusable profile component
 import "../App.css";
 
 const API_URI = "/api/group/";
@@ -75,9 +77,18 @@ function GroupMembers({ projectId, projectName }) {
     }
   }, [projectId]);
 
+  // Build combined members array; if the member is a string, we assume an empty skills array.
   const combinedMembers = [
-    ...acceptedMembers.map((member) => ({ email: member, status: "accepted" })),
-    ...pendingMembers.map((member) => ({ email: member, status: "invited" })),
+    ...acceptedMembers.map((member) =>
+      typeof member === "string"
+        ? { email: member, skills: [], status: "accepted" }
+        : { ...member, status: "accepted" }
+    ),
+    ...pendingMembers.map((member) =>
+      typeof member === "string"
+        ? { email: member, skills: [], status: "invited" }
+        : { ...member, status: "invited" }
+    ),
   ];
 
   const handleUpdateMembers = async (e) => {
@@ -155,15 +166,21 @@ function GroupMembers({ projectId, projectName }) {
         </form>
       )}
 
+      {/* Modified project members section: render each member’s public profile */}
       <div className="members-table">
         <div className="members-table-row members-table-header">
-          <div className="members-table-cell">Member</div>
+          <div className="members-table-cell">Member Profile</div>
           <div className="members-table-cell">Status</div>
         </div>
         {combinedMembers.length > 0 ? (
           combinedMembers.map((member, idx) => (
             <div key={idx} className="members-table-row">
-              <div className="members-table-cell">{member.email}</div>
+              <div className="members-table-cell">
+                <PublicProfile
+                  email={member.email}
+                  skills={member.skills || []}
+                />
+              </div>
               <div className="members-table-cell">{member.status}</div>
             </div>
           ))
@@ -304,7 +321,6 @@ function ProjectSettingsPage() {
             </button>
           </>
         )}
-
       </div>
 
       <GroupMembers projectId={projectId} projectName={projectName} />
