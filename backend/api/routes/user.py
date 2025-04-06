@@ -339,13 +339,27 @@ s3_client = boto3.client(
 # Load API Key from environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-def extract_text_from_pdf(file_path):
-    """Extracts text from a PDF file"""
-    text = ""
-    with pdfplumber.open(file_path) as pdf:
-        for page in pdf.pages:
-            text += page.extract_text() + "\n"
-    return text.strip()
+import requests
+import tempfile
+import json
+
+def extract_text_from_pdf(file_url: str) -> str:
+    # Download the PDF content
+    response = requests.get(file_url)
+    response.raise_for_status()
+
+    # Save to a temporary file
+    with tempfile.NamedTemporaryFile(suffix=".pdf") as tmp:
+        tmp.write(response.content)
+        tmp.flush()  # Ensure it's fully written
+
+        # Open the temp file with pdfplumber
+        with pdfplumber.open(tmp.name) as pdf:
+            text = ""
+            for page in pdf.pages:
+                text += page.extract_text() or ""
+    
+    return text
 
 @user_router.post("/uploadCV", summary="Upload a CV for a user")
 async def upload_cv(
@@ -353,7 +367,7 @@ async def upload_cv(
     # current_user: dict = Depends(get_current_user) # comment this line if you want to test locally without previouslly signing-in
 ):
     """Upload a CV for a user and extract text from it"""
-    current_user = {"email": "ainagool@gmail.com"} # uncomment this line if you want to test locally without previouslly signing-in
+    current_user = {"email": "aina.gomila@estudiantat.upc.edu"} # uncomment this line if you want to test locally without previouslly signing-in
 
     # Get the user's name
     user_name = current_user.get("name", "user").replace(" ", "_")  # Replace spaces just in case
@@ -398,15 +412,24 @@ async def upload_cv(
     return {"message": "CV uploaded successfully", "filename": new_filename}
 
 
-@user_router.post("/getCVSkills")
+# @user_router.post("/getCVSkills")
 async def ask_chatgpt_for_cv_skills(current_user: dict = Depends(get_current_user)):
      # get user cv file
      user_cv_file = files_collection.find_one({"user_email": current_user["email"]})
      if not user_cv_file:
          raise HTTPException(status_code=400, detail="CV file not found")
+
+     # Get the presigned URL for the user's CV file
+     filename = user_cv_file["filename"] # Assume filename is predefined or extracted from somewhere else
+     presigned_url_response = await get_user_presigned_url(filename=filename, current_user=current_user)
+     presigned_url = presigned_url_response.get("presigned_url")
+     if not presigned_url:
+         raise HTTPException(status_code=404, detail=f"Presigned URL not found for the user's CV {filename}")
+
      
      # extract text from cv
-     user_cv_text = extract_text_from_pdf(user_cv_file["file_url"])
+    #  user_cv_text = extract_text_from_pdf(user_cv_file["file_url"])
+     user_cv_text = extract_text_from_pdf(presigned_url)
      
      # Prepare the final prompt
      formatted_prompt = CV_SKILLS_PROMPT_TEMPLATE.format(user_cv_text=str(user_cv_text))
@@ -419,22 +442,106 @@ async def ask_chatgpt_for_cv_skills(current_user: dict = Depends(get_current_use
      )
      # Extract the skills from the response
      gpt_response = response["choices"][0]["message"]["content"]
-
-     # Parse the skills from the response
-     skills = {}
-     for line in gpt_response.split("\n"):
-         if line.startswith("-"):
-             category, skill_list = line[1:].split(":")
-             skills[category.strip()] = [skill.strip() for skill in skill_list.split(",")]
+     try:
+         # Convert the response to a Python dictionary (assume the response is valid JSON)
+         response_data = json.loads(gpt_response)
  
-     return skills
+         skills = {}
+         
+         # Process each key in the response data
+         for category, skills_list in response_data.items():
+             if isinstance(skills_list, list):  # Only process if it's a list
+                 skills[category] = [skill.strip() for skill in skills_list if skill.strip()]
+         return skills
+
+     except Exception as e:
+         raise HTTPException(status_code=500, detail=f"Error parsing GPT response: {str(e)}")
+
+from typing import List
+
+def flatten_skills_dict(skills_dict: dict) -> List[str]:
+    flat_skills = []
+
+    for key, value in skills_dict.items():
+        if isinstance(value, list):
+            flat_skills.extend([skill.strip() for skill in value if skill.strip()])
+        elif isinstance(value, str):
+            flat_skills.append(value.strip())
+
+    return list(set(flat_skills))  # Optional: remove duplicates
+
+async def get_user_presigned_url(
+    filename: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Generate a presigned URL for the uploaded CV file."""
+    # check if the user exists
+    user = users_collection.find_one({"email": current_user["email"]})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    filename = "user_cv.pdf"  # or whatever the filename is
+    # get the file from files_collection
+    user_cv_file = files_collection.find_one({"filename": filename, "user_email": user["email"]})
+
+    # check if the file is linked to the current user
+    # user_cv_file = user.get("cv_file")  # assuming you have a field for the user's CV file
+    if not user_cv_file or user_cv_file["filename"] != filename:
+        raise HTTPException(status_code=404, detail=f"CV file not found for the user {user["name"]}")
+
+    # generate pre signed url (valid for 1 hour)
+    try:
+        presigned_url = s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": AWS_BUCKET_NAME, "Key": filename},
+            ExpiresIn=3600
+        )
+        return {"presigned_url": presigned_url}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@user_router.post("/updateSkillsFromCV", summary="Update skills from CV")
+async def update_skills_from_cv(
+    #  current_user: dict = Depends(get_current_user)
+     ):
+     """Update user skills from a CV."""
+     current_user = {"email": "aina.gomila@estudiantat.upc.edu"} # uncomment this line if you want to test locally without previouslly signing-in
+
+
+     # Ask ChatGPT to extract skills from the CV
+     extracted_skills = await ask_chatgpt_for_cv_skills(current_user)
+
+     # get current user skills
+     user = users_collection.find_one({"email": current_user["email"]})
+
+     #  current_skills = user["skills"] if user and "skills" in user else []
+     
+     # Flatten the skills dictionary
+     extracted_skills_list = flatten_skills_dict(extracted_skills)
+
+     # Build a request to add these skills
+     update_request = UpdateUserRequest(
+         email=current_user["email"],
+         add_skills=extracted_skills_list
+     )
+     
+     result = await update_user(update_request)
+
+     return {
+        "message": "Skills extracted from CV and added successfully.",
+        "skills extracted": extracted_skills,
+        "updated_user": result["data"]
+     }
 
 CV_SKILLS_PROMPT_TEMPLATE = """
  You are given a text extracted from a pdf file containing a CV. Your task is to extract the skills from the CV.
  Now, given the following text, extract the skills from the CV (if any).
 
  This is the text extracted from the CV:
- {cv_text}
+ {user_cv_text}
  
  The skills to extract are:
 - Studies or position: name of their degree or work position that they have had
