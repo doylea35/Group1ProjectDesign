@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import CreateSubteam from "../components/CreateSubteam";
@@ -70,7 +70,30 @@ function ProjectPage() {
   const [tasks, setTasks] = useState([]);
   const [error, setError] = useState("");
   const [activeTaskId, setActiveTaskId] = useState(null);
-  const [labelFilter, setLabelFilter] = useState("");
+
+  // For label dropdown
+  const [availableLabels, setAvailableLabels] = useState([]);
+  const [selectedLabels, setSelectedLabels] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Ref for detecting clicks outside of the dropdown
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownRef]);
 
   // Pull project name from localStorage
   useEffect(() => {
@@ -99,7 +122,7 @@ function ProjectPage() {
         });
 
         if (response.data) {
-          // Priority-based sorting
+          // Sort by priority first, then due date
           const priorityOrder = { High: 0, Medium: 1, Low: 2 };
           const projectTasks = response.data
             .filter((task) => task.group === projectId)
@@ -127,7 +150,16 @@ function ProjectPage() {
     }
   }, [projectId]);
 
-  // Show loading or error states within a flex container
+  // Compute list of available labels from these tasks
+  useEffect(() => {
+    const uniqueLabels = new Set();
+    tasks.forEach((t) => {
+      (t.labels || []).forEach((lbl) => uniqueLabels.add(lbl));
+    });
+    setAvailableLabels(Array.from(uniqueLabels));
+  }, [tasks]);
+
+  // Show loading or error states
   if (loading) {
     return (
       <div className="project-page-container">
@@ -151,22 +183,6 @@ function ProjectPage() {
     setActiveTaskId((prev) => (prev === taskId ? null : taskId));
   };
 
-  // Label filter logic
-  const desiredLabels = labelFilter
-    .split(",")
-    .map((lbl) => lbl.trim())
-    .filter((lbl) => lbl !== "");
-
-  function labelsMatch(taskLabels, wanted) {
-    if (!wanted.length) return true;
-    return wanted.some((label) => taskLabels?.includes(label));
-  }
-
-  // Apply label-based filtering
-  const filteredTasks = tasks.filter((task) =>
-    labelsMatch(task.labels || [], desiredLabels)
-  );
-
   const openTaskDetails = (task) => {
     setSelectedTask(task);
     setShowModal(true);
@@ -177,10 +193,21 @@ function ProjectPage() {
     setSelectedTask(null);
   };
 
+  // OR-based label filter
+  const filteredTasks = tasks.filter((task) => {
+    if (selectedLabels.length === 0) return true;
+    const taskLabels = task.labels || [];
+    return taskLabels.some((label) => selectedLabels.includes(label));
+  });
+
   // Separate tasks by status
   const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
-  const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
-  const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
+  const inProgressTasks = filteredTasks.filter(
+    (task) => task.status === "In Progress"
+  );
+  const completedTasks = filteredTasks.filter(
+    (task) => task.status === "Completed"
+  );
 
   // For stats bar
   const totalTasks = filteredTasks.length;
@@ -188,11 +215,26 @@ function ProjectPage() {
 
   // Handlers for subteam & task creation
   const handleCreateSubteam = (subteamName, members) => {
-    alert(`Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(", ")}`);
+    alert(
+      `Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(
+        ", "
+      )}`
+    );
   };
 
   const handleCreateTask = () => {
     // Additional logic if needed
+  };
+
+  // Handlers for label selection
+  const handleLabelClick = (label) => {
+    setSelectedLabels((prev) =>
+      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+    );
+  };
+
+  const handleRemoveLabel = (label) => {
+    setSelectedLabels((prev) => prev.filter((l) => l !== label));
   };
 
   return (
@@ -207,22 +249,90 @@ function ProjectPage() {
         {/* Subteam & Task creation buttons */}
         <div className="button-container">
           <CreateSubteam projectName={projectName} onCreate={handleCreateSubteam} />
-          <CreateTask projectName={projectName} projectId={projectId} onCreate={handleCreateTask} />
+          <CreateTask
+            projectName={projectName}
+            projectId={projectId}
+            onCreate={handleCreateTask}
+          />
         </div>
 
-        {/* Label filter input */}
-        <div style={{ margin: "1rem 0" }}>
-          <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
-            Filter by labels (comma-separated):
-          </label>
-          <input
-            id="labelFilter"
-            type="text"
-            value={labelFilter}
-            onChange={(e) => setLabelFilter(e.target.value)}
-            placeholder="e.g. urgent, design, homework"
-            style={{ width: "300px" }}
-          />
+        {/* Label Filter Dropdown */}
+        <div
+          className="label-filter-container"
+          style={{ marginTop: "1rem", marginBottom: "1rem" }}
+        >
+          <div
+            className="filter-dropdown-toggle"
+            style={{
+              display: "inline-block",
+              marginRight: "1rem",
+              position: "relative",
+            }}
+            ref={dropdownRef}
+          >
+            <button onClick={() => setDropdownOpen(!dropdownOpen)} className="Button">
+              Filter by label ▾
+            </button>
+            {dropdownOpen && (
+              <div
+                className="label-dropdown"
+                style={{
+                  position: "absolute",
+                  background: "#fff",
+                  border: "1px solid #ccc",
+                  marginTop: "4px",
+                  padding: "8px",
+                  zIndex: 10,
+                }}
+              >
+                {availableLabels.length === 0 && (
+                  <div style={{ padding: "4px 0" }}>No labels found</div>
+                )}
+                {availableLabels.map((label) => (
+                  <div
+                    key={label}
+                    style={{
+                      padding: "4px 0",
+                      cursor: "pointer",
+                      fontWeight: selectedLabels.includes(label)
+                        ? "bold"
+                        : "normal",
+                    }}
+                    onClick={() => handleLabelClick(label)}
+                  >
+                    {label}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Selected filters (pills) */}
+          <div style={{ display: "inline-flex", gap: "8px", flexWrap: "wrap" }}>
+            {selectedLabels.map((label) => (
+              <div
+                key={label}
+                style={{
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  padding: "4px 8px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
+              >
+                {label}{" "}
+                <span
+                  style={{
+                    marginLeft: "6px",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                  }}
+                  onClick={() => handleRemoveLabel(label)}
+                >
+                  x
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Taskboard Columns */}
