@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional, List
+from fastapi import File, UploadFile
 
 class CreateUserRequest(BaseModel):
     email: str
