@@ -1,7 +1,9 @@
+// src/pages/ProjectSettingsPage.js
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import PageHeader from "../components/PageHeader";
+import PublicProfile from "../components/PublicProfile"; // imported reusable profile component
 import "../App.css";
 
 const API_URI = "/api/group/";
@@ -75,10 +77,38 @@ function GroupMembers({ projectId, projectName }) {
     }
   }, [projectId]);
 
-  const combinedMembers = [
-    ...acceptedMembers.map((member) => ({ email: member, status: "accepted" })),
-    ...pendingMembers.map((member) => ({ email: member, status: "invited" })),
-  ];
+  // Build combined members dictionary keyed by email.
+  // If an email appears in both accepted and pending, accepted takes precedence.
+  const combinedMembersDict = {};
+
+  acceptedMembers.forEach((member) => {
+    let email, skills;
+    if (typeof member === "string") {
+      email = member;
+      skills = [];
+    } else {
+      email = member.email;
+      skills = member.skills || [];
+    }
+    combinedMembersDict[email] = { email, skills, status: "accepted" };
+  });
+
+  pendingMembers.forEach((member) => {
+    let email, skills;
+    if (typeof member === "string") {
+      email = member;
+      skills = [];
+    } else {
+      email = member.email;
+      skills = member.skills || [];
+    }
+    // Only add pending member if it doesn't exist already as accepted.
+    if (!combinedMembersDict[email]) {
+      combinedMembersDict[email] = { email, skills, status: "invited" };
+    }
+  });
+
+  const combinedMembers = Object.values(combinedMembersDict);
 
   const handleUpdateMembers = async (e) => {
     e.preventDefault();
@@ -155,15 +185,21 @@ function GroupMembers({ projectId, projectName }) {
         </form>
       )}
 
+      {/* Modified project members section: render each member’s public profile */}
       <div className="members-table">
         <div className="members-table-row members-table-header">
-          <div className="members-table-cell">Member</div>
+          <div className="members-table-cell">Member Profile</div>
           <div className="members-table-cell">Status</div>
         </div>
         {combinedMembers.length > 0 ? (
           combinedMembers.map((member, idx) => (
             <div key={idx} className="members-table-row">
-              <div className="members-table-cell">{member.email}</div>
+              <div className="members-table-cell">
+                <PublicProfile
+                  email={member.email}
+                  skills={member.skills || []}
+                />
+              </div>
               <div className="members-table-cell">{member.status}</div>
             </div>
           ))
@@ -242,14 +278,21 @@ function ProjectSettingsPage() {
   if (loading) return <p>Loading project settings...</p>;
 
   return (
-    <div className="settings-page-container">
-      <PageHeader title={`${projectName} Settings`} />
-      <div className="top-row">
-        <button onClick={() => navigate(`/projects/${projectId}`)} className="back-project-btn">
-          Back to Project Page
-        </button>
+    <>
+    <div className="settings-header-container">
+      <PageHeader title={`${projectName}: Settings`} />
+    </div>
+    <div
+        className="back-button"
+        style={{position: "absolute", top: "100px", left: "300px", zIndex: "10", }}
+      >
+        <div className="top-row">
+          <button onClick={() => navigate(`/projects/${projectId}`)} className="back-project-btn">
+            Back to Project Page
+          </button>
+        </div>
       </div>
-
+      <div className="settings-page-container">
       <div className="project-info-card">
         <label>Project Name:</label>
         {editingName ? (
@@ -304,11 +347,11 @@ function ProjectSettingsPage() {
             </button>
           </>
         )}
-
       </div>
 
       <GroupMembers projectId={projectId} projectName={projectName} />
     </div>
+    </>
   );
 }
 

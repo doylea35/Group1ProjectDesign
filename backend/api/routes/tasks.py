@@ -127,7 +127,7 @@ async def assign_task(task_id: str, new_user_email: str):
         "user_email": new_user_email,
         "group_id": task["group"],
         "notification_type": "Task Assigned",
-        "content": f"You have been assigned a new task: {task["name"]}",
+        "content": f"You have been assigned a new task: {task['name']}",
         "task_id": str(task_id)
     }
 
@@ -152,7 +152,7 @@ async def update_task(task_id: str, request_body: dict):
         raise HTTPException(status_code=404, detail="Task not found")
 
     # Define the list of allowed fields that can be updated
-    allowed_fields = ["name", "description", "due_date", "status", "priority"]
+    allowed_fields = ["name", "description", "due_date", "status", "priority", "labels"]
 
     # Filter out any fields that are not in the allowed list
     update_data = {key: value for key, value in updated_fields.items() if key in allowed_fields}
@@ -173,7 +173,7 @@ async def update_task(task_id: str, request_body: dict):
             "user_email": user,
             "group_id": task["group"],
             "notification_type": "Task Updated",
-            "content": f"Your task has been updated: {task["name"]}",
+            "content": f"Your task has been updated: {task['name']}",
             "task_id": str(task_id)
         }
 
@@ -210,7 +210,7 @@ async def add_comment(task_id: str, comment_request: AddCommentRequest, current_
             "user_email": user,
             "group_id": task["group"],
             "notification_type": "Task Commented",
-            "content": f"New comment on your task: {task["name"]}",
+            "content": f"New comment on your task: {task['name']}",
             "task_id": str(task_id)
         }
 
@@ -242,6 +242,12 @@ TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
             margin: auto;
             text-align: center;
         }}
+        .logo {{
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            display: block;
+        }}
         .header {{
             font-size: 24px;
             font-weight: bold;
@@ -253,7 +259,7 @@ TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
             margin-top: 20px;
         }}
         .task-box {{
-            border: 2px solid #a463f2;
+            border: 4px solid #a463f2;
             border-radius: 12px;
             padding: 20px;
             margin-top: 20px;
@@ -262,29 +268,29 @@ TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
             box-sizing: border-box;
         }}
         .task-name {{
-            font-size: 24px; /* Made bigger */
+            font-size: 24px;
             font-weight: bold;
             color: #333;
-            margin-bottom: 10px; /* Added space below */
+            margin-bottom: 10px;
         }}
         .task-description {{
-            font-size: 16px; /* Kept bigger */
+            font-size: 16px;
             color: #555;
-            margin-bottom: 15px; /* More space below */
+            margin-bottom: 15px;
         }}
         .instruction {{
-            font-size: 12px; /* Smaller text */
+            font-size: 12px;
             color: #666;
-            margin-bottom: 6px; /* Reduced space between instruction and button */
+            margin-bottom: 6px;
         }}
         .button {{
             display: block;
             width: 150px;
-            margin: 0 auto; /* Centered button */
+            margin: 0 auto;
             padding: 12px;
             text-align: center;
             background-color: #a463f2;
-            color: #FFFFFF;
+            color: #FFFFFF !important;
             text-decoration: none;
             border-radius: 8px;
             font-size: 16px;
@@ -300,6 +306,7 @@ TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
 </head>
 <body>
     <div class="container">
+        <img class="logo" src="https://group-grade-files.s3.eu-north-1.amazonaws.com/groupgrade-assets/hexlogo.png" alt="GroupGrade Logo" />
         <div class="header">New Task Assigned: {task_name}</div>
         <div class="content">
             <p>Hi {user_name},</p>
@@ -310,12 +317,21 @@ TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
                 <div class="task-description">{task_description}</div>
                 <br>
                 <p class="instruction">Click the button below to view and start working on your task.</p>
-                <a href="{task_link}" class="button">View task</a>
+                <a href="{task_link}" class="button" 
+                   style="color: #FFFFFF !important; text-decoration: none !important;">
+                   View task
+                </a>
+            </div>
+            <div class="footer">
+                   Need help? Contact us at <a href="mailto:support@groupgrade.com">support@groupgrade.com</a><br/>
+                   &copy; 2025 GroupGrade. All rights reserved.
             </div>
         </div>
     </div>
 </body>
 </html>"""
+
+
 
 
 frontend_url_dev = os.getenv("FRONTEND_URL_DEV")

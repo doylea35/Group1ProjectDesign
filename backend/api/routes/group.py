@@ -38,23 +38,26 @@ async def get_groups_handler(
 
 @group_router.post("/create", status_code=status.HTTP_201_CREATED)
 async def create_group_handler(request : CreateGroupRequest):
-    if not users_collection.find_one({"email": request.creator_email}):
+    user = users_collection.find_one({"email": request.creator_email})
+    if not user:
         raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"User with email {request.creator_email} does not exist."
             )
 
     # Create a new group object with the creator as the only member
+    if request.creator_email in request.members:
+        request.members.remove(request.creator_email)
     newGroup = {
         "members" : [request.creator_email],  
         "name": request.group_name,
         "tasks" : [],
-        "pending_members": request.members
+        "pending_members": request.members,
+        "member_names": {request.creator_email: user["name"]}
     }
 
     # insert into database
     inserted_group = groups_collection.insert_one(newGroup)
-    print(f"inserted_group: {str(inserted_group.inserted_id)}\n")
 
     # send invitation email to the user
     send_project_invitation_email(request.members, request.creator_email, str(inserted_group.inserted_id), request.group_name)
@@ -99,8 +102,6 @@ async def delete_group_handler(request : DeleteGroupRequest):
 @group_router.get("/confirmMembership/{user_email}/{group_id}")
 async def confirm_member(user_email: str, group_id: str):
 
-    print(f"\ngroup_id: {group_id}, user_email: {user_email}\n")
-    
     group = groups_collection.find_one({"_id": ObjectId(group_id)})
     user = users_collection.find_one({"email":user_email})
     if not user:
@@ -125,12 +126,19 @@ async def confirm_member(user_email: str, group_id: str):
                     detail={"message": f"{user_email} is not a pending memeber in the group: {group['name']}"}
                 )
 
+    print("confirm membership is called")
     
+    
+    email_key = user_email
+
+    # Encode the key by replacing the dot with a placeholder (e.g., "[dot]")
+    encoded_email = email_key.replace('.', '[dot]')
     
     updated_group = groups_collection.find_one_and_update(
-        {"_id": ObjectId(group_id)}, # find by user email
+        {"_id": ObjectId(group_id)},
         {
             "$addToSet": {"members": user_email},
+            "$set": {f"member_names.{encoded_email}": user["name"]},
             "$pull": {"pending_members": user_email}
         }
         , return_document=True)
@@ -170,72 +178,97 @@ async def confirm_member(user_email: str, group_id: str):
     return {"message": "User is now added to the group.", "data": {"updated_group": str(updated_group), "updated_user": str(updated_user)}}
 
 
-INVITATION_EMAIL_TEMPLATE = """<!DOCTYPE html>
-<html>
+INVITATION_EMAIL_TEMPLATE = """\
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GroupGrade Invitation</title>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }}
-        .container {{
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: auto;
-        }}
-        .header {{
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-            text-align: center;
-        }}
-        .content {{
-            font-size: 16px;
-            color: #555;
-            margin-top: 20px;
-        }}
-        .button {{
-            display: block;
-            width: 200px;
-            margin: 20px auto;
-            padding: 10px;
-            text-align: center;
-            background-color: #007bff;
-            color: #FFFFFF;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 16px;
-        }}
-        .footer {{
-            margin-top: 20px;
-            font-size: 12px;
-            color: #888;
-            text-align: center;
-        }}
-    </style>
+  <meta charset="UTF-8">
+  <title>Group Invitation - GroupGrade</title>
+  <style>
+    body {{
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      font-family: 'Poppins', sans-serif;
+      color: #1f2937;
+    }}
+    .container {{
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      padding: 40px 30px;
+      text-align: center;
+    }}
+    .logo {{
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 20px;
+    }}
+    .title {{
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }}
+    .subtitle {{
+      font-size: 16px;
+      color: #6b7280;
+      margin-bottom: 24px;
+    }}
+    .button {{
+      display: inline-block;
+      background-color: #6C38F5;
+      color: #ffffff !important;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 9999px;
+      padding: 14px 32px;
+      margin-top: 20px;
+    }}
+    .button:hover {{
+      background-color: #5932ea;
+    }}
+    .note {{
+      font-size: 13px;
+      color: #777;
+      margin-top: 24px;
+    }}
+    .footer {{
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 40px;
+    }}
+    a {{
+      color: #6C38F5;
+      text-decoration: none;
+    }}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">You're Invited to Join "{project_name}" on GroupGrade</div>
-        <div class="content">
-            <p><strong>{creator_email}</strong> has invited you to join the project <strong>{project_name}</strong> on GroupGrade.</p>
-            <p>Please click the button below to accept the invitation:</p>
-            <a href="{invitation_link}" class="button">Accept Invitation</a>
-        </div>
-        <div class="footer">
-            If you didn't request this invitation, please ignore this email.
-        </div>
+  <div class="container">
+    <img class="logo" src="https://group-grade-files.s3.eu-north-1.amazonaws.com/groupgrade-assets/hexlogo.png" alt="GroupGrade Logo" />
+    <div class="title">You're Invited to Join "{project_name}"</div>
+    <div class="subtitle">Collaborate on GroupGrade — Teamwork Made Easy</div>
+
+    <p><strong>{creator_email}</strong> has invited you to join the project <strong>{project_name}</strong> on GroupGrade.</p>
+    <p>Click below to accept the invitation and start working with your team:</p>
+
+    <a href="{invitation_link}" class="button">Accept Invitation</a>
+
+    <div class="note">
+      Didn't expect this? You can safely ignore this message.
     </div>
+    <div class="footer">
+            Need help? Contact us at <a href="mailto:support@groupgrade.com">support@groupgrade.com</a><br/>
+            &copy; 2025 GroupGrade. All rights reserved.
+    </div>
+  </div>  
 </body>
-</html>"""
+</html>
+"""
+
 
 def send_project_invitation_email(user_emails:list[str], creator_email:str, new_group_id:str, new_group_name:str ):
 

@@ -179,12 +179,18 @@ async def login_user(request: UserLoginRequest):
     except Exception as e:
         print(e)
         raise HTTPException(status_code=400, detail="Invalid password")
-    return {
-        "name": user["name"],
-        "email": user["email"],
-        "token": generate_token(str(user["_id"]), user["email"]),
-        "status": user["status"],
-    }
+    
+    user["_id"] = str(user["_id"])
+    user["token"] = generate_token(str(user["_id"]), user["email"])
+    
+    return user
+    
+    # return {
+    #     "name": user["name"],
+    #     "email": user["email"],
+    #     "token": generate_token(str(user["_id"]), user["email"]),
+    #     "status": user["status"],
+    # }
 
 @user_router.delete("/deleteUser",  status_code=status.HTTP_201_CREATED)
 async def delete_user(request : DeleteUserRequest):
@@ -210,12 +216,20 @@ async def delete_user(request : DeleteUserRequest):
     # if there are no members in the subteam, delete it
     subteams_collection.delete_many({"members": []})
 
-    # remove the departing user's email from the list
+    # find tasks where the user is the only assignee ( orphan tasks)
+    orphan_tasks = tasks_collection.find({"assigned_to": [request.email]})
+    orphan_task_ids = [task["_id"] for task in orphan_tasks]
+    
+    # remove user from tasks
     tasks_collection.update_many(
         {"assigned_to": request.email},
         {"$pull": {"assigned_to": request.email}}
     )
-
+    
+    # delete tasks where the user was the only assignee
+    if orphan_task_ids:
+        tasks_collection.delete_many({"_id": {"$in": orphan_task_ids}})
+    
     return {"message": "User deleted successfully"}
 
 
@@ -263,78 +277,91 @@ async def update_user(request : UpdateUserRequest):
     return {"message": "User updated successfully", "data": updated_user}
 
 
-REGISTRATION_CONFIRMATION_EMAIL_TEMPLATE = """<!DOCTYPE html>
-<html>
+REGISTRATION_CONFIRMATION_EMAIL_TEMPLATE = """\
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirm Your Registration - GroupGrade</title>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }}
-        .container {{
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: auto;
-        }}
-        .header {{
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-            text-align: center;
-            margin-bottom: 20px;
-        }}
-        .content {{
-            font-size: 16px;
-            color: #555;
-            margin-top: 10px;
-            text-align: center;
-        }}
-        .button {{
-            display: inline-block;
-            padding: 12px 20px;
-            font-size: 16px;
-            color: #ffffff;
-            background-color: #007bff;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-top: 20px;
-            font-weight: bold;
-        }}
-        .button:hover {{
-            background-color: #0056b3;
-        }}
-        .footer {{
-            margin-top: 20px;
-            font-size: 12px;
-            color: #888;
-            text-align: center;
-        }}
-    </style>
+  <meta charset="UTF-8">
+  <title>Confirm Your Email - GroupGrade</title>
+  <style>
+    body {{
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      font-family: 'Poppins', sans-serif;
+      color: #1f2937;
+    }}
+    .container {{
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      padding: 40px 30px;
+      text-align: center;
+    }}
+    .logo {{
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 20px;
+    }}
+    .title {{
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }}
+    .subtitle {{
+      font-size: 16px;
+      color: #6b7280;
+      margin-bottom: 24px;
+    }}
+    .button {{
+      display: inline-block;
+      background-color: #6C38F5;
+      color: #fff;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 9999px;
+      padding: 14px 32px;
+      margin-top: 20px;
+    }}
+    .button:hover {{
+      background-color: #5932ea;
+    }}
+    .note {{
+      font-size: 13px;
+      color: #777;
+      margin-top: 24px;
+    }}
+    .footer {{
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 40px;
+    }}
+    a {{
+      color: #6C38F5;
+      text-decoration: none;
+    }}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">Confirm Your Registration on GroupGrade</div>
-        <div class="content">
-            <p>Hi {user_name},</p>
-            <p>Thank you for signing up for <strong>GroupGrade</strong>! Before you can start using your account, please confirm your email address by clicking the button below:</p>
-            <a href="{confirmation_link}" class="button">Confirm Your Email</a>
-            <p style="font-size: 14px; color: #777; margin-top: 20px;">
-                If you did not create an account on GroupGrade, you can safely ignore this email.
-            </p>
-        </div>
-        <div class="footer">
-            Need help? Contact us at <a href="mailto:support@groupgrade.com" style="color: #007bff; text-decoration: none;">support@groupgrade.com</a>
-            <br>© 2025 GroupGrade. All rights reserved.
-        </div>
+  <div class="container">
+    <img class="logo" src="https://group-grade-files.s3.eu-north-1.amazonaws.com/groupgrade-assets/hexlogo.png" alt="GroupGrade Logo" />
+    <div class="title">Confirm Your Registration</div>
+    <div class="subtitle">Welcome to GroupGrade — Teamwork Made Easy</div>
+    <p>Hi {user_name},</p>
+    <p>Thanks for signing up! Click the button below to confirm your email and start collaborating with your team.</p>
+    <a href="{confirmation_link}" class="button" style="color: #ffffff !important; text-decoration: none;">Confirm Email</a>
+
+    <div class="note">
+      Didn't request this? You can safely ignore this message.
     </div>
+    <div class="footer">
+      Need help? Contact us at <a href="mailto:support@groupgrade.com">support@groupgrade.com</a><br/>
+      &copy; 2025 GroupGrade. All rights reserved.
+    </div>
+  </div>
 </body>
 </html>"""
 
