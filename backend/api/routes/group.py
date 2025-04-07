@@ -1,15 +1,15 @@
-from fastapi import APIRouter, HTTPException, status, Query, Depends
+from fastapi import APIRouter, HTTPException, status, Depends
 from db.database import groups_collection, users_collection, chat_collection
 from db.models import Group
-from db.schemas import groups_serial
-from api.request_model.group_request_schema import CreateGroupRequest, DeleteGroupRequest, ConfirmGroupMembershipRequest, UpdateGroupRequest
+from db.schemas import groups_serial, users_serial
+from api.request_model.group_request_schema import CreateGroupRequest, DeleteGroupRequest, UpdateGroupRequest
 from bson import ObjectId
 from email_service.email_utils import email_sender
 from api.utils import is_valid_email
 from api.utils import get_current_user
 from dotenv import load_dotenv
 import os
-from pymongo import ReturnDocument
+
 
 # Load environment variables
 load_dotenv()
@@ -22,7 +22,7 @@ BASE_URL = "{frontend_url}/confirmMembership/{user_email}/{group_id}"
 
 
 @group_router.get("/")
-async def get_groups_handler(                          
+async def get_groups_handler(
     current_user: dict = Depends(get_current_user)
 ):
     user_email = current_user["email"]
@@ -31,10 +31,35 @@ async def get_groups_handler(
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         query = {"_id": {"$in": [ObjectId(group_id) for group_id in user.get("groups", [])]}}
-        groups =groups_serial(groups_collection.find(query))
+        groups_cursor = groups_collection.find(query)
     else:
-        groups = groups_serial(groups_collection.find())
-    return {"data": groups}
+        groups_cursor = groups_collection.find()
+
+    # Retrieve groups and serialize them using your groups_serial function
+    groups_list = list(groups_cursor)
+    groups_data = groups_serial(groups_list)
+
+    # Collect all member emails from the groups
+    member_emails = set()
+    for group in groups_list:
+        member_emails.update(group.get("members", []))
+    # Query the users_collection for all members using the gathered emails
+    users_cursor = users_collection.find({"email": {"$in": list(member_emails)}})
+    users_list = list(users_cursor)
+    serialized_users = users_serial(users_list)  # Use your provided serialization function
+    # Create a mapping from email to serialized User
+    user_map = {user.email: user for user in serialized_users}
+
+    # For each group, attach a new key "members_details" with the corresponding User objects
+    groups_with_members = []
+    for group in groups_data:
+        group_dict = group.model_dump()
+        group_dict["members_details"] = [
+            user_map[email] for email in group.members if email in user_map
+        ]
+        groups_with_members.append(group_dict)
+
+    return {"data": groups_with_members}
 
 @group_router.post("/create", status_code=status.HTTP_201_CREATED)
 async def create_group_handler(request : CreateGroupRequest):
@@ -125,9 +150,6 @@ async def confirm_member(user_email: str, group_id: str):
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail={"message": f"{user_email} is not a pending memeber in the group: {group['name']}"}
                 )
-
-    print("confirm membership is called")
-    
     
     email_key = user_email
 

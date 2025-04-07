@@ -1,17 +1,13 @@
-from fastapi import APIRouter, HTTPException, Query,  Depends, status, Body, File, UploadFile
-from typing import Dict, Optional
+from fastapi import APIRouter, HTTPException, Depends, status, File, UploadFile
 from db.database import groups_collection, users_collection, tasks_collection, subteams_collection
-from db.models import User, Group, Task
-from db.schemas import users_serial, groups_serial, tasks_serial
-from api.request_model.user_request_schema import CreateUserRequest, DeleteUserRequest, UpdateUserRequest, UserRegisterRequest, UserLoginRequest
+from api.request_model.user_request_schema import DeleteUserRequest, UpdateUserRequest, UserRegisterRequest, UserLoginRequest
 from bson import ObjectId # mongodb uses ObjectId to store _id
 import bcrypt
 import jwt
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from dotenv import load_dotenv
 import os
 from email_service.email_utils import email_sender
-from pydantic import BaseModel
 from pymongo import ReturnDocument
 import datetime
 import pdfplumber

@@ -1,5 +1,5 @@
 from db.models import User, Group, Task, SubTeam, Notification
-from bson import ObjectId
+
 
 def _user_serial(user: dict) -> User:
     return User(
@@ -11,7 +11,11 @@ def _user_serial(user: dict) -> User:
         free_time={
             day: [{"start": slot["start"], "end": slot["end"]} for slot in (slots or [])]
             for day, slots in (user.get("free_time", {}) or {}).items()  # Ensure it's a dict
-        }
+        },
+        password=None,
+        token= None,
+        status=None,
+        confirmation_code=None
     )
 
     
