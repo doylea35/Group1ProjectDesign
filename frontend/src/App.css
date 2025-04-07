@@ -38,6 +38,26 @@
   }
 }
 
+.page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Fill the viewport height */
+}
+
+.header-section {
+  flex: 0 0 auto;
+  position: sticky; 
+  top: 0;
+  z-index: 100;
+}
+
+.content-wrapper {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+
 .card {
   padding: 2em;
 }
@@ -1299,11 +1319,11 @@ to {
 }
 
 .settings-page-container {
-  margin-left: 100px;
-  padding: 24px;
-  max-width: 1000px;
-  margin: 0 auto;   
   font-family: "Inter", sans-serif; 
+  margin-top: 100px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .top-row {
@@ -1463,6 +1483,7 @@ to {
 
 .files-page-container {
   padding: 20px;
+  width: 500px;
 }
 
 .top-row {
@@ -1548,9 +1569,6 @@ to {
   margin-top: 24px;
 }
 
-.files-page-container {
-  padding: 20px;
-}
 
 .files-list-container {
   background-color: #fff;
@@ -1861,6 +1879,21 @@ small {
   top: 5px; 
   position: absolute;
   left: 10px;
+}
+
+.content-container {
+  flex: 1;
+  padding-top: 5rem; 
+  overflow-y: auto;
+}
+
+.settings-header-container{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding-left: 300px;
+  justify-content: flex-start; /* Ensures content is left aligned */
 }
 
 /* Position the edit (pencil) and close (X) icons top-right, side by side */

@@ -101,7 +101,7 @@ export default function HomePage() {
           params: { assigned_to: user.email },
         });
         if (response.data) {
-          // Sort tasks by priority first, then by due date
+
           const priorityOrder = { High: 0, Medium: 1, Low: 2 };
           const sortedTasks = response.data.sort((a, b) => {
             const prioA = priorityOrder[a.priority] ?? 999;
@@ -173,6 +173,7 @@ export default function HomePage() {
   const inProgressTasks = filteredTasks.filter(
     (task) => task.status === "In Progress"
   );
+
   const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
   const totalTasks = filteredTasks.length;
   const completedCount = completedTasks.length;
@@ -204,11 +205,13 @@ export default function HomePage() {
 
   return (
     <div className="page-container">
-      {/* Fixed header and stats */}
-      <PageHeader title="Home" />
-      <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
+      {/* Header section fixed at top */}
+      <div className="header-section">
+        <PageHeader title="Home" />
+        <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
+      </div>
 
-      {/* Scrollable content area */}
+      {/* Scrollable content area for tasks */}
       <div className="content-wrapper">
         {/* Label Filter Dropdown */}
         <div className="label-filter-container" style={{ marginBottom: "1rem" }}>
