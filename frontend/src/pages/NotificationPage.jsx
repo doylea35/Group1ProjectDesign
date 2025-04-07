@@ -16,15 +16,18 @@ const NotificationsPage = () => {
       }
 
       const url = "/api/notifications/get_notifications_by_user";
-      const data = { user_email: user.email };
+      const params = { user_email: user.email };
 
-      console.log("Sending POST request to:", url, "with body:", data);
+      console.log("Sending GET request to:", url, "with params:", params);
 
       try {
-        const response = await axios.get(url, data, {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
-        
+        const response = await axios.post(
+          "/api/notifications/get_notifications_by_user",
+          { user_email: user.email },
+          { headers: { Authorization: `Bearer ${user.token}` } }
+        );
+
+
         console.log("Notifications response:", response.data);
         setNotifications(response.data.notifications);
       } catch (err) {
@@ -54,6 +57,7 @@ const NotificationsPage = () => {
           headers: { Authorization: `Bearer ${user.token}` },
         }
       );
+      // Update the notifications state by marking the notification as read
       setNotifications((prev) =>
         prev.map((notification) =>
           (notification._id || notification.id) === notificationId
@@ -83,14 +87,22 @@ const NotificationsPage = () => {
           {notifications.map((notification) => (
             <li
               key={notification._id || notification.id}
-              className={`notification-item ${notification.read ? "read" : "unread"}`}
+              className={`notification-item ${
+                notification.read ? "read" : "unread"
+              }`}
             >
               <div className="notification-content">
                 <p>{notification.message}</p>
-                <small>{new Date(notification.timestamp).toLocaleString()}</small>
+                <small>
+                  {new Date(notification.timestamp).toLocaleString()}
+                </small>
               </div>
               {!notification.read && (
-                <button onClick={() => handleMarkAsRead(notification._id || notification.id)}>
+                <button
+                  onClick={() =>
+                    handleMarkAsRead(notification._id || notification.id)
+                  }
+                >
                   Mark as read
                 </button>
               )}
