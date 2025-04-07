@@ -1303,11 +1303,11 @@ to {
 }
 
 .settings-page-container {
-  margin-left: 100px;
-  padding: 24px;
-  max-width: 1000px;
-  margin: 0 auto;   
   font-family: "Inter", sans-serif; 
+  margin-top: 100px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .top-row {
@@ -1467,6 +1467,7 @@ to {
 
 .files-page-container {
   padding: 20px;
+  width: 500px;
 }
 
 .top-row {
@@ -1552,9 +1553,6 @@ to {
   margin-top: 24px;
 }
 
-.files-page-container {
-  padding: 20px;
-}
 
 .files-list-container {
   background-color: #fff;
@@ -1872,4 +1870,13 @@ small {
   flex: 1;
   padding-top: 5rem; 
   overflow-y: auto;
+}
+
+.settings-header-container{
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding-left: 300px;
+  justify-content: flex-start; /* Ensures content is left aligned */
 }

@@ -278,14 +278,21 @@ function ProjectSettingsPage() {
   if (loading) return <p>Loading project settings...</p>;
 
   return (
-    <div className="settings-page-container">
-      <PageHeader title={`${projectName} Settings`} />
-      <div className="top-row">
-        <button onClick={() => navigate(`/projects/${projectId}`)} className="back-project-btn">
-          Back to Project Page
-        </button>
+    <>
+    <div className="settings-header-container">
+      <PageHeader title={`${projectName}: Settings`} />
+    </div>
+    <div
+        className="back-button"
+        style={{position: "absolute", top: "100px", left: "300px", zIndex: "10", }}
+      >
+        <div className="top-row">
+          <button onClick={() => navigate(`/projects/${projectId}`)} className="back-project-btn">
+            Back to Project Page
+          </button>
+        </div>
       </div>
-
+      <div className="settings-page-container">
       <div className="project-info-card">
         <label>Project Name:</label>
         {editingName ? (
@@ -344,6 +351,7 @@ function ProjectSettingsPage() {
 
       <GroupMembers projectId={projectId} projectName={projectName} />
     </div>
+    </>
   );
 }
 
