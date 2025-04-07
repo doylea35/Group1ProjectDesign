@@ -204,210 +204,144 @@ export default function HomePage() {
   };
 
   return (
-    <div className="page-container">
-      {/* Header section fixed at top */}
-      <div className="header-section">
-        <PageHeader title="Home" />
-        <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
-      </div>
-
-      {/* Scrollable content area for tasks */}
-      <div className="content-wrapper">
-        {/* Label Filter Dropdown */}
-        <div className="label-filter-container" style={{ marginBottom: "1rem" }}>
-          <div
-            className="filter-dropdown-toggle"
-            style={{
-              display: "inline-block",
-              marginRight: "1rem",
-              position: "relative",
-            }}
-            ref={dropdownRef}
-          >
-            <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="Button"
-            >
-              Filter by label ▾
-            </button>
-            {dropdownOpen && (
-              <div
-                className="label-dropdown"
-                style={{
-                  position: "absolute",
-                  background: "#fff",
-                  border: "1px solid #ccc",
-                  marginTop: "4px",
-                  padding: "8px",
-                  zIndex: 10,
-                }}
-              >
-                {availableLabels.length === 0 && (
-                  <div style={{ padding: "4px 0" }}>No labels found</div>
-                )}
-                {availableLabels.map((label) => (
-                  <div
-                    key={label}
-                    style={{
-                      padding: "4px 0",
-                      cursor: "pointer",
-                      fontWeight: selectedLabels.includes(label)
-                        ? "bold"
-                        : "normal",
-                    }}
-                    onClick={() => handleLabelClick(label)}
-                  >
+    <>
+      <div className="page-container">
+        <div className="header-section">
+          <PageHeader title="Home" />
+          <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
+        </div>
+  
+        <div className="content-wrapper">
+          <div className="task-columns-wrapper">
+          <div className="board-header-home">
+            <div className="taskboard-title"> <h4>Your Taskboard</h4> </div>
+              <div className="filter-dropdown-toggle" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="filter-button"
+                > Filter by label ▾
+                </button>
+                {dropdownOpen && (
+                  <div className="SelectContent">
+                    <div className="SelectViewport">
+                      {availableLabels.length === 0 && (
+                        <div className="SelectItem">No labels found</div>
+                      )}
+                      {availableLabels.map((label) => (
+                        <div key={label} className="SelectItem" data-highlighted={ selectedLabels.includes(label) ? "true" : "false"}
+                          onClick={() => handleLabelClick(label)}
+                        >
+                          {label}
+                        </div>
+                      ))}
+                    </div>
+                    </div>
+                  )}
+                </div>
+                <div >
+                {selectedLabels.map((label) => (
+                  <div key={label} className="selected-label-pill">
                     {label}
+                    <span className="remove-label" onClick={() => handleRemoveLabel(label)}>
+                      &#x2715;
+                    </span>
                   </div>
                 ))}
+                </div>
               </div>
-            )}
-          </div>
-          {/* Selected filters (pills) */}
-          <div style={{ display: "inline-flex", gap: "8px", flexWrap: "wrap" }}>
-            {selectedLabels.map((label) => (
-              <div
-                key={label}
-                style={{
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  padding: "4px 8px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                }}
-              >
-                {label}{" "}
-                <span
-                  style={{
-                    marginLeft: "6px",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                  }}
-                  onClick={() => handleRemoveLabel(label)}
-                >
-                  x
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Task Board */}
-        <div className="task-columns-wrapper">
-          <div className="task-columns">
-            {/* TO DO Column */}
-            <div className="task-column to-do">
-              <h3 className="column-title">To Do</h3>
-              <div className="task-items">
-                {todoTasks.length > 0 ? (
-                  todoTasks.map((task) => (
-                    <div
-                      key={task._id}
-                      className="task-card"
-                      onClick={() => openTaskDetails(task)}
-                    >
-                      <h4 className="task-title">{task.name}</h4>
-                      <p className="task-meta">
-                        <strong>Project:</strong>{" "}
-                        {projects[task.group] || "Unknown Project"}
-                      </p>
-                      <div className="task-card-footer">
-                        <span className="task-date">{task.due_date}</span>
-                        <div className="task-labels">
-                          {task.labels &&
-                            task.labels.map((label, index) => (
-                              <span key={index} className="task-label">
-                                {label}
-                              </span>
-                            ))}
+            <div className="task-columns">
+              {/* TO DO Column */}
+              <div className="task-column to-do">
+                <h3 className="column-title">To Do</h3>
+                <div className="task-items">
+                  {todoTasks.length > 0 ? (
+                    todoTasks.map((task) => (
+                      <div key={task._id} className="task-card" onClick={() => openTaskDetails(task)}>
+                        <h4 className="task-title">{task.name}</h4>
+                        <p className="task-meta">
+                          <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                        </p>
+                        <div className="task-card-footer">
+                          <span className="task-date">{task.due_date}</span>
+                          <div className="task-labels">
+                            {task.labels &&
+                              task.labels.map((label, index) => (
+                                <span key={index} className="task-label">
+                                  {label}
+                                </span>
+                              ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
-                ) : (
-                  <p>No tasks in this column.</p>
-                )}
+                    ))
+                  ) : (
+                    <p>No tasks in this column.</p>
+                  )}
+                </div>
               </div>
-            </div>
-
-            {/* IN PROGRESS Column */}
-            <div className="task-column in-progress">
-              <h3 className="column-title">In Progress</h3>
-              <div className="task-items">
-                {inProgressTasks.length > 0 ? (
-                  inProgressTasks.map((task) => (
-                    <div
-                      key={task._id}
-                      className="task-card"
-                      onClick={() => openTaskDetails(task)}
-                    >
-                      <h4 className="task-title">{task.name}</h4>
-                      <p className="task-meta">
-                        <strong>Project:</strong>{" "}
-                        {projects[task.group] || "Unknown Project"}
-                      </p>
-                      <div className="task-card-footer">
-                        <span className="task-date">{task.due_date}</span>
-                        <div className="task-labels">
-                          {task.labels &&
-                            task.labels.map((label, index) => (
-                              <span key={index} className="task-label">
-                                {label}
-                              </span>
-                            ))}
+              {/* IN PROGRESS Column */}
+              <div className="task-column in-progress">
+                <h3 className="column-title">In Progress</h3>
+                <div className="task-items">
+                  {inProgressTasks.length > 0 ? (
+                    inProgressTasks.map((task) => (
+                      <div key={task._id} className="task-card" onClick={() => openTaskDetails(task)}>
+                        <h4 className="task-title">{task.name}</h4>
+                        <p className="task-meta">
+                          <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                        </p>
+                        <div className="task-card-footer">
+                          <span className="task-date">{task.due_date}</span>
+                          <div className="task-labels">
+                            {task.labels &&
+                              task.labels.map((label, index) => (
+                                <span key={index} className="task-label">
+                                  {label}
+                                </span>
+                              ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
-                ) : (
-                  <p>No tasks in this column.</p>
-                )}
+                    ))
+                  ) : (
+                    <p>No tasks in this column.</p>
+                  )}
+                </div>
               </div>
-            </div>
-
-            {/* COMPLETED Column */}
-            <div className="task-column completed">
-              <h3 className="column-title">Completed</h3>
-              <div className="task-items">
-                {completedTasks.length > 0 ? (
-                  completedTasks.map((task) => (
-                    <div
-                      key={task._id}
-                      className="task-card"
-                      onClick={() => openTaskDetails(task)}
-                    >
-                      <h4 className="task-title">{task.name}</h4>
-                      <p className="task-meta">
-                        <strong>Project:</strong>{" "}
-                        {projects[task.group] || "Unknown Project"}
-                      </p>
-                      <div className="task-card-footer">
-                        <span className="task-date">{task.due_date}</span>
-                        <div className="task-labels">
-                          {task.labels &&
-                            task.labels.map((label, index) => (
-                              <span key={index} className="task-label">
-                                {label}
-                              </span>
-                            ))}
+              {/* COMPLETED Column */}
+              <div className="task-column completed">
+                <h3 className="column-title">Completed</h3>
+                <div className="task-items">
+                  {completedTasks.length > 0 ? (
+                    completedTasks.map((task) => (
+                      <div key={task._id} className="task-card" onClick={() => openTaskDetails(task)}>
+                        <h4 className="task-title">{task.name}</h4>
+                        <p className="task-meta">
+                          <strong>Project:</strong> {projects[task.group] || "Unknown Project"}
+                        </p>
+                        <div className="task-card-footer">
+                          <span className="task-date">{task.due_date}</span>
+                          <div className="task-labels">
+                            {task.labels &&
+                              task.labels.map((label, index) => (
+                                <span key={index} className="task-label">
+                                  {label}
+                                </span>
+                              ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
-                ) : (
-                  <p>No tasks in this column.</p>
-                )}
+                    ))
+                  ) : (
+                    <p>No tasks in this column.</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <TaskDetailsModal
-        visible={showModal}
-        onClose={closeTaskDetails}
-        task={selectedTask}
-      />
-    </div>
+      <TaskDetailsModal visible={showModal} onClose={closeTaskDetails} task={selectedTask} />
+    </>
   );
-}
+}  

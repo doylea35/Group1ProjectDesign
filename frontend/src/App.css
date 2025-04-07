@@ -2177,3 +2177,8 @@ small {
   text-align: center;
   line-height: 25px;
 }
+
+.board-header-home {
+  justify-content: space-between; 
+  align-items: center;           
+}
