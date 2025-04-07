@@ -13,10 +13,34 @@ import os
 from email_service.email_utils import email_sender
 from pydantic import BaseModel
 from pymongo import ReturnDocument
+import datetime
+import pdfplumber
+from db.database import files_collection
+import boto3
+from botocore.exceptions import NoCredentialsError
+import openai
+import requests
+import tempfile
+import json
 
 # Load environment variables
 load_dotenv()
 JWT_SECRET = os.getenv("JWT_SECRET", "your_jwt_secret")
+
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
+AWS_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
+AWS_REGION = os.getenv("AWS_REGION")
+
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id=AWS_ACCESS_KEY,
+    aws_secret_access_key=AWS_SECRET_KEY,
+    region_name=AWS_REGION
+)
+
+# Load API Key from environment variables
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # OAuth2 password bearer for authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/login")
@@ -314,35 +338,6 @@ REGISTRATION_CONFIRMATION_EMAIL_TEMPLATE = """<!DOCTYPE html>
 </body>
 </html>"""
 
-
-import datetime
-import pdfplumber
-from db.database import files_collection
-import boto3
-from botocore.exceptions import NoCredentialsError
-import openai
-
-load_dotenv()
-
-AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
-AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
-AWS_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
-AWS_REGION = os.getenv("AWS_REGION")
-
-s3_client = boto3.client(
-    "s3",
-    aws_access_key_id=AWS_ACCESS_KEY,
-    aws_secret_access_key=AWS_SECRET_KEY,
-    region_name=AWS_REGION
-)
-
-# Load API Key from environment variables
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-import requests
-import tempfile
-import json
-
 def extract_text_from_pdf(file_url: str) -> str:
     # Download the PDF content
     response = requests.get(file_url)
@@ -364,10 +359,10 @@ def extract_text_from_pdf(file_url: str) -> str:
 @user_router.post("/uploadCV", summary="Upload a CV for a user")
 async def upload_cv(
     file: UploadFile = File(...),
-    # current_user: dict = Depends(get_current_user) # comment this line if you want to test locally without previouslly signing-in
+    current_user: dict = Depends(get_current_user) # comment this line if you want to test locally without previouslly signing-in
 ):
     """Upload a CV for a user and extract text from it"""
-    current_user = {"email": "aina.gomila@estudiantat.upc.edu"} # uncomment this line if you want to test locally without previouslly signing-in
+    # current_user = {"email": "aina.gomila@estudiantat.upc.edu"} # uncomment this line if you want to test locally without previouslly signing-in
 
     # Get the user's name
     user_name = current_user.get("name", "user").replace(" ", "_")  # Replace spaces just in case
@@ -505,10 +500,10 @@ async def get_user_presigned_url(
 
 @user_router.post("/updateSkillsFromCV", summary="Update skills from CV")
 async def update_skills_from_cv(
-    #  current_user: dict = Depends(get_current_user)
+     current_user: dict = Depends(get_current_user)
      ):
      """Update user skills from a CV."""
-     current_user = {"email": "aina.gomila@estudiantat.upc.edu"} # uncomment this line if you want to test locally without previouslly signing-in
+    #  current_user = {"email": "aina.gomila@estudiantat.upc.edu"} # uncomment this line if you want to test locally without previouslly signing-in
 
 
      # Ask ChatGPT to extract skills from the CV
@@ -516,8 +511,6 @@ async def update_skills_from_cv(
 
      # get current user skills
      user = users_collection.find_one({"email": current_user["email"]})
-
-     #  current_skills = user["skills"] if user and "skills" in user else []
      
      # Flatten the skills dictionary
      extracted_skills_list = flatten_skills_dict(extracted_skills)
