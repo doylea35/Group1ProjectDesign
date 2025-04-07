@@ -72,21 +72,20 @@ async def mark_notification_as_read(request: MarkNotificationAsReadRequest):
     return {"message": "Notification marked as read successfully"}
 
 
-@notifications_router.get("/get_notifications_by_user")
+@notifications_router.post("/get_notifications_by_user")
 async def get_notifications_by_user(request: GetNotificationsByUserRequest):
     """
     Get notifications by user.
     """
-    # Validate email
     if not is_valid_email(request.user_email):
         raise HTTPException(status_code=400, detail="Invalid email format")
 
-    # Find notifications for the user
     notifications = notifications_serial(
         notifications_collection.find({"user": request.user_email})
     )
 
     return {"notifications": notifications}
+
 
 @notifications_router.get("/get_notifications_by_group")
 async def get_notifications_by_group(request: GetNotificationsByGroupRequest):

@@ -12,7 +12,9 @@ const Sidebar = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
+  // Fetch user projects
   useEffect(() => {
     const fetchUserProjects = async () => {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -43,11 +45,35 @@ const Sidebar = () => {
     fetchUserProjects();
   }, []);
 
+  useEffect(() => {
+    const fetchUnreadNotifications = async () => {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user || !user.token || !user.email) return;
+      try {
+        const response = await axios.post(
+          "/api/notifications/get_notifications_by_user",
+          { user_email: user.email },
+          { headers: { Authorization: `Bearer ${user.token}` } }
+        );
+        const unread = response.data.notifications.filter(
+          (notification) => !notification.read
+        );
+        setUnreadCount(unread.length);
+      } catch (err) {
+        console.error(
+          "Error fetching unread notifications:",
+          err.response ? err.response.data : err
+        );
+      }
+    };
+    fetchUnreadNotifications();
+  }, []);
+  
+
   const handleProjectClick = (project) => {
     localStorage.setItem("selectedProject", JSON.stringify(project));
   };
 
-  // onSuccess callback simply closes the dialog.
   const handleProjectCreationSuccess = () => {
     setDialogOpen(false);
   };
@@ -63,15 +89,17 @@ const Sidebar = () => {
           />
           <h1 className="sidebar-title">GroupGrade</h1>
         </div>
-        {/* Toggle button removed to always keep sidebar open */}
         <nav className="sidebar-links active">
           <Link to="/home" className="nav-link">
             Home
           </Link>
 
-          {/* New Notifications Tab */}
+          {/* Notifications Tab with Unread Badge */}
           <Link to="/notifications" className="nav-link">
             Notifications
+            {unreadCount > 0 && (
+              <span className="notification-badge">{unreadCount}</span>
+            )}
           </Link>
 
           <Link to="/account" className="nav-link">

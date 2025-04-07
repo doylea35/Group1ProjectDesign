@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import PageHeader from "../components/PageHeader";
+import PublicProfile from "../components/PublicProfile"; // imported reusable profile component
 import "../App.css";
 
 const API_URI = "/api/group/";
@@ -37,6 +38,8 @@ function GroupMembers({ projectId, projectName }) {
   const [updateMessage, setUpdateMessage] = useState("");
   const [updateError, setUpdateError] = useState("");
   const [updateLoading, setUpdateLoading] = useState(false);
+  // New state for enriched members (with skills populated)
+  const [enrichedMembers, setEnrichedMembers] = useState([]);
 
   const fetchMembers = async () => {
     try {
@@ -75,10 +78,66 @@ function GroupMembers({ projectId, projectName }) {
     }
   }, [projectId]);
 
-  const combinedMembers = [
-    ...acceptedMembers.map((member) => ({ email: member, status: "accepted" })),
-    ...pendingMembers.map((member) => ({ email: member, status: "invited" })),
-  ];
+  // Combine accepted and pending members as before
+  // Then enrich each member with skills if missing.
+  useEffect(() => {
+    const combinedMembersDict = {};
+
+    acceptedMembers.forEach((member) => {
+      let email, skills;
+      if (typeof member === "string") {
+        email = member;
+        skills = []; // no skills available initially
+      } else {
+        email = member.email;
+        skills = member.skills || [];
+      }
+      combinedMembersDict[email] = { email, skills, status: "accepted" };
+    });
+
+    pendingMembers.forEach((member) => {
+      let email, skills;
+      if (typeof member === "string") {
+        email = member;
+        skills = [];
+      } else {
+        email = member.email;
+        skills = member.skills || [];
+      }
+      // Only add pending member if it doesn't exist already as accepted.
+      if (!combinedMembersDict[email]) {
+        combinedMembersDict[email] = { email, skills, status: "invited" };
+      }
+    });
+
+    const combinedMembers = Object.values(combinedMembersDict);
+
+    // Helper function to enrich a member's skills if empty
+    const enrichMember = async (member) => {
+      if (member.skills.length === 0) {
+        try {
+          const user = JSON.parse(localStorage.getItem("user"));
+          const token = user?.token;
+          if (token) {
+            const res = await axios.get(
+              `/api/user/profile?email=${encodeURIComponent(member.email)}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            // Assuming the response contains a 'skills' array:
+            return { ...member, skills: res.data.skills || [] };
+          }
+        } catch (error) {
+          console.error("Error fetching profile for", member.email, error);
+          return member; // fallback to original member if error occurs
+        }
+      }
+      return member;
+    };
+
+    Promise.all(combinedMembers.map(enrichMember))
+      .then((enriched) => setEnrichedMembers(enriched))
+      .catch((err) => console.error("Error enriching members:", err));
+  }, [acceptedMembers, pendingMembers]);
 
   const handleUpdateMembers = async (e) => {
     e.preventDefault();
@@ -157,13 +216,18 @@ function GroupMembers({ projectId, projectName }) {
 
       <div className="members-table">
         <div className="members-table-row members-table-header">
-          <div className="members-table-cell">Member</div>
+          <div className="members-table-cell">Member Profile</div>
           <div className="members-table-cell">Status</div>
         </div>
-        {combinedMembers.length > 0 ? (
-          combinedMembers.map((member, idx) => (
+        {enrichedMembers.length > 0 ? (
+          enrichedMembers.map((member, idx) => (
             <div key={idx} className="members-table-row">
-              <div className="members-table-cell">{member.email}</div>
+              <div className="members-table-cell">
+                <PublicProfile
+                  email={member.email}
+                  skills={member.skills || []}
+                />
+              </div>
               <div className="members-table-cell">{member.status}</div>
             </div>
           ))
@@ -242,73 +306,88 @@ function ProjectSettingsPage() {
   if (loading) return <p>Loading project settings...</p>;
 
   return (
-    <div className="settings-page-container">
-      <PageHeader title={`${projectName} Settings`} />
-      <div className="top-row">
-        <button onClick={() => navigate(`/projects/${projectId}`)} className="back-project-btn">
-          Back to Project Page
-        </button>
+    <>
+      <div className="settings-header-container">
+        <PageHeader title={`${projectName}: Settings`} />
       </div>
-
-      <div className="project-info-card">
-        <label>Project Name:</label>
-        {editingName ? (
-          <form onSubmit={handleUpdateName}>
-            <div className="project-name-container">
-              <input
-                type="text"
-                value={newProjectName}
-                onChange={(e) => setNewProjectName(e.target.value)}
-                className="project-name-input"
-              />
-            </div>
-            <button
-              type="submit"
-              className="edit-name-btn"
-              disabled={updateNameLoading}
-            >
-              {updateNameLoading ? "Updating..." : "Save"}
-            </button>
-            <button
-              type="button"
-              className="edit-name-btn"
-              onClick={() => {
-                setEditingName(false);
-                setNewProjectName(projectName);
-              }}
-            >
-              Cancel
-            </button>
-            {updateNameMessage && (
-              <p className="success-message">{updateNameMessage}</p>
-            )}
-            {updateNameError && (
-              <p className="error-message">{updateNameError}</p>
-            )}
-          </form>
-        ) : (
-          <>
-            <div className="project-name-container">
-              <input
-                type="text"
-                value={projectName}
-                readOnly
-                className="project-name-input"
-              />
-            </div>
-            <button
-              className="edit-name-btn"
-              onClick={() => setEditingName(true)}
-            >
-              Edit Name
-            </button>
-          </>
-        )}
-
+      <div
+        className="back-button"
+        style={{
+          position: "absolute",
+          top: "100px",
+          left: "300px",
+          zIndex: "10",
+        }}
+      >
+        <div className="top-row">
+          <button
+            onClick={() => navigate(`/projects/${projectId}`)}
+            className="back-project-btn"
+          >
+            Back to Project Page
+          </button>
+        </div>
       </div>
+      <div className="settings-page-container">
+        <div className="project-info-card">
+          <label>Project Name:</label>
+          {editingName ? (
+            <form onSubmit={handleUpdateName}>
+              <div className="project-name-container">
+                <input
+                  type="text"
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  className="project-name-input"
+                />
+              </div>
+              <button
+                type="submit"
+                className="edit-name-btn"
+                disabled={updateNameLoading}
+              >
+                {updateNameLoading ? "Updating..." : "Save"}
+              </button>
+              <button
+                type="button"
+                className="edit-name-btn"
+                onClick={() => {
+                  setEditingName(false);
+                  setNewProjectName(projectName);
+                }}
+              >
+                Cancel
+              </button>
+              {updateNameMessage && (
+                <p className="success-message">{updateNameMessage}</p>
+              )}
+              {updateNameError && (
+                <p className="error-message">{updateNameError}</p>
+              )}
+            </form>
+          ) : (
+            <>
+              <div className="project-name-container">
+                <input
+                  type="text"
+                  value={projectName}
+                  readOnly
+                  className="project-name-input"
+                />
+              </div>
+              <button
+                className="edit-name-btn"
+                onClick={() => setEditingName(true)}
+              >
+                Edit Name
+              </button>
+            </>
+          )}
+        </div>
 
-      <GroupMembers projectId={projectId} projectName={projectName} />
-    </div>
+        <GroupMembers projectId={projectId} projectName={projectName} />
+      </div>
+    </>
   );
 }
 

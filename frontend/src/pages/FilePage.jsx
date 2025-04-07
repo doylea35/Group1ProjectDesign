@@ -144,13 +144,21 @@ function ProjectFilesPage() {
   }
 
   return (
-    <div className="files-page-container">
-      <PageHeader title={projectName} />
-      <div className="top-row">
-        <button onClick={() => navigate(`/projects/${projectId}`)} className="back-project-btn">
+    <>
+    <div className="settings-header-container">
+      <PageHeader title={`${projectName}: Settings`} />
+    </div>
+    <div
+      className="back-button"
+      style={{position: "absolute", top: "100px", left: "300px", zIndex: "10", }}
+    >
+    <div className="top-row">
+      <button onClick={() => navigate(`/projects/${projectId}`)} className="back-project-btn">
           Back to Project Page
-        </button>
+      </button>
       </div>
+    </div>
+    <div className="files-page-container">
 
       {error && <div style={{ color: "red", marginBottom: "1rem" }}>{error}</div>}
 
@@ -204,6 +212,7 @@ function ProjectFilesPage() {
         )}
       </div>
     </div>
+    </>
   );
 }
 

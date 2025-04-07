@@ -178,72 +178,97 @@ async def confirm_member(user_email: str, group_id: str):
     return {"message": "User is now added to the group.", "data": {"updated_group": str(updated_group), "updated_user": str(updated_user)}}
 
 
-INVITATION_EMAIL_TEMPLATE = """<!DOCTYPE html>
-<html>
+INVITATION_EMAIL_TEMPLATE = """\
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GroupGrade Invitation</title>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }}
-        .container {{
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: auto;
-        }}
-        .header {{
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-            text-align: center;
-        }}
-        .content {{
-            font-size: 16px;
-            color: #555;
-            margin-top: 20px;
-        }}
-        .button {{
-            display: block;
-            width: 200px;
-            margin: 20px auto;
-            padding: 10px;
-            text-align: center;
-            background-color: #007bff;
-            color: #FFFFFF;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 16px;
-        }}
-        .footer {{
-            margin-top: 20px;
-            font-size: 12px;
-            color: #888;
-            text-align: center;
-        }}
-    </style>
+  <meta charset="UTF-8">
+  <title>Group Invitation - GroupGrade</title>
+  <style>
+    body {{
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      font-family: 'Poppins', sans-serif;
+      color: #1f2937;
+    }}
+    .container {{
+      max-width: 600px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      padding: 40px 30px;
+      text-align: center;
+    }}
+    .logo {{
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 20px;
+    }}
+    .title {{
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }}
+    .subtitle {{
+      font-size: 16px;
+      color: #6b7280;
+      margin-bottom: 24px;
+    }}
+    .button {{
+      display: inline-block;
+      background-color: #6C38F5;
+      color: #ffffff !important;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 9999px;
+      padding: 14px 32px;
+      margin-top: 20px;
+    }}
+    .button:hover {{
+      background-color: #5932ea;
+    }}
+    .note {{
+      font-size: 13px;
+      color: #777;
+      margin-top: 24px;
+    }}
+    .footer {{
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 40px;
+    }}
+    a {{
+      color: #6C38F5;
+      text-decoration: none;
+    }}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">You're Invited to Join "{project_name}" on GroupGrade</div>
-        <div class="content">
-            <p><strong>{creator_email}</strong> has invited you to join the project <strong>{project_name}</strong> on GroupGrade.</p>
-            <p>Please click the button below to accept the invitation:</p>
-            <a href="{invitation_link}" class="button">Accept Invitation</a>
-        </div>
-        <div class="footer">
-            If you didn't request this invitation, please ignore this email.
-        </div>
+  <div class="container">
+    <img class="logo" src="https://group-grade-files.s3.eu-north-1.amazonaws.com/groupgrade-assets/hexlogo.png" alt="GroupGrade Logo" />
+    <div class="title">You're Invited to Join "{project_name}"</div>
+    <div class="subtitle">Collaborate on GroupGrade — Teamwork Made Easy</div>
+
+    <p><strong>{creator_email}</strong> has invited you to join the project <strong>{project_name}</strong> on GroupGrade.</p>
+    <p>Click below to accept the invitation and start working with your team:</p>
+
+    <a href="{invitation_link}" class="button">Accept Invitation</a>
+
+    <div class="note">
+      Didn't expect this? You can safely ignore this message.
     </div>
+    <div class="footer">
+            Need help? Contact us at <a href="mailto:support@groupgrade.com">support@groupgrade.com</a><br/>
+            &copy; 2025 GroupGrade. All rights reserved.
+    </div>
+  </div>  
 </body>
-</html>"""
+</html>
+"""
+
 
 def send_project_invitation_email(user_emails:list[str], creator_email:str, new_group_id:str, new_group_name:str ):
 

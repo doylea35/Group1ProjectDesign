@@ -46,7 +46,7 @@ const EditTask = ({ task, onEdit, onClose }) => {
       description: taskDescription,
       due_date: dueDate,
       priority: taskPriority,
-
+      labels: labelsArray,
     };
 
     try {

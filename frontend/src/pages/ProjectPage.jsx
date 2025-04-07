@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import CreateSubteam from "../components/CreateSubteam";
@@ -70,11 +70,36 @@ function ProjectPage() {
   const [tasks, setTasks] = useState([]);
   const [error, setError] = useState("");
   const [activeTaskId, setActiveTaskId] = useState(null);
-  const [labelFilter, setLabelFilter] = useState("");
+
+  // For label dropdown
+  const [availableLabels, setAvailableLabels] = useState([]);
+  const [selectedLabels, setSelectedLabels] = useState([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Ref for detecting clicks outside of the dropdown
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownRef]);
 
   // Pull project name from localStorage
   useEffect(() => {
-    const projectFromStorage = JSON.parse(localStorage.getItem("selectedProject"));
+    const projectFromStorage = JSON.parse(
+      localStorage.getItem("selectedProject")
+    );
     if (projectFromStorage && projectFromStorage._id === projectId) {
       setProjectName(projectFromStorage.name);
       setLoading(false);
@@ -99,7 +124,7 @@ function ProjectPage() {
         });
 
         if (response.data) {
-          // Priority-based sorting
+          // Sort by priority first, then due date
           const priorityOrder = { High: 0, Medium: 1, Low: 2 };
           const projectTasks = response.data
             .filter((task) => task.group === projectId)
@@ -127,7 +152,16 @@ function ProjectPage() {
     }
   }, [projectId]);
 
-  // Show loading or error states within a flex container
+  // Compute list of available labels from these tasks
+  useEffect(() => {
+    const uniqueLabels = new Set();
+    tasks.forEach((t) => {
+      (t.labels || []).forEach((lbl) => uniqueLabels.add(lbl));
+    });
+    setAvailableLabels(Array.from(uniqueLabels));
+  }, [tasks]);
+
+  // Show loading or error states
   if (loading) {
     return (
       <div className="project-page-container">
@@ -151,22 +185,6 @@ function ProjectPage() {
     setActiveTaskId((prev) => (prev === taskId ? null : taskId));
   };
 
-  // Label filter logic
-  const desiredLabels = labelFilter
-    .split(",")
-    .map((lbl) => lbl.trim())
-    .filter((lbl) => lbl !== "");
-
-  function labelsMatch(taskLabels, wanted) {
-    if (!wanted.length) return true;
-    return wanted.some((label) => taskLabels?.includes(label));
-  }
-
-  // Apply label-based filtering
-  const filteredTasks = tasks.filter((task) =>
-    labelsMatch(task.labels || [], desiredLabels)
-  );
-
   const openTaskDetails = (task) => {
     setSelectedTask(task);
     setShowModal(true);
@@ -177,10 +195,21 @@ function ProjectPage() {
     setSelectedTask(null);
   };
 
+  // OR-based label filter
+  const filteredTasks = tasks.filter((task) => {
+    if (selectedLabels.length === 0) return true;
+    const taskLabels = task.labels || [];
+    return taskLabels.some((label) => selectedLabels.includes(label));
+  });
+
   // Separate tasks by status
   const todoTasks = filteredTasks.filter((task) => task.status === "To Do");
-  const inProgressTasks = filteredTasks.filter((task) => task.status === "In Progress");
-  const completedTasks = filteredTasks.filter((task) => task.status === "Completed");
+  const inProgressTasks = filteredTasks.filter(
+    (task) => task.status === "In Progress"
+  );
+  const completedTasks = filteredTasks.filter(
+    (task) => task.status === "Completed"
+  );
 
   // For stats bar
   const totalTasks = filteredTasks.length;
@@ -188,46 +217,87 @@ function ProjectPage() {
 
   // Handlers for subteam & task creation
   const handleCreateSubteam = (subteamName, members) => {
-    alert(`Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(", ")}`);
+    alert(
+      `Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(
+        ", "
+      )}`
+    );
   };
 
   const handleCreateTask = () => {
     // Additional logic if needed
   };
 
+  // Handlers for label selection
+  const handleLabelClick = (label) => {
+    setSelectedLabels((prev) =>
+      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+    );
+  };
+
+  const handleRemoveLabel = (label) => {
+    setSelectedLabels((prev) => prev.filter((l) => l !== label));
+  };
+
   return (
     <div className="project-page-container">
-      {/* Fixed header, stats and navigation */}
       <PageHeader title={projectName} />
       <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
       <ProjectNavigation projectId={projectId} />
 
-      {/* Scrollable content area */}
       <div className="content-wrapper">
-        {/* Subteam & Task creation buttons */}
-        <div className="button-container">
-          <CreateSubteam projectName={projectName} onCreate={handleCreateSubteam} />
-          <CreateTask projectName={projectName} projectId={projectId} onCreate={handleCreateTask} />
-        </div>
-
-        {/* Label filter input */}
-        <div style={{ margin: "1rem 0" }}>
-          <label htmlFor="labelFilter" style={{ marginRight: "0.5rem" }}>
-            Filter by labels (comma-separated):
-          </label>
-          <input
-            id="labelFilter"
-            type="text"
-            value={labelFilter}
-            onChange={(e) => setLabelFilter(e.target.value)}
-            placeholder="e.g. urgent, design, homework"
-            style={{ width: "300px" }}
-          />
-        </div>
-
         {/* Taskboard Columns */}
         <div className="task-columns-wrapper">
-          <h4 className="taskboard-title">Group Taskboard</h4>
+          <div className="taskboard-title">
+            <h4>Group Taskboard</h4>
+          </div>
+          <div className="taskboard-controls">
+            <div className="button-container">
+              <CreateSubteam
+                projectName={projectName}
+                onCreate={handleCreateSubteam}
+              />
+              <CreateTask
+                projectName={projectName}
+                projectId={projectId}
+                onCreate={handleCreateTask}
+              />
+              <div className="filter-dropdown-toggle" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="filter-button"
+                >
+                  Filter by label ▾
+                </button>
+                {dropdownOpen && (
+                  <div className="SelectContent">
+                    <div className="SelectViewport">
+                      {availableLabels.length === 0 && (
+                        <div className="SelectItem">No labels found</div>
+                      )}
+                      {availableLabels.map((label) => (
+                        <div key={label} className="SelectItem" data-highlighted={ selectedLabels.includes(label) ? "true" : "false"}
+                          onClick={() => handleLabelClick(label)}
+                        >
+                          {label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div >
+              {selectedLabels.map((label) => (
+                <div key={label} className="selected-label-pill">
+                  {label}
+                  <span className="remove-label" onClick={() => handleRemoveLabel(label)}>
+                    &#x2715;
+                  </span>
+                </div>
+              ))}
+              </div>
+            </div>
+          </div>
           <div className="task-columns">
             {/* TO DO */}
             <div className="task-column to-do">
