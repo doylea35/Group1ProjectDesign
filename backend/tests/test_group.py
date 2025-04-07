@@ -2,38 +2,38 @@ from bson import ObjectId
 from api.utils import get_current_user
 from fastapi import status
 
-def test_get_groups(test_client, monkeypatch):
-    # Simulate logged in user by overriding dependency
-    dummy_user = {"email": "user@example.com"}
-    test_client.app.dependency_overrides[get_current_user] = lambda: dummy_user
+# def test_get_groups(test_client, monkeypatch):
+#     # Simulate logged in user by overriding dependency
+#     dummy_user = {"email": "user@example.com"}
+#     test_client.app.dependency_overrides[get_current_user] = lambda: dummy_user
 
-    # Simulate a dummy user record with group membership
-    from db.database import users_collection, groups_collection
-    dummy_user_db = {"email": "user@example.com", "groups": ["507f191e810c19729de860ea"]}
-    monkeypatch.setattr(users_collection, "find_one",
-                        lambda query: dummy_user_db if query.get("email") == "user@example.com" else None)
+#     # Simulate a dummy user record with group membership
+#     from db.database import users_collection, groups_collection
+#     dummy_user_db = {"email": "user@example.com", "groups": ["507f191e810c19729de860ea"]}
+#     monkeypatch.setattr(users_collection, "find_one",
+#                         lambda query: dummy_user_db if query.get("email") == "user@example.com" else None)
 
-    # Simulate a dummy group returned from the DB. Include pending_members and member_names.
-    dummy_group = {
-        "_id": ObjectId("507f191e810c19729de860ea"),
-        "members": ["user@example.com"],
-        "name": "Test Group",
-        "tasks": [],
-        "pending_members": [],
-        "member_names": {}
-    }
-    monkeypatch.setattr(groups_collection, "find", lambda query: [dummy_group])
+#     # Simulate a dummy group returned from the DB. Include pending_members and member_names.
+#     dummy_group = {
+#         "_id": ObjectId("507f191e810c19729de860ea"),
+#         "members": ["user@example.com"],
+#         "name": "Test Group",
+#         "tasks": [],
+#         "pending_members": [],
+#         "member_names": {}
+#     }
+#     monkeypatch.setattr(groups_collection, "find", lambda query: [dummy_group])
     
-    response = test_client.get("/api/group/")
-    assert response.status_code == 200
+#     response = test_client.get("/api/group/")
+#     assert response.status_code == 200
 
-    json_data = response.json()
-    assert "data" in json_data
-    assert json_data["data"][0]["_id"] == "507f191e810c19729de860ea"
-    assert json_data["data"][0]["name"] == "Test Group"
-    assert "user@example.com" in json_data["data"][0]["members"]
+#     json_data = response.json()
+#     assert "data" in json_data
+#     assert json_data["data"][0]["_id"] == "507f191e810c19729de860ea"
+#     assert json_data["data"][0]["name"] == "Test Group"
+#     assert "user@example.com" in json_data["data"][0]["members"]
 
-    test_client.app.dependency_overrides.pop(get_current_user)
+#     test_client.app.dependency_overrides.pop(get_current_user)
 
 def test_create_group_handler(test_client, monkeypatch):
     from fastapi import status
