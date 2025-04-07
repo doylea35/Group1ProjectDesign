@@ -97,7 +97,9 @@ function ProjectPage() {
 
   // Pull project name from localStorage
   useEffect(() => {
-    const projectFromStorage = JSON.parse(localStorage.getItem("selectedProject"));
+    const projectFromStorage = JSON.parse(
+      localStorage.getItem("selectedProject")
+    );
     if (projectFromStorage && projectFromStorage._id === projectId) {
       setProjectName(projectFromStorage.name);
       setLoading(false);
@@ -239,105 +241,63 @@ function ProjectPage() {
 
   return (
     <div className="project-page-container">
-      {/* Fixed header, stats and navigation */}
       <PageHeader title={projectName} />
       <StatsBar totalTasks={totalTasks} completedTasks={completedCount} />
       <ProjectNavigation projectId={projectId} />
 
-      {/* Scrollable content area */}
       <div className="content-wrapper">
-        {/* Subteam & Task creation buttons */}
-        <div className="button-container">
-          <CreateSubteam projectName={projectName} onCreate={handleCreateSubteam} />
-          <CreateTask
-            projectName={projectName}
-            projectId={projectId}
-            onCreate={handleCreateTask}
-          />
-        </div>
-
-        {/* Label Filter Dropdown */}
-        <div
-          className="label-filter-container"
-          style={{ marginTop: "1rem", marginBottom: "1rem" }}
-        >
-          <div
-            className="filter-dropdown-toggle"
-            style={{
-              display: "inline-block",
-              marginRight: "1rem",
-              position: "relative",
-            }}
-            ref={dropdownRef}
-          >
-            <button onClick={() => setDropdownOpen(!dropdownOpen)} className="Button">
-              Filter by label ▾
-            </button>
-            {dropdownOpen && (
-              <div
-                className="label-dropdown"
-                style={{
-                  position: "absolute",
-                  background: "#fff",
-                  border: "1px solid #ccc",
-                  marginTop: "4px",
-                  padding: "8px",
-                  zIndex: 10,
-                }}
-              >
-                {availableLabels.length === 0 && (
-                  <div style={{ padding: "4px 0" }}>No labels found</div>
-                )}
-                {availableLabels.map((label) => (
-                  <div
-                    key={label}
-                    style={{
-                      padding: "4px 0",
-                      cursor: "pointer",
-                      fontWeight: selectedLabels.includes(label)
-                        ? "bold"
-                        : "normal",
-                    }}
-                    onClick={() => handleLabelClick(label)}
-                  >
-                    {label}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          {/* Selected filters (pills) */}
-          <div style={{ display: "inline-flex", gap: "8px", flexWrap: "wrap" }}>
-            {selectedLabels.map((label) => (
-              <div
-                key={label}
-                style={{
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  padding: "4px 8px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                }}
-              >
-                {label}{" "}
-                <span
-                  style={{
-                    marginLeft: "6px",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                  }}
-                  onClick={() => handleRemoveLabel(label)}
-                >
-                  x
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Taskboard Columns */}
         <div className="task-columns-wrapper">
-          <h4 className="taskboard-title">Group Taskboard</h4>
+          <div className="taskboard-title">
+            <h4>Group Taskboard</h4>
+          </div>
+          <div className="taskboard-controls">
+            <div className="button-container">
+              <CreateSubteam
+                projectName={projectName}
+                onCreate={handleCreateSubteam}
+              />
+              <CreateTask
+                projectName={projectName}
+                projectId={projectId}
+                onCreate={handleCreateTask}
+              />
+              <div className="filter-dropdown-toggle" ref={dropdownRef}>
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="filter-button"
+                >
+                  Filter by label ▾
+                </button>
+                {dropdownOpen && (
+                  <div className="SelectContent">
+                    <div className="SelectViewport">
+                      {availableLabels.length === 0 && (
+                        <div className="SelectItem">No labels found</div>
+                      )}
+                      {availableLabels.map((label) => (
+                        <div key={label} className="SelectItem" data-highlighted={ selectedLabels.includes(label) ? "true" : "false"}
+                          onClick={() => handleLabelClick(label)}
+                        >
+                          {label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div >
+              {selectedLabels.map((label) => (
+                <div key={label} className="selected-label-pill">
+                  {label}
+                  <span className="remove-label" onClick={() => handleRemoveLabel(label)}>
+                    &#x2715;
+                  </span>
+                </div>
+              ))}
+              </div>
+            </div>
+          </div>
           <div className="task-columns">
             {/* TO DO */}
             <div className="task-column to-do">

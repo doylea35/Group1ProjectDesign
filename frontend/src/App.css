@@ -151,6 +151,7 @@ line-height: 1;
 font-weight: 500;
 height: 35px;
 user-select: none;
+cursor: pointer;
 }
 .Button:focus:not(:focus-visible) {
 outline: 0;
@@ -1517,7 +1518,7 @@ to {
   padding: 2rem 1rem;
   border-radius: 20px;
   margin-bottom: 2rem;
-  margin-top: 6rem;
+  margin-top: 3rem;
 }
 
 .stats-item {
@@ -1636,7 +1637,7 @@ to {
 }
 
 .taskboard-title {
-  font-size: 1.5rem; 
+  font-size: 1.8rem; 
   font-weight: bold; 
   margin-right: 780px; 
 }
@@ -2007,3 +2008,91 @@ small {
   height: 28px;
 }
 
+.filter-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  padding: 0 15px;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 500;
+  height: 30px;
+  background-color: var(--violet-4);
+  cursor: pointer;  
+  margin-left: 10px;
+  font-family: inherit;
+}
+
+.filter-button:hover {
+  background-color: var(--mauve-3);
+}
+
+.filter-dropdown-toggle {
+  position: relative;
+  display: inline-block;
+}
+
+.SelectContent {
+  position: absolute;
+  top: 100%; 
+  left: 0;
+  z-index: 999;
+  border-radius: 6px;
+}
+
+.SelectViewport {
+  padding: 5px;
+}
+
+.SelectItem {
+  font-size: 13px;
+  line-height: 1;
+  background-color: white;
+  color: black;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  height: 2rem;
+  padding: 0 1rem;
+  position: relative;
+  user-select: none;
+  border: 1px solid transparent;
+  transition: all 0.1s;
+  cursor: pointer;
+}
+
+.SelectItem:hover {
+  background-color: var(--violet-4);
+  border: 1px solid var(--violet-8);
+}
+
+.SelectItem[data-highlighted="true"] {
+  background-color: var(--violet-4);
+  color: black;
+}
+
+.selected-label-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px;
+  border-radius: 4px;
+  background-color: var(--violet-6);
+  color: black;
+  font-size: 13px;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.selected-label-pill .remove-label {
+  font-weight: bold;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background-color 0.1s;
+}
+
+.selected-label-pill .remove-label:hover {
+  background-color: var(--mauve-3);
+}
