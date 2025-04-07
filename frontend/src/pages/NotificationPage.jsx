@@ -15,11 +15,6 @@ const NotificationsPage = () => {
         return;
       }
 
-      const url = "/api/notifications/get_notifications_by_user";
-      const params = { user_email: user.email };
-
-      console.log("Sending GET request to:", url, "with params:", params);
-
       try {
         const response = await axios.post(
           "/api/notifications/get_notifications_by_user",
@@ -27,9 +22,10 @@ const NotificationsPage = () => {
           { headers: { Authorization: `Bearer ${user.token}` } }
         );
 
-
-        console.log("Notifications response:", response.data);
-        setNotifications(response.data.notifications);
+        const unreadNotifications = response.data.notifications.filter(
+          (notification) => !notification.read
+        );
+        setNotifications(unreadNotifications);
       } catch (err) {
         console.error(
           "Error loading notifications:",
@@ -57,14 +53,8 @@ const NotificationsPage = () => {
           headers: { Authorization: `Bearer ${user.token}` },
         }
       );
-      // Update the notifications state by marking the notification as read
-      setNotifications((prev) =>
-        prev.map((notification) =>
-          (notification._id || notification.id) === notificationId
-            ? { ...notification, read: true }
-            : notification
-        )
-      );
+      // Refresh the page after marking as read
+      window.location.reload();
     } catch (err) {
       console.error(
         "Error marking notification as read:",
@@ -81,7 +71,7 @@ const NotificationsPage = () => {
       ) : error ? (
         <p className="error-message">{error}</p>
       ) : notifications.length === 0 ? (
-        <p>No notifications available</p>
+        <p>You have no new notifications</p>
       ) : (
         <ul className="notification-list">
           {notifications.map((notification) => (
@@ -97,15 +87,13 @@ const NotificationsPage = () => {
                   {new Date(notification.timestamp).toLocaleString()}
                 </small>
               </div>
-              {!notification.read && (
-                <button
-                  onClick={() =>
-                    handleMarkAsRead(notification._id || notification.id)
-                  }
-                >
-                  Mark as read
-                </button>
-              )}
+              <button
+                onClick={() =>
+                  handleMarkAsRead(notification._id || notification.id)
+                }
+              >
+                Mark as read
+              </button>
             </li>
           ))}
         </ul>
