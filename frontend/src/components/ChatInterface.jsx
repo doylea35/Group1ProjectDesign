@@ -12,16 +12,22 @@ function ChatInterface() {
   const messagesEndRef = useRef(null); // Reference for the auto-scroll container
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
-  const { email: userEmail, name: userName, token: authToken } = user;
+  // const { email: userEmail, name: userName, token: authToken } = user;
+
+  const userEmail = user["email"];
+  const userName = user["name"];
+  const authToken = user["token"];
 
   // Helper function to check if projectId is a valid ObjectId-like string
   const isValidObjectId = (id) => /^[a-f\d]{24}$/i.test(id);
-  
 
   useEffect(() => {
     const fetchChat = async () => {
       if (!isValidObjectId(projectId)) {
-        console.warn("Invalid group_id format (must be 24-character hex):", projectId);
+        console.warn(
+          "Invalid group_id format (must be 24-character hex):",
+          projectId
+        );
         return;
       }
 
@@ -39,7 +45,10 @@ function ChatInterface() {
         setChatId(chatData._id);
         setMessages(chatData.chat_history || []);
       } catch (error) {
-        console.error("Failed to fetch chat:", error.response?.data || error.message);
+        console.error(
+          "Failed to fetch chat:",
+          error.response?.data || error.message
+        );
       }
     };
 
@@ -79,7 +88,7 @@ function ChatInterface() {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
-    if(user && user.name) {
+    if (user && user.name) {
       console.log("Loaded User Name:", user.name);
     } else {
       console.log("No User Name Found in Local Storage");
@@ -114,33 +123,40 @@ function ChatInterface() {
 
   const formatIrishTime = (date) => {
     const dt = new Date(date);
-  
-    const formatter = new Intl.DateTimeFormat('en-IE', {
-      hour: 'numeric',
-      minute: '2-digit',
+
+    const formatter = new Intl.DateTimeFormat("en-IE", {
+      hour: "numeric",
+      minute: "2-digit",
       hour12: true,
-      timeZone: 'Europe/Dublin'
+      timeZone: "Europe/Dublin",
     });
-    dt.setHours(dt.getHours() + (dt.getTimezoneOffset() < 0 ? 1 : 0)); 
-  
+    dt.setHours(dt.getHours() + (dt.getTimezoneOffset() < 0 ? 1 : 0));
+
     return formatter.format(dt);
   };
 
   return (
     <div className="chat-container">
-      {!isSocketReady && <div className="connecting-message">Connecting to chat...</div>}
+      {!isSocketReady && (
+        <div className="connecting-message">Connecting to chat...</div>
+      )}
 
       <ul className="message-list">
         {messages.map((msg, index) => (
-          <li key={index} className={`message-item ${msg.sender === userEmail ? "mine" : "theirs"}`}>
-           <div className="sender-name">{msg.sender_name || 'No Name'}</div>
+          <li
+            key={index}
+            className={`message-item ${
+              msg.sender === userEmail ? "mine" : "theirs"
+            }`}
+          >
+            <div className="sender-name">{msg.sender_name || "No Name"}</div>
             {msg.message}
             <span className="timestamp">
               {formatIrishTime(msg.delivered_time)}
-            </span>  
+            </span>
           </li>
         ))}
-        <div ref={messagesEndRef} /> 
+        <div ref={messagesEndRef} />
       </ul>
 
       <form onSubmit={sendMessage} className="send-message-form">

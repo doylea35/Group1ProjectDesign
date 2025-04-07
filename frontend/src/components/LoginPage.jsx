@@ -1,47 +1,57 @@
-import React, { useState } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
-import { Cross2Icon } from '@radix-ui/react-icons';
-import { useNavigate } from 'react-router-dom';
-import '../App.css';
-import axios from 'axios';
+import React, { useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { Cross2Icon } from "@radix-ui/react-icons";
+import { useNavigate } from "react-router-dom";
+import "../App.css";
+import axios from "axios";
 
 // axios.defaults.baseURL = 'https://group-grade-backend-5f919d63857a.herokuapp.com';
 
 const LoginPage = ({ setOpen }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (event) => {
     event.preventDefault();
-    setError('');
+    setError("");
     console.log("Login Submitted:", username, password);
 
     try {
-      const response = await axios.post('/api/user/login', {
-        email: username,  //'username' field is used for email
-        password: password
+      const response = await axios.post("/api/user/login", {
+        email: username, //'username' field is used for email
+        password: password,
       });
       console.log("Login successful:", response.data); // Debugging log
 
-      const { email, token } = response.data;
+      const { email, token, name } = response.data;
 
-       // Retrieve existing user details from local storage to keep the skills
-       const existingUserData = JSON.parse(localStorage.getItem('user'));
-       const skills = existingUserData && existingUserData.skills ? existingUserData.skills : [];
+      // Retrieve existing user details from local storage to keep the skills
+      const existingUserData = JSON.parse(localStorage.getItem("user"));
+      const skills =
+        existingUserData && existingUserData.skills
+          ? existingUserData.skills
+          : [];
 
-       // Store user data in localStorage with the existing or empty skills array
-       localStorage.setItem('user', JSON.stringify({ email, token, skills }));
+      // Store user data in localStorage with the existing or empty skills array
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ email, token, skills, name })
+      );
 
       // Navigate to home page
-      navigate('/home');
+      navigate("/home");
       setOpen(false);
     } catch (error) {
-      console.error("Login error:", error.response ? error.response.data : error);
-      const errorMsg = error.response && error.response.data.detail
-        ? error.response.data.detail
-        : "An unexpected error occurred. Please try again.";
+      console.error(
+        "Login error:",
+        error.response ? error.response.data : error
+      );
+      const errorMsg =
+        error.response && error.response.data.detail
+          ? error.response.data.detail
+          : "An unexpected error occurred. Please try again.";
       setError(errorMsg);
     }
   };
@@ -50,11 +60,15 @@ const LoginPage = ({ setOpen }) => {
     <Dialog.Portal>
       <Dialog.Overlay className="DialogOverlay" />
       <Dialog.Content className="DialogContent">
-        <Dialog.Title className="DialogTitle">Log In to Your Account</Dialog.Title>
+        <Dialog.Title className="DialogTitle">
+          Log In to Your Account
+        </Dialog.Title>
         {error && <p className="error-message">{error}</p>}
         <form onSubmit={handleLogin}>
-          <fieldset className="Fieldset" style={{ marginTop: '20px' }}>
-            <label className="Label" htmlFor="username">Email:</label>
+          <fieldset className="Fieldset" style={{ marginTop: "20px" }}>
+            <label className="Label" htmlFor="username">
+              Email:
+            </label>
             <input
               className="Input"
               id="username"
@@ -66,7 +80,9 @@ const LoginPage = ({ setOpen }) => {
             />
           </fieldset>
           <fieldset className="Fieldset">
-            <label className="Label" htmlFor="password">Password:</label>
+            <label className="Label" htmlFor="password">
+              Password:
+            </label>
             <input
               className="Input"
               id="password"
@@ -77,8 +93,16 @@ const LoginPage = ({ setOpen }) => {
               required
             />
           </fieldset>
-          <div style={{ display: "flex", marginTop: 25, justifyContent: "flex-end" }}>
-            <button type="submit" className="Button green">Log In</button>
+          <div
+            style={{
+              display: "flex",
+              marginTop: 25,
+              justifyContent: "flex-end",
+            }}
+          >
+            <button type="submit" className="Button green">
+              Log In
+            </button>
           </div>
         </form>
         <Dialog.Close asChild>
