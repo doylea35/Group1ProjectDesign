@@ -30,21 +30,20 @@ async def get_subteams_by_group(request: GetSubteamsByGroupRequest):
     # get all task for a subteam
 @subteam_router.get("/getTasksBySubteam")
 async def get_tasks_by_subteam(request: GetTasksBySubteamRequest):
-    team_name = request.team_name
+    subteam_id = request.subteam_id   
+    subteam = subteams_collection.find_one({"_id": ObjectId(subteam_id)})
     # Check if subteam exists
-    if not subteams_collection.find_one({"team_name": team_name}):
+    if not subteam:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Subteam with team name {team_name} does not exist."
+            detail=f"Subteam with id {subteam_id} does not exist."
             )
-    
-    subteam = subteams_collection.find_one({"team_name": team_name})
     tasks = []
     for task_id in subteam["tasks"]:
         task = tasks_collection.find_one({"_id": ObjectId(task_id)})
         tasks.append(task)
     tasks = tasks_serial(tasks)
-    return {"data": {"subteam": team_name, "tasks": tasks}}
+    return {"data": {"subteam": subteam_id, "tasks": tasks}}
 
 #### POST Requests ####
 @subteam_router.post("/createSubteam", status_code=status.HTTP_201_CREATED)
@@ -130,33 +129,36 @@ async def delete_subteam(request : DeleteSubteamRequest):
 #### PUT Requests ####
 @subteam_router.put("/assignTaskToSubteam", status_code=status.HTTP_201_CREATED)
 async def assign_task_to_subteam(request: AssignTaskToSubteamRequest):
+    subteam_id = request.subteam_id
     # Check if subteam exists
-    if not subteams_collection.find_one({"team_name": request.team_name}):
+    if not subteams_collection.find_one({"_id": ObjectId(subteam_id)}):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Subteam with team name {request.team_name} does not exist."
+            detail=f"Subteam with id {subteam_id} does not exist."
             )
     
+    subteam = subteams_collection.find_one({"_id": ObjectId(subteam_id)})
+    
     # Check if task exists
-    if not tasks_collection.find_one({"_id": ObjectId(request.task)}):
+    if not tasks_collection.find_one({"_id": ObjectId(request.task_id)}):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Task with ID {request.task} does not exist."
+            detail=f"Task with ID {request.task_id} does not exist."
             )
     
     # Update subteam
     subteams_collection.update_one(
-        {"team_name": request.team_name},
-        {"$push": {"tasks": request.task}}
+        {"team_name": request.subteam_id},
+        {"$push": {"tasks": request.task_id}}
     )
 
     # Update task
     tasks_collection.update_one(
-        {"_id": ObjectId(request.task)},
-        {"$set": {"subteam": request.team_name}}
+        {"_id": ObjectId(request.task_id)},
+        {"$set": {"subteam": request.subteam_id}}
     )
 
-    return {"message": "Task assigned to subteam successfully.", "data": {"subteam": request.team_name, "task": request.task}}
+    return {"message": "Task assigned to subteam successfully.", "data": {"subteam": request.subteam_id, "task": request.task_id}}
 
 
 @subteam_router.put("/removeTaskFromSubteam", status_code=status.HTTP_201_CREATED)

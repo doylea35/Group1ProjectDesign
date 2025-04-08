@@ -12,8 +12,8 @@ class DeleteSubteamRequest(BaseModel):
     email: str
 
 class AssignTaskToSubteamRequest(BaseModel):
-    team_name: str
-    task: str
+    subteam_id: str
+    task_id: str
 
 class RemoveTaskFromSubteamRequest(BaseModel):
     team_name: str
