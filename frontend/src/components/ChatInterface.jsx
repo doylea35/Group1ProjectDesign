@@ -3,57 +3,67 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 
 function ChatInterface() {
-  const { projectId } = useParams(); // Treating projectId as group_id
+  const { projectId } = useParams();
   const [chatId, setChatId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isSocketReady, setIsSocketReady] = useState(false);
+  const [memberNames, setMemberNames] = useState({});
   const ws = useRef(null);
-  const messagesEndRef = useRef(null); // Reference for the auto-scroll container
+  const messagesEndRef = useRef(null);
 
   const user = JSON.parse(localStorage.getItem("user")) || {};
-  // const { email: userEmail, name: userName, token: authToken } = user;
-
   const userEmail = user["email"];
   const userName = user["name"];
   const authToken = user["token"];
 
-  // Helper function to check if projectId is a valid ObjectId-like string
   const isValidObjectId = (id) => /^[a-f\d]{24}$/i.test(id);
 
   useEffect(() => {
-    const fetchChat = async () => {
+    const fetchChatAndGroup = async () => {
       if (!isValidObjectId(projectId)) {
-        console.warn(
-          "Invalid group_id format (must be 24-character hex):",
-          projectId
-        );
+        console.warn("Invalid chat ID:", projectId);
         return;
       }
 
       try {
-        const response = await axios.get(
+        const chatRes = await axios.get(
           `https://group-grade-backend-5f919d63857a.herokuapp.com/api/chat/${projectId}`,
           {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
+            headers: { Authorization: `Bearer ${authToken}` },
           }
         );
 
-        const chatData = response.data.data;
+        const chatData = chatRes.data.data;
         setChatId(chatData._id);
         setMessages(chatData.chat_history || []);
-      } catch (error) {
-        console.error(
-          "Failed to fetch chat:",
-          error.response?.data || error.message
+
+        const groupId = chatData.group_id;
+
+        const groupRes = await axios.get(
+          "https://group-grade-backend-5f919d63857a.herokuapp.com/api/group",
+          {
+            headers: { Authorization: `Bearer ${authToken}` },
+          }
         );
+
+        const groupList = groupRes.data.data;
+        const currentGroup = groupList.find((g) => g.id === groupId);
+
+        if (!currentGroup) {
+          console.warn("Group not found with ID:", groupId);
+          return;
+        }
+
+        setMemberNames(currentGroup.member_names || {});
+        localStorage.setItem("memberNames", JSON.stringify(currentGroup.member_names));
+      } catch (error) {
+        console.error("Error fetching chat or group:", error.response?.data || error.message);
       }
     };
 
     if (projectId && authToken) {
-      fetchChat();
+      fetchChatAndGroup();
     }
   }, [projectId, authToken]);
 
@@ -63,19 +73,17 @@ function ChatInterface() {
     const wsUrl = `wss://group-grade-backend-5f919d63857a.herokuapp.com/ws/chat/${chatId}/${userEmail}`;
     ws.current = new WebSocket(wsUrl);
 
-    ws.current.onopen = () => {
-      console.log("WebSocket connected");
-      setIsSocketReady(true);
-    };
+    ws.current.onopen = () => setIsSocketReady(true);
 
     ws.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
+      if (data.is_heartbeat_msg || data.message === "Health ping received!") return;
       setMessages((prev) => [...prev, data]);
-      scrollToBottom(); // Scroll to bottom on new message
+      scrollToBottom();
     };
 
     ws.current.onclose = () => setIsSocketReady(false);
-    ws.current.onerror = (error) => setIsSocketReady(false);
+    ws.current.onerror = () => setIsSocketReady(false);
 
     return () => {
       if (ws.current) ws.current.close();
@@ -83,15 +91,38 @@ function ChatInterface() {
   }, [chatId, userEmail]);
 
   useEffect(() => {
-    scrollToBottom(); // Scroll to bottom when the component mounts
+    const HEARTBEAT_INTERVAL = 15000;
+    let heartbeatInterval;
+
+    if (isSocketReady && ws.current) {
+      heartbeatInterval = setInterval(() => {
+        if (ws.current.readyState === WebSocket.OPEN) {
+          ws.current.send(
+            JSON.stringify({
+              message: "",
+              sender_name: userName,
+              sender_email: userEmail,
+              is_heartbeat_msg: true,
+              close_connection: false,
+            })
+          );
+        }
+      }, HEARTBEAT_INTERVAL);
+    }
+
+    return () => {
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+    };
+  }, [isSocketReady, userName, userEmail]);
+
+  useEffect(() => {
+    scrollToBottom();
   }, [messages]);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (user && user.name) {
-      console.log("Loaded User Name:", user.name);
-    } else {
-      console.log("No User Name Found in Local Storage");
+    const cached = localStorage.getItem("memberNames");
+    if (cached) {
+      setMemberNames(JSON.parse(cached));
     }
   }, []);
 
@@ -123,7 +154,6 @@ function ChatInterface() {
 
   const formatIrishTime = (date) => {
     const dt = new Date(date);
-
     const formatter = new Intl.DateTimeFormat("en-IE", {
       hour: "numeric",
       minute: "2-digit",
@@ -131,7 +161,6 @@ function ChatInterface() {
       timeZone: "Europe/Dublin",
     });
     dt.setHours(dt.getHours() + (dt.getTimezoneOffset() < 0 ? 1 : 0));
-
     return formatter.format(dt);
   };
 
@@ -145,11 +174,13 @@ function ChatInterface() {
         {messages.map((msg, index) => (
           <li
             key={index}
-            className={`message-item ${
-              msg.sender === userEmail ? "mine" : "theirs"
-            }`}
+            className={`message-item ${msg.sender === userEmail ? "mine" : "theirs"}`}
           >
-            <div className="sender-name">{msg.sender_name || "No Name"}</div>
+            <div className="sender-name">
+              {msg.sender === userEmail
+                ? "You"
+                : memberNames[msg.sender] || msg.sender}
+            </div>
             {msg.message}
             <span className="timestamp">
               {formatIrishTime(msg.delivered_time)}
@@ -176,3 +207,4 @@ function ChatInterface() {
 }
 
 export default ChatInterface;
+
