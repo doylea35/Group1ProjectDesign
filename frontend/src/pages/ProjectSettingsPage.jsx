@@ -54,7 +54,7 @@ function GroupMembers({ projectId, projectName }) {
       });
 
       if (response.data?.data) {
-        const project = response.data.data.find((p) => p._id === projectId);
+        const project = response.data.data.find((p) => p.id === projectId);
         if (project) {
           setAcceptedMembers(project.members || []);
           setPendingMembers(project.pending_members || []);
@@ -258,7 +258,7 @@ function ProjectSettingsPage() {
     const projectFromStorage = JSON.parse(
       localStorage.getItem("selectedProject")
     );
-    if (projectFromStorage && projectFromStorage._id === projectId) {
+    if (projectFromStorage && projectFromStorage.id === projectId) {
       setProjectName(projectFromStorage.name);
       setNewProjectName(projectFromStorage.name);
       setLoading(false);

@@ -123,7 +123,7 @@ const Sidebar = () => {
                 projects.map((project) => (
                   <Link
                     key={project._id}
-                    to={`/projects/${project._id}`}
+                    to={`/projects/${project.id}`}
                     className="nav-link"
                     onClick={() => handleProjectClick(project)}
                   >
