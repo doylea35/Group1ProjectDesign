@@ -124,29 +124,33 @@ export default function HomePage() {
     fetchTasks();
   }, []);
 
-  // Fetch project info (for project names)
+  // Fetch group info (for group names)
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchGroups = async () => {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user?.token) return;
         const response = await axios.get("/api/group/", {
           headers: { Authorization: `Bearer ${user.token}` },
         });
+        console.log("Groups response:", response.data);
         if (response.data?.data) {
-          const projectMap = {};
-          response.data.data.forEach((project) => {
-            projectMap[project._id] = project.name;
+          const groupMap = {};
+          response.data.data.forEach((group) => {
+            // Use group.id if it exists; otherwise, fallback to group._id
+            const groupId = group.id || group._id;
+            groupMap[groupId] = group.name;
           });
-          setProjects(projectMap);
+          setProjects(groupMap);
         }
       } catch (error) {
-        console.error("Error fetching projects:", error);
+        console.error("Error fetching groups:", error.response || error);
       }
     };
 
-    fetchProjects();
+    fetchGroups();
   }, []);
+
 
   // Compute list of available labels from the tasks
   useEffect(() => {

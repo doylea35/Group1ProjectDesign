@@ -11,9 +11,10 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
   const [selectedSubteams, setSelectedSubteams] = useState([]);
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [errors, setErrors] = useState({});
-  const [members, setMembers] = useState([]);
+  const [members, setMembers] = useState([]); 
   const [taskPriority, setTaskPriority] = useState("Medium");
   const [subteams, setSubteams] = useState([]);
+
   // NEW: Text input for comma-separated labels
   const [labelString, setLabelString] = useState("");
 
@@ -36,7 +37,7 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
         console.log("API Response:", response.data);
 
         if (response.data?.data) {
-          const project = response.data.data.find(p => p._id === projectId);
+          const project = response.data.data.find(p => p.id === projectId);
 
           if (project) {
             setMembers(project.members || []);
@@ -130,7 +131,7 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
       subteams: selectedSubteams,
       status: "To Do",
       priority: taskPriority,
-      labels: labelsArray,
+      labels: labelsArray, // <--- includes user-typed labels
     };
 
     try {
@@ -142,30 +143,11 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
 
       console.log("Creating task with data:", taskData);
 
-      // Create the task
       const response = await axios.post("/tasks/", taskData, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
 
       console.log("Task Created:", response.data);
-
-      // Extract the task ID using a fallback in case of differing response structure
-      const taskId = response.data.data?.id || response.data.id;
-      if (!taskId) {
-        console.error("Task ID not found in response", response.data);
-        throw new Error("Task ID not returned by the server.");
-      }
-
-      // Create a notification for the new task
-      await axios.post("/api/notifications/create_notification", {
-        user_email: user.email,
-        group_id: projectId,
-        notification_type: "task_created",
-        content: `Task "${taskName}" was created.`,
-        task_id: taskId,
-      }, {
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
 
       // Reset form fields
       setTaskName("");
@@ -173,19 +155,19 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
       setDueDate("");
       setSelectedSubteams([]);
       setSelectedMembers([]);
-      setLabelString("");
+      setLabelString(""); // Clear labels
       setErrors({});
 
       if (onCreate) {
         onCreate();
       }
 
-      // Optionally, update the UI instead of reloading the page
+      // Force a full page refresh after a short delay so the new task is visible
       setTimeout(() => {
         window.location.reload();
       }, 500);
     } catch (error) {
-      console.error("Error creating task or notification:", error.response?.data || error);
+      console.error("Error creating task:", error.response?.data || error);
       setErrors({ general: "Failed to create task. Please try again." });
     }
   };
@@ -256,7 +238,7 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
               </select>
             </fieldset>
 
-            {/* Labels (comma-separated) */}
+            {/* NEW: Labels (comma-separated) */}
             <fieldset className="Fieldset">
               <label className="Label" htmlFor="task-labels">Labels (comma-separated):</label>
               <input
@@ -276,7 +258,9 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
                   <button
                     type="button"
                     key={subteam}
-                    className={`task-toggle-button ${selectedSubteams.includes(subteam) ? "selected" : ""}`}
+                    className={`task-toggle-button ${
+                      selectedSubteams.includes(subteam) ? "selected" : ""
+                    }`}
                     onClick={() => toggleSubteam(subteam)}
                   >
                     {subteam}
@@ -293,7 +277,9 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
                   <button
                     type="button"
                     key={member}
-                    className={`task-toggle-button ${selectedMembers.includes(member) ? "selected" : ""}`}
+                    className={`task-toggle-button ${
+                      selectedMembers.includes(member) ? "selected" : ""
+                    }`}
                     onClick={() => toggleMember(member)}
                   >
                     {member}

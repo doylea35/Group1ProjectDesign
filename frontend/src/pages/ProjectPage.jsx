@@ -100,7 +100,7 @@ function ProjectPage() {
     const projectFromStorage = JSON.parse(
       localStorage.getItem("selectedProject")
     );
-    if (projectFromStorage && projectFromStorage._id === projectId) {
+    if (projectFromStorage && projectFromStorage.id === projectId) {
       setProjectName(projectFromStorage.name);
       setLoading(false);
     } else {
