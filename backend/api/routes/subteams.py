@@ -148,7 +148,7 @@ async def assign_task_to_subteam(request: AssignTaskToSubteamRequest):
     
     # Update subteam
     subteams_collection.update_one(
-        {"team_name": request.subteam_id},
+        {"_id": ObjectId(request.subteam_id)},
         {"$push": {"tasks": request.task_id}}
     )
 
