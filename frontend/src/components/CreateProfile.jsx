@@ -57,8 +57,8 @@ const CreateProfilePopup = ({ open, setOpen }) => {
       name: profile.name,
       email: profile.email,
       password: profile.password,
-      groups: [], // Empty group lists for now
-      skills: [],
+      groups: [],  // Empty group lists for now
+      skills: []
     };
 
     console.log("Sending user data to backend:", userData); // Debugging log

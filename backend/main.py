@@ -7,6 +7,7 @@ from api.routes.user import user_router
 from api.routes.files import files_router
 from api.routes.chat import chat_router
 from api.routes.notifications import notifications_router
+from api.routes.subteams import subteam_router
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import os
@@ -52,6 +53,7 @@ app.include_router(files_router, prefix="/api/files", tags=["Files"])
 app.include_router(chat_router, tags=["Chat"])
 app.include_router(tasks_router, prefix="/api", tags=["Task Comments"])
 app.include_router(notifications_router, prefix="/api/notifications", tags=["Notifications"])
+app.include_router(subteam_router, prefix="/api/subteams", tags=["Subteams"])
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))

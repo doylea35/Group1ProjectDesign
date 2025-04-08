@@ -8,7 +8,7 @@ from bson import ObjectId
 subteam_router = APIRouter()
 
 #### GET Requests ####
-@subteam_router.get("/", response_model=list[SubTeam])
+@subteam_router.get("/")
 async def get_subteams():
     subteams = subteams_serial(subteams_collection.find())
     #return {"data":subteams}
@@ -16,7 +16,7 @@ async def get_subteams():
 
 
     # get subteams within a project
-@subteam_router.get("/getSubteamsByGroup", response_model=list[SubTeam])
+@subteam_router.get("/getSubteamsByGroup")
 async def get_subteams_by_group(request: GetSubteamsByGroupRequest):
     group_id = request.group_id
     # Validate group ID
@@ -28,7 +28,7 @@ async def get_subteams_by_group(request: GetSubteamsByGroupRequest):
 
 
     # get all task for a subteam
-@subteam_router.get("/getTasksBySubteam", response_model=list[Task])
+@subteam_router.get("/getTasksBySubteam")
 async def get_tasks_by_subteam(request: GetTasksBySubteamRequest):
     team_name = request.team_name
     # Check if subteam exists
@@ -47,7 +47,7 @@ async def get_tasks_by_subteam(request: GetTasksBySubteamRequest):
     return {"data": {"subteam": team_name, "tasks": tasks}}
 
 #### POST Requests ####
-@subteam_router.post("/createSubteam", response_model=SubTeam, status_code=status.HTTP_201_CREATED)
+@subteam_router.post("/createSubteam", status_code=status.HTTP_201_CREATED)
 async def create_subteam(request : CreateSubteamRequest):
     # Check if team_name already exists
     if subteams_collection.find_one({"team_name": request.team_name}):
@@ -87,14 +87,15 @@ async def create_subteam(request : CreateSubteamRequest):
     inserted_subteam = subteams_collection.insert_one(newSubTeam)
     # created_subteam = subteams_collection.find_one({"team_name": request.team_name})
     newSubTeam["_id"] = str(inserted_subteam.inserted_id)
+    newSubTeam["group"] = str(newSubTeam["group"])
 
     # add subteam id to the groups' "subteams" field
-    updated_group = groups_collection.find_one_and_update(
-        {"_id": ObjectId(request.group)}, # find by group id
-        {"$addToSet": {"subteams": inserted_subteam.inserted_id}}, 
-        return_document=True)
+    # groups_collection.find_one_and_update(
+    #     {"_id": request.group}, # find by group id
+    #     {"$addToSet": {"subteams": inserted_subteam.inserted_id}}, 
+    #     return_document=True)
     
-    return {"message": "Subteam created successfully", "data": {newSubTeam}}
+    return {"message": "Subteam created successfully", "data":newSubTeam}
 
 #### DELETE Requests ####
 @subteam_router.delete("/deleteSubteam",  status_code=status.HTTP_201_CREATED)
