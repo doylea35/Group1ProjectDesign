@@ -67,6 +67,7 @@ def _task_serial(task: dict) -> Task:
 
 def _subteam_serial(subteam: dict) -> SubTeam:
     return SubTeam(  # Use the SubTeam model
+        _id=str(subteam["_id"]),  # Ensure _id is a string
         team_name=subteam["team_name"],
         members=subteam["members"],  # Assuming these are already emails or strings
         tasks=[str(task_id) for task_id in subteam.get("tasks", [])],  # Convert ObjectId to str
