@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, Query, Depends
 from typing import Dict, Optional
-from db.database import groups_collection, users_collection, tasks_collection
+from db.database import groups_collection, users_collection, tasks_collection, subteams_collection
 from db.models import User, Group, Task, Notification
 from db.schemas import users_serial, groups_serial, tasks_serial
 from bson import ObjectId # mongodb uses ObjectId to store _id
@@ -31,75 +31,111 @@ async def get_tasks(assigned_to: Optional[str] = Query(None, description="User e
 @tasks_router.post("/tasks/")
 async def create_task(task: Task):
 
-    # Check if user exists
-    assigned_users = [user for user in task.assigned_to if users_collection.find_one({"email": user})]    
-    if not assigned_users:
-        raise HTTPException(status_code=400, detail=f"User(s) {task.assigned_to} do not exist")
-    # Assign only valid users
-    task.assigned_to = assigned_users
-
-    # Check if group exists
+    # Validate group
     assigned_group = groups_collection.find_one({"_id": ObjectId(task.group)})
-    
     if not assigned_group:
         raise HTTPException(status_code=400, detail=f"Group {task.group} does not exist")
 
-    # Check if all assigned users are members of the group 
-    non_members = [user for user in task.assigned_to if user not in assigned_group["members"]]
+    assigned_to = task.assigned_to
+    subteam_id = None
 
-    if non_members:
-        raise HTTPException(status_code=400, detail=f"User(s) {non_members} are not members of the group")
+    if len(assigned_to) == 1:
+        possible_subteam_id = assigned_to[0]
+        try:
+            subteam = subteams_collection.find_one({"_id": ObjectId(possible_subteam_id)})
+        except:
+            subteam = None
 
-    # stop duplicate tasks for one user
+        if subteam:
+            subteam_id = possible_subteam_id
+            assigned_to = subteam["members"]  # Get members of subteam
+
+            # Make sure all members are part of the group
+            non_members = [user for user in assigned_to if user not in assigned_group["members"]]
+            if non_members:
+                raise HTTPException(status_code=400, detail=f"User(s) {non_members} in subteam are not part of the group")
+
+            # Send emails to subteam members
+            send_assigned_task_email_subteam(
+                subteam_id=subteam_id,
+                task_name=task.name,
+                task_description=task.description,
+                task_id="pending",  # Will update after insertion
+                group=assigned_group
+            )
+
+        else:
+            # Not a subteam, continue as individual user assignment
+            assigned_to = [user for user in assigned_to if users_collection.find_one({"email": user})]
+            if not assigned_to:
+                raise HTTPException(status_code=400, detail=f"No valid users found in {task.assigned_to}")
+    else:
+        # Individual users case
+        assigned_to = [user for user in assigned_to if users_collection.find_one({"email": user})]
+        if not assigned_to:
+            raise HTTPException(status_code=400, detail=f"No valid users found in {task.assigned_to}")
+
+    # Check duplicate task for same users
     existing_task = tasks_collection.find_one({
-        "assigned_to": task.assigned_to,
+        "assigned_to": assigned_to,
         "name": task.name,
         "group": task.group
     })
     if existing_task:
-        raise HTTPException( status_code=400, detail="task already exists for this user in the group" )
+        raise HTTPException(status_code=400, detail="Task already exists for this user/subteam in the group")
 
-    # ensure correct status
-    valid_statuses = ["To Do", "In Progress", "Completed" ]
+    # Validate task status and priority
+    valid_statuses = ["To Do", "In Progress", "Completed"]
+    valid_priorities = ["Low", "Medium", "High"]
     if task.status not in valid_statuses:
-        raise HTTPException(status_code=400, detail=f" invalid status, choose from {valid_statuses}")
-
-    # ensure correct priority
-    valid_priorities = ["Low", "Medium", "High" ]
+        raise HTTPException(status_code=400, detail=f"Invalid status, choose from {valid_statuses}")
     if task.priority not in valid_priorities:
-        raise HTTPException( status_code=400, detail=f"invalid priority. Choose from {valid_priorities}")
+        raise HTTPException(status_code=400, detail=f"Invalid priority, choose from {valid_priorities}")
 
-    # insert task to database
+    # Prepare and insert task
     task_data = task.dict()
+    task_data["assigned_to"] = assigned_to
+    if subteam_id:
+        task_data["subteam"] = str(subteam_id)  # Store subteam ID as string
+
     new_task = tasks_collection.insert_one(task_data)
 
-    # include new task in groups task list
+    # Update group's task list
     groups_collection.update_one(
         {"_id": ObjectId(task.group)},
         {"$push": {"tasks": str(new_task.inserted_id)}}
     )
 
-    # send email to new user
-    for user in task.assigned_to:
-        send_assigned_task_email(user, task.name, task.description, str(new_task.inserted_id), task.group, assigned_group["name"])
-        # create notification for each user
-        notification_dir = {
-            "user_email": user,
-            "group_id": task.group,
-            "notification_type": "Task Assigned",
-            "content": f"You have been assigned a new task: {task.name}",
-            "task_id": str(new_task.inserted_id)
-        }
+    # Send emails to individual users if not subteam
+    if not subteam_id:
+        for user in assigned_to:
+            send_assigned_task_email(
+                user_email=user,
+                task_name=task.name,
+                task_description=task.description,
+                task_id=str(new_task.inserted_id),
+                group_id=task.group,
+                group_name=assigned_group["name"]
+            )
 
-        # create notification in database
-        notification = CreateNotificationRequest(**notification_dir)
-        await create_notification(notification)
+            # Create notification for each user
+            notification_dir = {
+                "user_email": user,
+                "group_id": task.group,
+                "notification_type": "Task Assigned",
+                "content": f"You have been assigned a new task: {task.name}",
+                "task_id": str(new_task.inserted_id)
+            }
+            notification = CreateNotificationRequest(**notification_dir)
+            await create_notification(notification)
 
     return {
-    "id": str(new_task.inserted_id),  
-    "message": "task created and assigned successfully",
-    "task_details": {**task_data, "_id": str(new_task.inserted_id)}  
+        "id": str(new_task.inserted_id),
+        "message": "Task created and assigned successfully",
+        "task_details": {**task_data, "_id": str(new_task.inserted_id)}
     }
+
+
 
 
 @tasks_router.put("/tasks/assign/")
@@ -371,3 +407,160 @@ def send_assigned_task_email(user_email: str, task_name: str, task_description: 
     return {"message": "Task assignment email sent successfully", "task_id": task_id, "assigned_to": user_email}
 
 
+TASK_ASSIGNMENT_EMAIL_TEMPLATE_SUBTEAM = """<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Task Assigned</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }}
+        .container {{
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+        }}
+        .logo {{
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            display: block;
+        }}
+        .header {{
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }}
+        .content {{
+            font-size: 16px;
+            color: #555;
+            margin-top: 20px;
+        }}
+        .task-box {{
+            border: 4px solid #a463f2;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+        }}
+        .task-name {{
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }}
+        .task-description {{
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 15px;
+        }}
+        .instruction {{
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 6px;
+        }}
+        .button {{
+            display: block;
+            width: 150px;
+            margin: 0 auto;
+            padding: 12px;
+            text-align: center;
+            background-color: #a463f2;
+            color: #FFFFFF !important;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+        }}
+        .footer {{
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img class="logo" src="https://group-grade-files.s3.eu-north-1.amazonaws.com/groupgrade-assets/hexlogo.png" alt="GroupGrade Logo" />
+        <div class="header">New Task Assigned: {task_name}</div>
+        <div class="content">
+            <p>Hi {user_name},</p>
+            <p>Your subteam {subteam_name} has been assigned a new task!</p>
+            <div class="task-box">
+                <div class="task-name">{task_name}</div>
+                <br>
+                <div class="task-description">{task_description}</div>
+                <br>
+                <p class="instruction">Click the button below to view and start working on your task.</p>
+                <a href="{task_link}" class="button" 
+                   style="color: #FFFFFF !important; text-decoration: none !important;">
+                   View task
+                </a>
+            </div>
+            <div class="footer">
+                   Need help? Contact us at <a href="mailto:support@groupgrade.com">support@groupgrade.com</a><br/>
+                   &copy; 2025 GroupGrade. All rights reserved.
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+
+def send_assigned_task_email_subteam(subteam_id: str, task_name: str, task_description: str, task_id: str, group: dict):
+    """
+    Sends task assignment emails to all members of a subteam given its ID.
+    """
+    # Fetch subteam from DB
+    subteam = subteams_collection.find_one({"_id": ObjectId(subteam_id)})
+    if not subteam:
+        return {"error": f"Subteam with ID {subteam_id} not found."}
+
+    for user_email in subteam["members"]:
+        # Validate email format
+        if not is_valid_email(user_email):
+            continue  # Skip invalid emails
+
+        # Use fallback in case user is not in DB
+        user = users_collection.find_one({"email": user_email})
+        user_email_for_link = user_email if user else "notRegistered"
+
+        # Generate task link
+        task_link = f"{BASE_URL.format(frontend_url=frontend_url_dev, group_id=group['_id'])}"
+
+        if not user:
+            continue  # Skip if user doesn't exist
+
+        # Format email content using subteam template
+        email_content = TASK_ASSIGNMENT_EMAIL_TEMPLATE_SUBTEAM.format(
+            user_name=user["name"],
+            subteam_name=subteam["team_name"],
+            task_name=task_name,
+            task_description=task_description,
+            group_name=group["name"],
+            task_link=task_link
+        )
+
+        # Send email
+        email_sender.send_email(
+            receipient=user_email,
+            email_message=email_content,
+            subject_line=f"New Task Assigned to Subteam '{subteam['team_name']}' - {task_name}"
+        )
+
+    return {
+        "message": "Subteam task notification emails sent successfully",
+        "task_id": task_id,
+        "subteam": subteam["team_name"]
+    }
