@@ -47,7 +47,7 @@ class SubTeam(BaseModel): #_id as Primary key, automatically created, can be fou
     id: Optional[str] = Field(alias="_id", default=None)
     team_name: str 
     members: List[str]  # List of Foreign Keys referencing User.email
-    tasks: List[str] # List of Foreign Keys referencing Task.id
+    tasks: Optional[List[str]] = None # List of Foreign Keys referencing Task.id
     group: str # Foreign Key referencing Group.id
 
 
