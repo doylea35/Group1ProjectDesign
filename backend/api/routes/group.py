@@ -126,13 +126,15 @@ async def delete_group_handler(request : DeleteGroupRequest):
 
 @group_router.get("/confirmMembership/{user_email}/{group_id}")
 async def confirm_member(user_email: str, group_id: str):
-
+    print(f"user email: {user_email}")
     group = groups_collection.find_one({"_id": ObjectId(group_id)})
     user = users_collection.find_one({"email":user_email})
+    print(f"user found: {user}")
     if not user:
+        print("user not found")
         return HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"message": f"User with email: '{user_email}' is not a registered user."}
+                detail={"message": f"User with email: '{user_email}' is not a registered user.", "emailNotRegistered": True}
             )
     if not group:
         return HTTPException(
@@ -303,8 +305,8 @@ def send_project_invitation_email(user_emails:list[str], creator_email:str, new_
 
     for user_email in valid_user_emails:
         user_email_for_link = user_email
-        if not users_collection.find_one({"email":user_email}):
-            user_email_for_link = "notRegistered"
+        # if not users_collection.find_one({"email":user_email}):
+        #     user_email_for_link = f"notRegistered[dot]{user_email}"
 
         email_content = INVITATION_EMAIL_TEMPLATE.format(
             creator_email=creator_email,
