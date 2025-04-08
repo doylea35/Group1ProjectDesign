@@ -146,7 +146,7 @@ function ProjectFilesPage() {
   return (
     <>
     <div className="settings-header-container">
-      <PageHeader title={`${projectName}: Settings`} />
+      <PageHeader title={`${projectName}: Files`} />
     </div>
     <div
       className="back-button"

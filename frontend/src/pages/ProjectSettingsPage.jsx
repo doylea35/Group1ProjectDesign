@@ -49,14 +49,16 @@ function GroupMembers({ projectId, projectName }) {
         setLoading(false);
         return;
       }
-      const response = await axios.get("/api/group/", {
+      const response = await axios.get(API_URI, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
       if (response.data?.data) {
+        // Use the new format: project objects have an "id" field and a "members_details" key
         const project = response.data.data.find((p) => p.id === projectId);
         if (project) {
-          setAcceptedMembers(project.members || []);
+          // For accepted members, use the enriched members_details array
+          setAcceptedMembers(project.members_details || []);
           setPendingMembers(project.pending_members || []);
         } else {
           setError("Group not found in response.");
@@ -78,16 +80,17 @@ function GroupMembers({ projectId, projectName }) {
     }
   }, [projectId]);
 
-  // Combine accepted and pending members as before
-  // Then enrich each member with skills if missing.
+  // Combine accepted and pending members.
+  // For this option, we use the data already returned by the backend.
   useEffect(() => {
     const combinedMembersDict = {};
 
+    // Process accepted members, which are objects with skills
     acceptedMembers.forEach((member) => {
       let email, skills;
       if (typeof member === "string") {
         email = member;
-        skills = []; // no skills available initially
+        skills = []; // fallback if not enriched
       } else {
         email = member.email;
         skills = member.skills || [];
@@ -95,6 +98,7 @@ function GroupMembers({ projectId, projectName }) {
       combinedMembersDict[email] = { email, skills, status: "accepted" };
     });
 
+    // Process pending members (which might be plain strings or objects)
     pendingMembers.forEach((member) => {
       let email, skills;
       if (typeof member === "string") {
@@ -104,39 +108,15 @@ function GroupMembers({ projectId, projectName }) {
         email = member.email;
         skills = member.skills || [];
       }
-      // Only add pending member if it doesn't exist already as accepted.
+      // Only add pending member if not already accepted.
       if (!combinedMembersDict[email]) {
         combinedMembersDict[email] = { email, skills, status: "invited" };
       }
     });
 
+    // In Option 1, we don't need any extra enrichment; we simply use the data as is.
     const combinedMembers = Object.values(combinedMembersDict);
-
-    // Helper function to enrich a member's skills if empty
-    const enrichMember = async (member) => {
-      if (member.skills.length === 0) {
-        try {
-          const user = JSON.parse(localStorage.getItem("user"));
-          const token = user?.token;
-          if (token) {
-            const res = await axios.get(
-              `/api/user/profile?email=${encodeURIComponent(member.email)}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            // Assuming the response contains a 'skills' array:
-            return { ...member, skills: res.data.skills || [] };
-          }
-        } catch (error) {
-          console.error("Error fetching profile for", member.email, error);
-          return member; // fallback to original member if error occurs
-        }
-      }
-      return member;
-    };
-
-    Promise.all(combinedMembers.map(enrichMember))
-      .then((enriched) => setEnrichedMembers(enriched))
-      .catch((err) => console.error("Error enriching members:", err));
+    setEnrichedMembers(combinedMembers);
   }, [acceptedMembers, pendingMembers]);
 
   const handleUpdateMembers = async (e) => {
