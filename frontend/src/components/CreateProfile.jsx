@@ -2,7 +2,7 @@ import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import "../App.css";
-import axios from 'axios';
+import axios from "axios";
 
 // axios.defaults.baseURL = 'https://group-grade-backend-5f919d63857a.herokuapp.com';
 
@@ -11,7 +11,7 @@ const CreateProfilePopup = ({ open, setOpen }) => {
     name: "",
     email: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
 
   const [errors, setErrors] = React.useState({
@@ -19,7 +19,7 @@ const CreateProfilePopup = ({ open, setOpen }) => {
     email: "",
     password: "",
     confirmPassword: "",
-    general: ""
+    general: "",
   });
 
   const [successMessage, setSuccessMessage] = React.useState("");
@@ -44,7 +44,8 @@ const CreateProfilePopup = ({ open, setOpen }) => {
     if (!profile.name.trim()) newErrors.name = "Name is required.";
     if (!profile.email.trim()) newErrors.email = "Email is required.";
     if (!profile.password.trim()) newErrors.password = "Password is required.";
-    if (profile.password !== profile.confirmPassword) newErrors.confirmPassword = "Passwords do not match.";
+    if (profile.password !== profile.confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match.";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -63,18 +64,53 @@ const CreateProfilePopup = ({ open, setOpen }) => {
     console.log("Sending user data to backend:", userData); // Debugging log
 
     try {
-      const response = await axios.post('/api/user/register', userData);
+      const response = await axios.post("/api/user/register", userData);
       console.log("Profile Created:", response.data); // Debugging log
-      setSuccessMessage("Profile created! Please check your email to verify your account.");
+      setSuccessMessage(
+        "Profile created! Please check your email to verify your account."
+      );
+
+      // console.log(`response: ${response}`);
+      const confirmGroupMemebershipDetails = JSON.parse(
+        localStorage.getItem("confirmGroupMemebershipDetails")
+      );
+
+      console.log(
+        `confirmGroupMemebershipDetails !== null: ${
+          confirmGroupMemebershipDetails !== null
+        }`
+      );
+
+      if (confirmGroupMemebershipDetails !== null) {
+        const user_email = confirmGroupMemebershipDetails["user_email"];
+        const group_id = confirmGroupMemebershipDetails["group_id"];
+        axios
+          .get(`/api/group/confirmMembership/${user_email}/${group_id}`)
+          .then((response) => {
+            localStorage.removeItem("confirmGroupMemebershipDetails");
+          })
+          .catch((error) => {
+            setMessage("Failed to join group. Please try again");
+            console.error(
+              "Verification failed:",
+              error.response ? error.response.data : error.message
+            );
+          });
+      }
+
       setTimeout(() => {
         setOpen(false); // Close the popup after a delay
-      }, 3000);
+      }, 2000);
     } catch (error) {
-      console.error("Error creating profile:", error.response ? error.response.data : error);
-      const errorMessage = error.response && error.response.data.detail
-        ? error.response.data.detail
-        : "Failed to create profile. Please try again.";
-      setErrors(prevErrors => ({ ...prevErrors, general: errorMessage }));
+      console.error(
+        "Error creating profile:",
+        error.response ? error.response.data : error
+      );
+      const errorMessage =
+        error.response && error.response.data.detail
+          ? error.response.data.detail
+          : "Failed to create profile. Please try again.";
+      setErrors((prevErrors) => ({ ...prevErrors, general: errorMessage }));
     }
   };
 
@@ -88,10 +124,16 @@ const CreateProfilePopup = ({ open, setOpen }) => {
             Enter your details and click "Create Profile".
           </Dialog.Description>
           <form onSubmit={handleSubmit}>
-            {errors.general && <p className="error-message">{errors.general}</p>}
-            {successMessage && <p className="success-message">{successMessage}</p>}
+            {errors.general && (
+              <p className="error-message">{errors.general}</p>
+            )}
+            {successMessage && (
+              <p className="success-message">{successMessage}</p>
+            )}
             <fieldset className="Fieldset">
-              <label className="Label" htmlFor="name">Name:</label>
+              <label className="Label" htmlFor="name">
+                Name:
+              </label>
               <input
                 className="Input"
                 id="name"
@@ -104,7 +146,9 @@ const CreateProfilePopup = ({ open, setOpen }) => {
               {errors.name && <p className="error-message">{errors.name}</p>}
             </fieldset>
             <fieldset className="Fieldset">
-              <label className="Label" htmlFor="email">Email:</label>
+              <label className="Label" htmlFor="email">
+                Email:
+              </label>
               <input
                 className="Input"
                 id="email"
@@ -118,7 +162,9 @@ const CreateProfilePopup = ({ open, setOpen }) => {
               {errors.email && <p className="error-message">{errors.email}</p>}
             </fieldset>
             <fieldset className="Fieldset">
-              <label className="Label" htmlFor="password">Password:</label>
+              <label className="Label" htmlFor="password">
+                Password:
+              </label>
               <input
                 className="Input"
                 id="password"
@@ -128,10 +174,14 @@ const CreateProfilePopup = ({ open, setOpen }) => {
                 onChange={handleChange}
                 required
               />
-              {errors.password && <p className="error-message">{errors.password}</p>}
+              {errors.password && (
+                <p className="error-message">{errors.password}</p>
+              )}
             </fieldset>
             <fieldset className="Fieldset">
-              <label className="Label" htmlFor="confirmPassword">Confirm Password:</label>
+              <label className="Label" htmlFor="confirmPassword">
+                Confirm Password:
+              </label>
               <input
                 className="Input"
                 id="confirmPassword"
@@ -141,10 +191,20 @@ const CreateProfilePopup = ({ open, setOpen }) => {
                 onChange={handleChange}
                 required
               />
-              {errors.confirmPassword && <p className="error-message">{errors.confirmPassword}</p>}
+              {errors.confirmPassword && (
+                <p className="error-message">{errors.confirmPassword}</p>
+              )}
             </fieldset>
-            <div style={{ display: "flex", marginTop: 25, justifyContent: "flex-end" }}>
-              <button type="submit" className="Button green">Create Profile</button>
+            <div
+              style={{
+                display: "flex",
+                marginTop: 25,
+                justifyContent: "flex-end",
+              }}
+            >
+              <button type="submit" className="Button green">
+                Create Profile
+              </button>
             </div>
           </form>
           <Dialog.Close asChild>
@@ -159,4 +219,3 @@ const CreateProfilePopup = ({ open, setOpen }) => {
 };
 
 export default CreateProfilePopup;
-
