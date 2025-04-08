@@ -2,16 +2,22 @@ from db.models import User, Group, Task, SubTeam, Notification
 
 
 def _user_serial(user: dict) -> User:
+    free_time = {}
+    for day, slots in (user.get("free_time", {}).get("free_time", {}) or {}).items():
+        valid_slots = []
+        for slot in (slots or []):
+            try:
+                valid_slots.append({"start": slot["start"], "end": slot["end"]})
+            except (TypeError, KeyError) as e:
+                pass
+        free_time[day] = valid_slots
     return User(
         _id=str(user["_id"]),
         email=user["email"],
         name=user["name"],
         groups=[str(group_id) for group_id in user.get("groups", []) or []],  # Ensure it's a list
         skills=[str(skill) for skill in user.get("skills", []) or []],  # Ensure it's a list
-        free_time={
-            day: [{"start": slot["start"], "end": slot["end"]} for slot in (slots or [])]
-            for day, slots in (user.get("free_time", {}) or {}).items()  # Ensure it's a dict
-        },
+        free_time=free_time,
         password=None,
         token= None,
         status=None,
