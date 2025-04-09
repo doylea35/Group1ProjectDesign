@@ -26,27 +26,35 @@ const AccountPage = () => {
 
   const syncSkillsToBackend = async (skillsToAdd, skillsToRemove) => {
     try {
+      const currentUser = JSON.parse(localStorage.getItem('user'));
       console.log("Syncing skills to backend:", skillsToAdd, skillsToRemove);
+  
       await axios.put('/api/user/updateUser', {
         email: userDetails.email,
         add_skills: skillsToAdd,
         remove_skills: skillsToRemove
       }, {
-        headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem('user')).token}` }
+        headers: { Authorization: `Bearer ${currentUser.token}` }
       });
+  
       console.log("Skills updated successfully.");
-      
+  
       // Update local storage and state to reflect the changes
-      const newUserDetails = {
-        ...userDetails,
-        skills: userDetails.skills.filter(skill => !skillsToRemove.includes(skill)).concat(skillsToAdd)
+      const updatedUser = {
+        ...currentUser,
+        skills: userDetails.skills
+          .filter(skill => !skillsToRemove.includes(skill))
+          .concat(skillsToAdd)
       };
-      localStorage.setItem('user', JSON.stringify(newUserDetails));
-      setUserDetails(newUserDetails);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUserDetails({
+        email: updatedUser.email,
+        skills: updatedUser.skills
+      });
     } catch (error) {
       console.error("Failed to sync skills:", error);
     }
-  };
+  };  
 
   const handleDeleteSkill = (skillToDelete) => {
     syncSkillsToBackend([], [skillToDelete]);

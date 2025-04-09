@@ -120,6 +120,9 @@ function TaskDetailsModal({ visible, onClose, task }) {
                 : "None"}
             </div>
             <div style={{ margin: "0.2rem 0" }}>
+              <strong>Priority:</strong> {task.priority} {/* Added line for displaying task priority */}
+            </div>
+            <div style={{ margin: "0.2rem 0" }}>
               <strong>Labels:</strong>{" "}
               {Array.isArray(task.labels) && task.labels.length > 0
                 ? task.labels.join(", ")

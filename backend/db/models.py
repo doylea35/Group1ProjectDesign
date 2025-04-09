@@ -32,15 +32,17 @@ class Group(BaseModel): #_id as Primary key, automatically created, can be found
     member_names: Dict = {}
 
 class Task(BaseModel):
-    assigned_to: List[str]         # List of foreign keys referencing User.email
+    assigned_to: Optional[List[str]] = []         # Only used if assigning directly to users
+    subteam: Optional[str] = None                 # Subteam ID if assigned to a subteam
     name: str
     description: str
     due_date: str
-    status: str                    # ["To Do", "In Progress", "Completed"]
-    group: str                     # Foreign Key referencing Group.id
-    priority: str                  # ["Low", "Medium", "High"]
-    labels: Optional[List[str]] = []   # array of labels, optional 
-    comments: Optional[List[Comment]] = []  # field for comments 
+    status: str
+    group: str
+    priority: str
+    labels: Optional[List[str]] = []
+    comments: Optional[List[Comment]] = []
+
 
 
 class SubTeam(BaseModel): #_id as Primary key, automatically created, can be found using ObjectID
