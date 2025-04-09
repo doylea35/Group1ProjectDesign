@@ -11,7 +11,7 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
   const [selectedSubteams, setSelectedSubteams] = useState([]);
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [errors, setErrors] = useState({});
-  const [members, setMembers] = useState([]); 
+  const [members, setMembers] = useState([]);
   const [taskPriority, setTaskPriority] = useState("Medium");
   const [subteams, setSubteams] = useState([]);
 
@@ -31,13 +31,13 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
 
         console.log("Fetching all groups for the user...");
         const response = await axios.get("/api/group/", {
-          headers: { Authorization: `Bearer ${user.token}` }
+          headers: { Authorization: `Bearer ${user.token}` },
         });
 
         console.log("API Response:", response.data);
 
         if (response.data?.data) {
-          const project = response.data.data.find(p => p.id === projectId);
+          const project = response.data.data.find((p) => p.id === projectId);
 
           if (project) {
             setMembers(project.members || []);
@@ -63,10 +63,13 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
 
         console.log("Fetching subteams for project:", projectId);
 
-        const subteamRes = await axios.get("/subteam/getSubteamsByGroup", {
-          headers: { Authorization: `Bearer ${user.token}` },
-          params: { group_id: projectId }
-        });
+        const subteamRes = await axios.post(
+          "/api/subteams/getSubteamsByGroup",
+          { group_id: projectId },
+          {
+            headers: { Authorization: `Bearer ${user.token}` },
+          }
+        );
 
         console.log("Subteam API response:", subteamRes.data);
 
@@ -76,7 +79,10 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
           setSubteams(subteamNames);
           console.log("Subteams set:", subteamNames);
         } else {
-          console.error("No subteams field found in response:", subteamRes.data);
+          console.error(
+            "No subteams field found in response:",
+            subteamRes.data
+          );
         }
       } catch (error) {
         console.error("Error fetching subteams:", error);
@@ -93,13 +99,17 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
 
   const toggleSubteam = (subteam) => {
     setSelectedSubteams((prev) =>
-      prev.includes(subteam) ? prev.filter((s) => s !== subteam) : [...prev, subteam]
+      prev.includes(subteam)
+        ? prev.filter((s) => s !== subteam)
+        : [...prev, subteam]
     );
   };
 
   const toggleMember = (member) => {
     setSelectedMembers((prev) =>
-      prev.includes(member) ? prev.filter((m) => m !== member) : [...prev, member]
+      prev.includes(member)
+        ? prev.filter((m) => m !== member)
+        : [...prev, member]
     );
   };
 
@@ -108,7 +118,8 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
 
     let newErrors = {};
     if (!taskName.trim()) newErrors.taskName = "Task name is required.";
-    if (!taskDescription.trim()) newErrors.taskDescription = "Task description is required.";
+    if (!taskDescription.trim())
+      newErrors.taskDescription = "Task description is required.";
     if (!dueDate) newErrors.dueDate = "Due date is required.";
 
     if (Object.keys(newErrors).length > 0) {
@@ -119,8 +130,8 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
     // NEW: Parse comma-separated labels into an array
     const labelsArray = labelString
       .split(",")
-      .map(lbl => lbl.trim())
-      .filter(lbl => lbl !== "");
+      .map((lbl) => lbl.trim())
+      .filter((lbl) => lbl !== "");
 
     const taskData = {
       name: taskName,
@@ -144,7 +155,7 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
       console.log("Creating task with data:", taskData);
 
       const response = await axios.post("/tasks/", taskData, {
-        headers: { Authorization: `Bearer ${user.token}` }
+        headers: { Authorization: `Bearer ${user.token}` },
       });
 
       console.log("Task Created:", response.data);
@@ -187,7 +198,9 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
           <form onSubmit={handleCreateTask}>
             {/* Task Name */}
             <fieldset className="Fieldset">
-              <label className="Label" htmlFor="task-name">Task Name:</label>
+              <label className="Label" htmlFor="task-name">
+                Task Name:
+              </label>
               <input
                 className="Input"
                 id="task-name"
@@ -195,24 +208,32 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
                 value={taskName}
                 onChange={(e) => setTaskName(e.target.value)}
               />
-              {errors.taskName && <p className="error-message">{errors.taskName}</p>}
+              {errors.taskName && (
+                <p className="error-message">{errors.taskName}</p>
+              )}
             </fieldset>
 
             {/* Task Description */}
             <fieldset className="Fieldset">
-              <label className="Label" htmlFor="task-desc">Task Description:</label>
+              <label className="Label" htmlFor="task-desc">
+                Task Description:
+              </label>
               <textarea
                 className="Input"
                 id="task-desc"
                 value={taskDescription}
                 onChange={(e) => setTaskDescription(e.target.value)}
               ></textarea>
-              {errors.taskDescription && <p className="error-message">{errors.taskDescription}</p>}
+              {errors.taskDescription && (
+                <p className="error-message">{errors.taskDescription}</p>
+              )}
             </fieldset>
 
             {/* Due Date */}
             <fieldset className="Fieldset">
-              <label className="Label" htmlFor="due-date">Due Date:</label>
+              <label className="Label" htmlFor="due-date">
+                Due Date:
+              </label>
               <input
                 className="Input"
                 id="due-date"
@@ -220,12 +241,16 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
               />
-              {errors.dueDate && <p className="error-message">{errors.dueDate}</p>}
+              {errors.dueDate && (
+                <p className="error-message">{errors.dueDate}</p>
+              )}
             </fieldset>
 
             {/* Task Priority */}
             <fieldset className="Fieldset">
-              <label className="Label" htmlFor="task-priority">Task Priority:</label>
+              <label className="Label" htmlFor="task-priority">
+                Task Priority:
+              </label>
               <select
                 className="Input"
                 id="task-priority"
@@ -240,7 +265,9 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
 
             {/* NEW: Labels (comma-separated) */}
             <fieldset className="Fieldset">
-              <label className="Label" htmlFor="task-labels">Labels (comma-separated):</label>
+              <label className="Label" htmlFor="task-labels">
+                Labels (comma-separated):
+              </label>
               <input
                 className="Input"
                 id="task-labels"
@@ -253,7 +280,9 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
             {/* Subteam Selection */}
             <div className="selection-container">
               <p className="selection-title">Assign to Subteams:</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+              >
                 {subteams.map((subteam) => (
                   <button
                     type="button"
@@ -272,7 +301,9 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
             {/* Member Selection */}
             <div className="selection-container">
               <p className="selection-title">Assign to Members:</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+              >
                 {members.map((member) => (
                   <button
                     type="button"
@@ -289,8 +320,16 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
             </div>
 
             {/* Buttons */}
-            <div style={{ display: "flex", marginTop: 25, justifyContent: "space-between" }}>
-              <button type="submit" className="Button green">Create Task</button>
+            <div
+              style={{
+                display: "flex",
+                marginTop: 25,
+                justifyContent: "space-between",
+              }}
+            >
+              <button type="submit" className="Button green">
+                Create Task
+              </button>
               <Dialog.Close asChild>
                 <button className="Button red">Cancel</button>
               </Dialog.Close>

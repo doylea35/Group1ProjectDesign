@@ -16,7 +16,7 @@ async def get_subteams():
 
 
     # get subteams within a project
-@subteam_router.get("/getSubteamsByGroup")
+@subteam_router.post("/getSubteamsByGroup")
 async def get_subteams_by_group(request: GetSubteamsByGroupRequest):
     group_id = request.group_id
     # Validate group ID
