@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams,useNavigate } from "react-router-dom";
 import axios from "axios";
 
 function ChatInterface() {
@@ -11,7 +11,7 @@ function ChatInterface() {
   const [memberNames, setMemberNames] = useState({});
   const ws = useRef(null);
   const messagesEndRef = useRef(null);
-
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const userEmail = user["email"];
   const userName = user["name"];
@@ -165,6 +165,17 @@ function ChatInterface() {
   };
 
   return (
+    <>
+    <div
+      className="back-button"
+      style={{position: "absolute", top: "100px", left: "300px", zIndex: "10", }}
+    >
+    <div className="top-row">
+      <button onClick={() => navigate(`/projects/${projectId}`)} className="back-project-btn">
+          Back to Project Page
+      </button>
+      </div>
+    </div>
     <div className="chat-container">
       {!isSocketReady && (
         <div className="connecting-message">Connecting to chat...</div>
@@ -203,6 +214,7 @@ function ChatInterface() {
         </button>
       </form>
     </div>
+    </>
   );
 }
 
