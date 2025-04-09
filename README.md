@@ -40,11 +40,11 @@ You can test the application's functionalities in two ways:
 - Use the deployed frontend via the link above to test the deployed application.
 - You could use the credentials in **Login Section**.
 
-## 2️⃣ **Running Locally **
+2️⃣ **Running Locally **
 
 If you prefer to run and test the application (both frontend and backend) on your local machine, follow the **Installation Guide** below.
 
-- **Note:** If you run the frontend locally, it will still make API calls to the **deployed backend**
+- **Note:** If you run the frontend locally, it will still make API calls to the **deployed backend** by default.
 - However, if you want the local frontend to make calls to the **local backend running on your machine**, follow these steps:
 
 1. Navigate to the following file in the repository:
@@ -143,7 +143,7 @@ Ensure you have the following installed before proceeding:
 #### 🏁 Installation Steps (Windows)
 
 #### 🔹 Step 0: Clone this GitHub repository to your local machine
-
+If you have been following the guide for the frontend, skip this step since the repo is already cloned.
 Open a terminal (Command Prompt or PowerShell) and run:
 
 ```sh
@@ -193,18 +193,18 @@ Therefore the correct path to the `.env` file after this should be:
 ```
 
 ---
-By default, all the links you received in email (email verification, confirm joining a group etc) are pointed to the deployed frontend .i.e all the links will start with https://groupgrade.vercel.app/
+By default, all the links you received in email (email verification, confirm joining a group etc) are pointed to the deployed frontend i.e all the links will start with https://groupgrade.vercel.app/
 
-When you are running both the frontend and backend locally, and wish these links to point to localhost please change the variable ENV in .env file to DEV.
+When you are running both the frontend and backend locally, and wish these links to point to localhost frontend please change the variable ENV in .env file to DEV.
 By default, the variable ENV is set to PROD.
-
-After you changed ENV to DEV, all these links will start with http://localhost:5173/
----
-
-
+After you changed ENV's value to DEV, all these links will start with http://localhost:5173/ (local frontend)
 
 ##### 🔹 Step 4: Start the backend server
-
+Ensure you have navigated to:
+```sh
+<path-to-repository-directory>\Group1ProjectDesign\backend
+```
+on your terminal.
 Run:
 
 ```sh
@@ -232,7 +232,7 @@ If the above credentials do not work, please try:
 - **Username/Email:** `nzhang@tcd.ie`  
   **Password:** `123456`
 
-You could also register your on our application.
+You could also register your email on our application.
 If you decided to use your own email, please be aware of the following:
 
 If you registered using our deployed application, your email and password can only login to the deployed version of our app, but not the local version (local frontend pointing to local backend).
@@ -244,11 +244,13 @@ The reason for this is because you could have a different python version than th
 
 ## Database
 
-We are using **MongoDB** as our database. We've invited the following emails to our database:
+We are using **MongoDB** as our database. in Release One we've invited the following emails to our database:
 
 - aqeelhkazmi@gmail.com
 - mfatima@tcd.ie
 - tzhou@tcd.ie
+
+These emails should also have access in Release Two.
 
 If you did not receive the invitation, please follow these steps:
 
@@ -262,7 +264,7 @@ If you did not receive the invitation, please follow these steps:
 
 ## GMail API and Google Calendar API
 
-We've added the following users to our **Google Cloud Project: "GroupGrade"** as **"Viewer"**:
+We've added the following users to our **Google Cloud Project: "GroupGrade"** as **"Viewer"** in Release One, but these emails should still have access:
 
 - aqeelhkazmi@gmail.com
 - mfatima@tcd.ie
@@ -278,6 +280,10 @@ This happens because the **refresh token** in Google OAuth credentials may expir
 1. **Log in** using one of the invited emails above.
 2. You will be told that "Google hasn’t verified this app". Please select "Continue".
 3. You will be prompt "GroupGrade wants access to your Google Account". Please select "Continue".
+
+You might required to do this twice because we have connection to GMail and Google Calendar APIs. So you could be prompted to log
+in and give consent, and still encounter an error. Please "ctrl + c" to stop the backend server, and restart it again,
+then you will be prompt to log in and give consent again. After you give the consent twice, you should be able to run the backend server without error.
 
 📩 **Check your email inbox and spam folder** for an email containing **groupgradetcd@gmail.com**.
 
