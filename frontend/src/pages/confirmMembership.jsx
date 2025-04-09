@@ -28,7 +28,7 @@ const ConfirmGroupMembershipPage = () => {
         }
       })
       .catch((error) => {
-        setMessage("Failed to join group. Please try again");
+        setMessage("");
         console.error(
           "Verification failed:",
           error.response ? error.response.data : error.message
