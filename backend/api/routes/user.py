@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status, File, UploadFile
+from fastapi import APIRouter, HTTPException, Depends, status, File, UploadFile, Query
 from db.database import groups_collection, users_collection, tasks_collection, subteams_collection
 from api.request_model.user_request_schema import DeleteUserRequest, UpdateUserRequest, UserRegisterRequest, UserLoginRequest
 from bson import ObjectId # mongodb uses ObjectId to store _id
@@ -381,22 +381,26 @@ def extract_text_from_pdf(file_url: str) -> str:
 @user_router.post("/uploadCV", summary="Upload a CV for a user")
 async def upload_cv(
     file: UploadFile = File(...),
+    user_id: str = Query(..., description="ID of the user"),
     current_user: dict = Depends(get_current_user) # comment this line if you want to test locally without previouslly signing-in
 ):
     """Upload a CV for a user and extract text from it"""
     # current_user = {"email": "aina.gomila@estudiantat.upc.edu"} # uncomment this line if you want to test locally without previouslly signing-in
 
+    # get user
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
     # Get the user's name
-    user_name = current_user.get("name", "user").replace(" ", "_")  # Replace spaces just in case
+    # user_name = current_user.get("name", "user").replace(" ", "_")  # Replace spaces just in case
+    user_name = user.get("name", "user").replace(" ", "_")  # Replace spaces just in case
 
     # Create a clean filename like "john_doe_cv.pdf"
     new_filename = f"{user_name}_cv.pdf"
 
     # check if user exists
-    if not users_collection.find_one({"email": current_user["email"]}):
+    if not users_collection.find_one({"email": user["email"]}):
         raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"User with email {current_user['email']} does not exist."
+                detail=f"User with email {user['email']} does not exist."
             )
 
     # get file +  check file is pdf
@@ -420,13 +424,13 @@ async def upload_cv(
     file_metadata = {
         "filename": new_filename,
         "file_url": file_url,
-        "user_email": current_user["email"],
-        "uploaded_by": current_user["email"],
+        "user_email": user["email"],
+        "uploaded_by": user["email"],
         "upload_date": datetime.datetime.utcnow()
     }
     files_collection.insert_one(file_metadata)
 
-    return {"message": "CV uploaded successfully", "filename": new_filename}
+    return {"message": "CV uploaded successfully", "file_url": file_url}
 
 
 # @user_router.post("/getCVSkills")
