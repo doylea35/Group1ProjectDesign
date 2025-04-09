@@ -75,7 +75,7 @@ const CreateSubteam = ({ projectName, onCreate }) => {
     // Force a full page refresh after a short delay to reflect the new subteam
     setTimeout(() => {
       window.location.reload();
-    }, 5000);
+    }, 500);
   };
 
   return (

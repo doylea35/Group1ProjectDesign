@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import Dict, Optional
 from db.database import groups_collection, users_collection, tasks_collection, subteams_collection
 from db.models import User, Group, Task, Notification
@@ -370,7 +370,7 @@ TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
 
 # frontend_url_dev = os.getenv("FRONTEND_URL_DEV")
 # BASE_URL = "{frontend_url}/tasks/{user_email}/{group_id}/{task_id}"
-BASE_URL = "{frontend_url}projects/{group_id}"
+BASE_URL = "{frontend_url}/projects/{group_id}"
 
 def send_assigned_task_email(user_email: str, task_name: str, task_description: str, task_id: str, group_id: str, group_name: str):
     # Validate email
