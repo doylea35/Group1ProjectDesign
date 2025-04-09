@@ -75,8 +75,9 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
 
         const returnedData = subteamRes.data?.data?.subteams;
         if (Array.isArray(returnedData)) {
-          const subteamNames = returnedData.map((st) => st.team_name);
-          setSubteams(subteamNames);
+          // const subteamNames = returnedData.map((st) => st.team_name);
+          // setSubteams(subteamNames);
+          setSubteams(returnedData);
           console.log("Subteams set:", subteamNames);
         } else {
           console.error(
@@ -97,13 +98,14 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
     }
   }, [projectId]);
 
-  const toggleSubteam = (subteam) => {
+  const toggleSubteam = (subteamId) => {
     setSelectedSubteams((prev) =>
-      prev.includes(subteam)
-        ? prev.filter((s) => s !== subteam)
-        : [...prev, subteam]
+      prev.includes(subteamId)
+        ? prev.filter((s) => s !== subteamId)
+        : [...prev, subteamId]
     );
   };
+  
 
   const toggleMember = (member) => {
     setSelectedMembers((prev) =>
@@ -133,17 +135,37 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
       .map((lbl) => lbl.trim())
       .filter((lbl) => lbl !== "");
 
-    const taskData = {
-      name: taskName,
-      description: taskDescription,
-      due_date: dueDate,
-      assigned_to: selectedMembers,
-      group: projectId,
-      subteams: selectedSubteams,
-      status: "To Do",
-      priority: taskPriority,
-      labels: labelsArray, // <--- includes user-typed labels
-    };
+      let assignedTo = [];
+
+      if (selectedMembers.length > 0 && selectedSubteams.length > 0) {
+        setErrors({
+          general:
+            "You can assign a task to either members or subteams, not both at the same time.",
+        });
+        return;
+      } else if (selectedMembers.length > 0) {
+        assignedTo = selectedMembers;
+      } else if (selectedSubteams.length > 0) {
+        assignedTo = selectedSubteams;
+      } else {
+        setErrors({
+          general: "You must assign the task to at least one member or subteam.",
+        });
+        return;
+      }
+      
+      const taskData = {
+        name: taskName,
+        description: taskDescription,
+        due_date: dueDate,
+        assigned_to: selectedMembers.length > 0 ? selectedMembers : selectedSubteams,
+        group: projectId,
+        status: "To Do",
+        priority: taskPriority,
+        labels: labelsArray,
+      };
+      
+      
 
     try {
       const user = JSON.parse(localStorage.getItem("user"));
@@ -286,15 +308,16 @@ const CreateTask = ({ projectName, projectId, onCreate }) => {
                 {subteams.map((subteam) => (
                   <button
                     type="button"
-                    key={subteam}
+                    key={subteam._id}
                     className={`task-toggle-button ${
-                      selectedSubteams.includes(subteam) ? "selected" : ""
+                      selectedSubteams.includes(subteam._id) ? "selected" : ""
                     }`}
-                    onClick={() => toggleSubteam(subteam)}
+                    onClick={() => toggleSubteam(subteam._id)}
                   >
-                    {subteam}
+                    {subteam.team_name}
                   </button>
                 ))}
+
               </div>
             </div>
 

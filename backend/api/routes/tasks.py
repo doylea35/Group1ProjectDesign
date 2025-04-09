@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query, Query, Depends
+from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import Dict, Optional
 from db.database import groups_collection, users_collection, tasks_collection, subteams_collection
 from db.models import User, Group, Task, Notification
