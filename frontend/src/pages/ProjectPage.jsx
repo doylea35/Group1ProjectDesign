@@ -82,10 +82,7 @@ function ProjectPage() {
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDropdownOpen(false);
       }
     }
@@ -216,7 +213,23 @@ function ProjectPage() {
   const completedCount = completedTasks.length;
 
   // Handlers for subteam & task creation
-  const handleCreateSubteam = (subteamName, members) => {
+  const handleCreateSubteam = (subteamName, members, group_id) => {
+    const data = {
+      team_name: subteamName,
+      members: members,
+      group: group_id,
+      tasks: [],
+    };
+
+
+    axios
+      .post(`/api/subteams/createSubteam`, data)
+      .then((response) => {})
+      .catch((error) => {
+        setMessage("");
+        console.error(error.response ? error.response.data : error.message);
+      });
+
     alert(
       `Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(
         ", "
@@ -276,7 +289,12 @@ function ProjectPage() {
                         <div className="SelectItem">No labels found</div>
                       )}
                       {availableLabels.map((label) => (
-                        <div key={label} className="SelectItem" data-highlighted={ selectedLabels.includes(label) ? "true" : "false"}
+                        <div
+                          key={label}
+                          className="SelectItem"
+                          data-highlighted={
+                            selectedLabels.includes(label) ? "true" : "false"
+                          }
                           onClick={() => handleLabelClick(label)}
                         >
                           {label}
@@ -286,15 +304,18 @@ function ProjectPage() {
                   </div>
                 )}
               </div>
-              <div >
-              {selectedLabels.map((label) => (
-                <div key={label} className="selected-label-pill">
-                  {label}
-                  <span className="remove-label" onClick={() => handleRemoveLabel(label)}>
-                    &#x2715;
-                  </span>
-                </div>
-              ))}
+              <div>
+                {selectedLabels.map((label) => (
+                  <div key={label} className="selected-label-pill">
+                    {label}
+                    <span
+                      className="remove-label"
+                      onClick={() => handleRemoveLabel(label)}
+                    >
+                      &#x2715;
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

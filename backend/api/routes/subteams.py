@@ -54,15 +54,17 @@ async def create_subteam(request : CreateSubteamRequest):
             status_code=status.HTTP_400_BAD_REQUEST, 
             detail=f"Team {request.team_name} already exists"
             )
-    
+    print("no duplicate team_name")
     # Validate group ID
     if not groups_collection.find_one({"_id": ObjectId(request.group)}):
+        print("group does not exist")
         raise HTTPException(status_code=400, detail=f"Group {request.group} does not exist")
     
     # Validate member IDs
     valid_member_ids = []
     for member_id in request.members:
         if not users_collection.find_one({"email": member_id}):
+            print("user_doesnt exist")
             raise HTTPException(status_code=400, detail=f"User {member_id} does not exist")
         valid_member_ids.append(member_id)
 
@@ -81,9 +83,11 @@ async def create_subteam(request : CreateSubteamRequest):
         "group": ObjectId(request.group),
         "tasks": valid_task_ids
     }
+    print("prepare to inster new subteam")
 
     # Insert subteam
     inserted_subteam = subteams_collection.insert_one(newSubTeam)
+    print("after inster new subteam")
     # created_subteam = subteams_collection.find_one({"team_name": request.team_name})
     newSubTeam["_id"] = str(inserted_subteam.inserted_id)
     newSubTeam["group"] = str(newSubTeam["group"])

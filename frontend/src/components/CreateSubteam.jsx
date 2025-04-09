@@ -2,22 +2,25 @@ import React, { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import "../App.css";
-
+import axios from "axios";
 const CreateSubteam = ({ projectName, onCreate }) => {
   const [subteamName, setSubteamName] = useState("");
   const [members, setMembers] = useState("");
   const [errors, setErrors] = useState({});
 
-  const handleCreateSubteam = (event) => {
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  const handleCreateSubteam = async (event) => {
     event.preventDefault();
 
     let newErrors = {};
-    if (!subteamName.trim()) newErrors.subteamName = "Subteam name is required.";
+    if (!subteamName.trim())
+      newErrors.subteamName = "Subteam name is required.";
 
     const membersArray = members
       .split(",")
-      .map(email => email.trim())
-      .filter(email => email.length > 0);
+      .map((email) => email.trim())
+      .filter((email) => email.length > 0);
 
     if (membersArray.length < 2) {
       newErrors.members = "At least 2 team members are required.";
@@ -28,8 +31,41 @@ const CreateSubteam = ({ projectName, onCreate }) => {
       return;
     }
 
+    const projectFromStorage = JSON.parse(
+      localStorage.getItem("selectedProject")
+    );
+
+    console.log(`projectFromStorage: ${JSON.stringify(projectFromStorage)}`);
+
+    console.log(projectFromStorage["id"]);
+
+    const data = {
+      team_name: subteamName,
+      members: membersArray,
+      group: projectFromStorage["id"],
+      tasks: [],
+    };
+
+    console.log(JSON.stringify(data));
+
+    await axios
+      .post("/api/subteams/createSubteam", data)
+      .then((response) => {
+        console.log(JSON.stringify(response));
+      })
+      .catch((error) => {
+        console.error(error.response ? error.response.data : error.message);
+      });
+
+    // alert(
+    //   `Subteam "${subteamName}" created for Project ${projectName} with members: ${members.join(
+    //     ", "
+    //   )}`
+    // );
+    // };
+
     // Call parent's onCreate callback with the subteam details
-    onCreate(subteamName, membersArray);
+    // onCreate(subteamName, membersArray, projectFromStorage["id"]);
 
     // Reset form fields and errors
     setSubteamName("");
@@ -39,7 +75,7 @@ const CreateSubteam = ({ projectName, onCreate }) => {
     // Force a full page refresh after a short delay to reflect the new subteam
     setTimeout(() => {
       window.location.reload();
-    }, 500);
+    }, 5000);
   };
 
   return (
@@ -56,7 +92,9 @@ const CreateSubteam = ({ projectName, onCreate }) => {
           </Dialog.Description>
           <form onSubmit={handleCreateSubteam}>
             <fieldset className="Fieldset">
-              <label className="Label" htmlFor="subteam-name">Subteam Name:</label>
+              <label className="Label" htmlFor="subteam-name">
+                Subteam Name:
+              </label>
               <input
                 className="Input"
                 id="subteam-name"
@@ -64,10 +102,14 @@ const CreateSubteam = ({ projectName, onCreate }) => {
                 value={subteamName}
                 onChange={(e) => setSubteamName(e.target.value)}
               />
-              {errors.subteamName && <p className="error-message">{errors.subteamName}</p>}
+              {errors.subteamName && (
+                <p className="error-message">{errors.subteamName}</p>
+              )}
             </fieldset>
             <fieldset className="Fieldset">
-              <label className="Label" htmlFor="members">Members (comma-separated emails):</label>
+              <label className="Label" htmlFor="members">
+                Members (comma-separated emails):
+              </label>
               <input
                 className="Input"
                 id="members"
@@ -75,10 +117,20 @@ const CreateSubteam = ({ projectName, onCreate }) => {
                 value={members}
                 onChange={(e) => setMembers(e.target.value)}
               />
-              {errors.members && <p className="error-message">{errors.members}</p>}
+              {errors.members && (
+                <p className="error-message">{errors.members}</p>
+              )}
             </fieldset>
-            <div style={{ display: "flex", marginTop: 25, justifyContent: "flex-end" }}>
-              <button type="submit" className="Button green">Create Subteam</button>
+            <div
+              style={{
+                display: "flex",
+                marginTop: 25,
+                justifyContent: "flex-end",
+              }}
+            >
+              <button type="submit" className="Button green">
+                Create Subteam
+              </button>
             </div>
           </form>
           <Dialog.Close asChild>
