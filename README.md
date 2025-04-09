@@ -12,9 +12,13 @@ The key features of our application were designed to enhance the user expereince
 
 1. Users can create an account, verify their email and then log in to this account to promote security amongst users when creating accounts.
 2. Users can create projects and add other members to these projects who will be prompted to join the group via an email link.
-3. Users can add their free time for group meetings, view the available times of other members and find a time that all users are available for a meeting.
-4. Users can create tasks and assign members to these tasks and view them on their home page and project page.
+3. Users can add their free time for group meetings, view the available times of other members and find a time that all users are available for a meeting. A Google Calendar invitation email will be send.
+4. Users can create tasks, assign members to these tasks, view them on their home page and project page, and add comments.
 5. Users can create subteams and use these as a member to assign tasks to.
+7. Users can use the team's groupchats to message teammates.
+8. Users can upload and download shared files in the group resources page.
+9. Users can edit their profile by changing their username and adding their skills.
+10. Users can be notified, in-app and via email, about tasks assigned, commented and updated, as well as invitations to new projects.
 
 ---
 
