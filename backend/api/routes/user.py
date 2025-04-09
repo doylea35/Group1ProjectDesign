@@ -18,6 +18,7 @@ import openai
 import requests
 import tempfile
 import json
+from params.frontend_params import frontend_url
 
 # Load environment variables
 load_dotenv()
@@ -43,8 +44,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/users/login")
 
 
 user_router = APIRouter()
-
-frontend_url_dev = os.getenv("FRONTEND_URL_DEV")
 
 BASE_URL = "{frontend_url}/confirmRegistration/{confirmationCode}"
 
@@ -125,7 +124,7 @@ async def register_user(request : UserRegisterRequest):
         {"$set": {"confirmation_code": unique_token}}
     )
 
-    confirmation_link = BASE_URL.format(frontend_url=frontend_url_dev,confirmationCode=unique_token)
+    confirmation_link = BASE_URL.format(frontend_url=frontend_url,confirmationCode=unique_token)
 
     message = REGISTRATION_CONFIRMATION_EMAIL_TEMPLATE.format(
         user_name=request.name,

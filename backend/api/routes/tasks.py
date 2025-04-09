@@ -12,9 +12,7 @@ from api.utils import is_valid_email
 from api.routes.notifications import create_notification
 from api.request_model.notifications_request_schema import CreateNotificationRequest
 from email_service.email_utils import email_sender
-import os
-
-
+from params.frontend_params import frontend_url
 tasks_router = APIRouter()
 
 
@@ -334,7 +332,7 @@ TASK_ASSIGNMENT_EMAIL_TEMPLATE = """<!DOCTYPE html>
 
 
 
-frontend_url_dev = os.getenv("FRONTEND_URL_DEV")
+# frontend_url_dev = os.getenv("FRONTEND_URL_DEV")
 # BASE_URL = "{frontend_url}/tasks/{user_email}/{group_id}/{task_id}"
 BASE_URL = "{frontend_url}projects/{group_id}"
 
@@ -348,7 +346,7 @@ def send_assigned_task_email(user_email: str, task_name: str, task_description: 
 
     # Generate task link
     # task_link = f"{BASE_URL.format(frontend_url=frontend_url_dev, user_email=user_email_for_link, group_id=group_id, task_id=task_id)}"
-    task_link = f"{BASE_URL.format(frontend_url=frontend_url_dev, group_id=group_id)}"
+    task_link = f"{BASE_URL.format(frontend_url=frontend_url, group_id=group_id)}"
 
     # get user
     user = users_collection.find_one({"email": user_email})
