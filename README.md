@@ -296,3 +296,19 @@ If you want to see our Heroku Dashboard, please send **nzhang@tcd.ie** an email 
 
 # Common issues
 - When entering new free time slots, the user may get a ```Please fill out all fields before saving.``` error if any of the fields is left to the default values. To solve it, simply manually input the same value and press ```save```
+
+- When downloading the group files, make sure to check for blocked pop-up tabs if nothing is happening.
+
+- When testing the messaging feature, the user may encounter some consistency errors when using multiple tabs of the deployed version with different users. To solve this, make sure you are using the messaging with one user logged-in in the deployed version and the other logged-in locally.
+
+- When testing locally, if you continuously run into ```500 Internal Server Error```, make the following changes to the ```db_utils.py``` file. Uncomment the following lines:
+  ```python
+  import certifi
+  ```
+  ```python
+  client : MongoClient = MongoClient(MONGODB_URL, tlsCAFile=certifi.where())
+  ```
+  and comment the next one:
+  ```python
+  client : MongoClient = MongoClient(MONGODB_URL)
+  ```
