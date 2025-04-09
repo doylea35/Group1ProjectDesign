@@ -73,14 +73,6 @@ This change will ensure that the local frontend makes API calls to the **local b
 
 ---
 
----
-Furtheremore, by the default, all the links (email verification, confirm joining a group etc) are pointed to the deployed frontend .i.e all the links will start with https://groupgrade.vercel.app/
-
-When you are running both the frontend and backend locally, and wish these links to point to local host please change the variable ENV in .env file to DEV.
-By default, the variable ENV is set to PROD.
-
-After you changed ENV to DEV, all these links will start with http://localhost:5173/
----
 
 ## **Installation Guide**
 
@@ -199,6 +191,17 @@ Therefore the correct path to the `.env` file after this should be:
 ```sh
 <path-to-repository-directory>\Group1ProjectDesign\backend\.env
 ```
+
+---
+By default, all the links you received in email (email verification, confirm joining a group etc) are pointed to the deployed frontend .i.e all the links will start with https://groupgrade.vercel.app/
+
+When you are running both the frontend and backend locally, and wish these links to point to localhost please change the variable ENV in .env file to DEV.
+By default, the variable ENV is set to PROD.
+
+After you changed ENV to DEV, all these links will start with http://localhost:5173/
+---
+
+
 
 ##### 🔹 Step 4: Start the backend server
 
