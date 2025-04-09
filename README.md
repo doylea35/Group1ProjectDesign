@@ -293,3 +293,6 @@ If you want to see our Heroku Dashboard, please send **nzhang@tcd.ie** an email 
 - Email
 - Password
 - 6-digits code from Duo Mobile authenticator.
+
+# Common issues
+- When entering new free time slots, the user may get a ```Please fill out all fields before saving.``` error if any of the fields is left to the default values. To solve it, simply manually input the same value and press ```save```
