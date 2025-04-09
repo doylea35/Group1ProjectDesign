@@ -73,6 +73,15 @@ This change will ensure that the local frontend makes API calls to the **local b
 
 ---
 
+---
+Furtheremore, by the default, all the links (email verification, confirm joining a group etc) are pointed to the deployed frontend .i.e all the links will start with https://groupgrade.vercel.app/
+
+When you are running both the frontend and backend locally, and wish these links to point to local host please change the variable ENV in .env file to DEV.
+By default, the variable ENV is set to PROD.
+
+After you changed ENV to DEV, all these links will start with http://localhost:5173/
+---
+
 ## **Installation Guide**
 
 This guide provides instructions to set up and run the **GroupGrade** application.
@@ -248,7 +257,7 @@ If you did not receive the invitation, please follow these steps:
 
 ---
 
-## GMail API
+## GMail API and Google Calendar API
 
 We've added the following users to our **Google Cloud Project: "GroupGrade"** as **"Viewer"**:
 
@@ -294,7 +303,7 @@ If you want to see our Heroku Dashboard, please send **nzhang@tcd.ie** an email 
 - Password
 - 6-digits code from Duo Mobile authenticator.
 
-# Common issues
+## Troubleshooting
 - When entering new free time slots, the user may get a ```Please fill out all fields before saving.``` error if any of the fields is left to the default values. To solve it, simply manually input the same value and press ```save```
 
 - When downloading the group files, make sure to check for blocked pop-up tabs if nothing is happening.
