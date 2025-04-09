@@ -2184,3 +2184,16 @@ small {
   justify-content: space-between; 
   align-items: center;           
 }
+
+.mark-read-btn {
+  background-color: var(--violet-10);
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.mark-read-btn:hover {
+  background-color: #3111B6; 
+}
