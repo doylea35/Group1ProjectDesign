@@ -308,9 +308,13 @@ If you want to see our Heroku Dashboard, please send **nzhang@tcd.ie** an email 
 
 - When downloading the group files, make sure to check for blocked pop-up tabs if nothing is happening.
 
-- When testing the messaging feature, the user may encounter some consistency errors when using multiple tabs of the deployed version with different users. To solve this, make sure you are using the messaging with one user logged-in in the deployed version and the other logged-in locally.
+- When testing the chat feature, you might experience consistency errors if multiple tabs of the same window are open. To resolve this issue, please follow these steps:
 
-- When testing locally, if you continuously run into ```500 Internal Server Error```, make the following changes to the ```db_utils.py``` file. Uncomment the following lines:
+------- Log into one user account on our app in one Chrome profile window (for example, use your TCD email in this Google Chrome profile).
+
+------- Log into a different user account on our app in a separate Chrome profile window (for example, use your personal email in another Google Chrome profile).
+
+- When testing locally, if you continuously run into ```500 Internal Server Error``` due to connection errors with mongodb, make the following changes to the ```db_utils.py``` file. Uncomment the following lines:
   ```python
   import certifi
   ```
