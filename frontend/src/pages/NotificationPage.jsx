@@ -16,12 +16,14 @@ const NotificationsPage = () => {
       }
 
       try {
+        // Fetch all notifications for user
         const response = await axios.post(
           "/api/notifications/get_notifications_by_user",
           { user_email: user.email },
           { headers: { Authorization: `Bearer ${user.token}` } }
         );
 
+        // If you only want to show unread notifications, you can filter them here:
         const unreadNotifications = response.data.notifications.filter(
           (notification) => !notification.read
         );
@@ -40,6 +42,7 @@ const NotificationsPage = () => {
     fetchNotifications();
   }, []);
 
+  // Mark one notification as read
   const handleMarkAsRead = async (notificationId) => {
     const user = JSON.parse(localStorage.getItem("user"));
     try {
@@ -49,11 +52,8 @@ const NotificationsPage = () => {
           notification_id: notificationId,
           user_email: user.email,
         },
-        {
-          headers: { Authorization: `Bearer ${user.token}` },
-        }
+        { headers: { Authorization: `Bearer ${user.token}` } }
       );
-      // Refresh the page after marking as read
       window.location.reload();
     } catch (err) {
       console.error(
@@ -63,9 +63,43 @@ const NotificationsPage = () => {
     }
   };
 
+  // Mark *all* unread notifications as read by calling the same endpoint for each
+  const handleMarkAllAsRead = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    try {
+      // No single "mark all" endpoint, so we call the single-notification
+      // endpoint in a loop for each unread notification:
+      await Promise.all(
+        notifications.map((n) =>
+          axios.put(
+            "/api/notifications/mark_notification_as_read",
+            {
+              notification_id: n._id || n.id,
+              user_email: user.email,
+            },
+            { headers: { Authorization: `Bearer ${user.token}` } }
+          )
+        )
+      );
+      window.location.reload();
+    } catch (err) {
+      console.error(
+        "Error marking all notifications as read:",
+        err.response ? err.response.data : err
+      );
+    }
+  };
+
   return (
     <div className="notifications-page">
-      <h2>Notifications</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        <h2 style={{ margin: 0 }}>Notifications</h2>
+        {/* "Mark all as read" button with the same .mark-read-btn class */}
+        <button className="mark-read-btn" onClick={handleMarkAllAsRead}>
+          Mark all as read
+        </button>
+      </div>
+
       {loading ? (
         <p>Loading notifications...</p>
       ) : error ? (
@@ -88,6 +122,7 @@ const NotificationsPage = () => {
                 </small>
               </div>
               <button
+                className="mark-read-btn"
                 onClick={() =>
                   handleMarkAsRead(notification._id || notification.id)
                 }
