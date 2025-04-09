@@ -34,16 +34,18 @@ The key features of our application were designed to enhance the user expereince
 
 You can test the application's functionalities in two ways:
 
-1️⃣ **Using the Live Deployment**
+1️⃣ **Using the Live Deployment (Recommended)**
 
-- Visit the deployed frontend (Some functionality might not work).
+- The deployed frontend are connected with the deployed backend.
+- Use the deployed frontend via the link above to test the deployed application.
+- You could use the credentials in **Login Section**.
 
-## 2️⃣ **Running Locally (Recommended)**
+## 2️⃣ **Running Locally **
 
 If you prefer to run and test the application (both frontend and backend) on your local machine, follow the **Installation Guide** below.
 
-- **Note:** If you run the frontend locally, it will make API calls to the **backend running on your local host**.
-- However, if you want the local frontend to make calls to the **deployed backend**, follow these steps:
+- **Note:** If you run the frontend locally, it will still make API calls to the **deployed backend**
+- However, if you want the local frontend to make calls to the **local backend running on your machine**, follow these steps:
 
 1. Navigate to the following file in the repository:
 
@@ -53,17 +55,17 @@ If you prefer to run and test the application (both frontend and backend) on you
 
 2. **Modify the `axios.defaults.baseURL` setting:**
 
-- **Uncomment** the following line:
+- **Comment out** the following line:
   ```javascript
   axios.defaults.baseURL =
     "https://group-grade-backend-5f919d63857a.herokuapp.com";
   ```
-- **Comment out** the following line:
+- **Uncomment** the following line:
   ```javascript
   axios.defaults.baseURL = "http://127.0.0.1:8000";
   ```
 
-This change will ensure that the local frontend makes API calls to the **deployed backend** instead of your local backend.
+This change will ensure that the local frontend makes API calls to the **local backend** instead of the deployed backend.
 
 ---
 
@@ -126,7 +128,6 @@ npm run dev
 Our frontend runs on: **http://localhost:5173/**
 
 **When you made an operation through our frontend, if nothing seems to happen, please refresh the page. The changes should appear.**
-**We will fix this issue in the next Sprint**
 
 ### 🖥️ **Backend Setup**
 
@@ -218,6 +219,14 @@ If the above credentials do not work, please try:
 
 - **Username/Email:** `nzhang@tcd.ie`  
   **Password:** `123456`
+
+You could also register your on our application.
+If you decided to use your own email, please be aware of the following:
+
+If you registered using our deployed application, your email and password can only login to the deployed version of our app, but not the local version (local frontend pointing to local backend).
+If you registered using our app running on local(local frontend pointing to local backend), your email and password will be able to login to the deployed version of our app and the local version.
+
+The reason for this is because you could have a different python version than the deployed backend running on Heroku, which might cause the the password to be hashed differently.
 
 # **Backends**
 
