@@ -104,9 +104,9 @@ const AccountPage = () => {
         formData.append("file", file);
         const user = JSON.parse(localStorage.getItem("user"));
         console.log("Loaded user from localStorage:", user);
-        console.log("Token:", user?.token);
-        console.log("Group ID:", user?.group_id);
-        if (!user || !user.token) {
+        console.log("Token:", user["token"]);
+        console.log("Group ID:", user["groups"]);
+        if (!user || !user["token"]) {
             console.error("User not authenticated. Please log in first.");
             return;
         }
@@ -117,7 +117,7 @@ const AccountPage = () => {
                 formData,
                 {
                     headers: {
-                        Authorization: `Bearer ${user.token}`,
+                        Authorization: `Bearer ${user["token"]}`,
                         'Content-Type': 'multipart/form-data'
                     }
                 }
