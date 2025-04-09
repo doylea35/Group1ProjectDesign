@@ -535,7 +535,7 @@ def send_assigned_task_email_subteam(subteam_id: str, task_name: str, task_descr
         user_email_for_link = user_email if user else "notRegistered"
 
         # Generate task link
-        task_link = f"{BASE_URL.format(frontend_url=frontend_url_dev, group_id=group['_id'])}"
+        task_link = f"{BASE_URL.format(frontend_url=frontend_url, group_id=group['_id'])}"
 
         if not user:
             continue  # Skip if user doesn't exist
