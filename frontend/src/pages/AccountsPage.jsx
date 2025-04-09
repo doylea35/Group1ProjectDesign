@@ -106,6 +106,7 @@ const AccountPage = () => {
         console.log("Loaded user from localStorage:", user);
         console.log("Token:", user["token"]);
         console.log("Group ID:", user["groups"]);
+        console.log("user id:", user["_id"]);
         if (!user || !user["token"]) {
             console.error("User not authenticated. Please log in first.");
             return;
@@ -113,44 +114,43 @@ const AccountPage = () => {
         try {
             // Upload the CV
             await axios.post(
-                `https://group-grade-backend-5f919d63857a.herokuapp.com/api/user/uploadCV`,
+                `https://group-grade-backend-5f919d63857a.herokuapp.com/api/user/uploadCV?user_id=${user["_id"]}`,
                 formData,
                 {
                     headers: {
-                        Authorization: `Bearer ${user["token"]}`,
-                        'Content-Type': 'multipart/form-data'
+                        Authorization: `Bearer ${user["token"]}`
                     }
                 }
             );
             console.log("File uploaded successfully");
 
             // Extract skills from CV
-            const { data: extractedSkills } = await axios.post(
-                `https://group-grade-backend-5f919d63857a.herokuapp.com/api/user/updateSkillsFromCV`,
-                {},
-                {
-                    headers: {
-                        Authorization: `Bearer ${user.token}`
-                    }
-                }
-            );
+            // const { data: extractedSkills } = await axios.post(
+            //     `https://group-grade-backend-5f919d63857a.herokuapp.com/api/user/updateSkillsFromCV`,
+            //     {},
+            //     {
+            //         headers: {
+            //             Authorization: `Bearer ${user.token}`
+            //         }
+            //     }
+            // );
 
-            console.log("Extracted skills:", extractedSkills);
+            // console.log("Extracted skills:", extractedSkills);
 
-            const skillSet = new Set(userDetails.skills);
+            // const skillSet = new Set(userDetails.skills);
 
-            Object.entries(extractedSkills).forEach(([key, value]) => {
-                if (Array.isArray(value)) {
-                    value.forEach(skill => skillSet.add(skill));
-                } else if (typeof value === 'string' && value.toLowerCase() === 'yes') {
-                    skillSet.add(key.replace(/_/g, ' '));
-                }
-            });
+            // Object.entries(extractedSkills).forEach(([key, value]) => {
+            //     if (Array.isArray(value)) {
+            //         value.forEach(skill => skillSet.add(skill));
+            //     } else if (typeof value === 'string' && value.toLowerCase() === 'yes') {
+            //         skillSet.add(key.replace(/_/g, ' '));
+            //     }
+            // });
 
-            const newSkills = [...skillSet].filter(skill => !userDetails.skills.includes(skill));
-            if (newSkills.length > 0) {
-                await syncSkillsToBackend(newSkills, []);
-            }
+            // const newSkills = [...skillSet].filter(skill => !userDetails.skills.includes(skill));
+            // if (newSkills.length > 0) {
+            //     await syncSkillsToBackend(newSkills, []);
+            // }
 
         } catch (err) {
             console.error("Error uploading file or extracting skills:", err.response ? err.response.data : err.message);
