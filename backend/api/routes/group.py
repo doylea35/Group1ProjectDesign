@@ -9,14 +9,13 @@ from api.utils import is_valid_email
 from api.utils import get_current_user
 from dotenv import load_dotenv
 import os
+from params.frontend_params import frontend_url
 
 
 # Load environment variables
 load_dotenv()
 
 group_router = APIRouter()
-
-frontend_url_dev = os.getenv("FRONTEND_URL_DEV")
 
 BASE_URL = "{frontend_url}/confirmMembership/{user_email}/{group_id}"
 
@@ -311,7 +310,7 @@ def send_project_invitation_email(user_emails:list[str], creator_email:str, new_
         email_content = INVITATION_EMAIL_TEMPLATE.format(
             creator_email=creator_email,
             project_name=new_group_name,
-            invitation_link=f"{BASE_URL.format(frontend_url=frontend_url_dev, user_email=user_email_for_link, group_id=new_group_id)}"
+            invitation_link=f"{BASE_URL.format(frontend_url=frontend_url, user_email=user_email_for_link, group_id=new_group_id)}"
         )
         email_sender.send_email(receipient=user_email, email_message=email_content, subject_line=f"Group Invitation from: {creator_email}")
 

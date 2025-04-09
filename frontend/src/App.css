@@ -1797,6 +1797,7 @@ small {
   border-radius: 15px; 
   margin: 0 auto; 
   border: 3px solid var(--violet-7); 
+  margin-top: 50px;
 }
 
 /* For the message list */
@@ -1876,10 +1877,11 @@ small {
 
 .sender-name {
   font-size: 0.85em;
-  color: black;
+  color: white;
   top: 5px; 
   position: absolute;
   left: 10px;
+  font-weight: bold;
 }
 
 .content-container {
